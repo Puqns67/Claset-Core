@@ -1,19 +1,6 @@
 {
-    "FileVersion": 4,
-    "Settings": {
-        "VersionSeparation": false,
-        "Memory": 2048,
-        "CheckUpdate": true,
-        "DownloadServer": "BMCLAPI",
-        "DefaultPath": {
-            "Execs": "/CPML",
-            "Cache": "/CPML/Cache",
-            "Minecraft": "/.minecraft",
-            "Assets": "/.minecraft/assets",
-            "Libraries": "/.minecraft/libraries",
-            "Version": "/.minecraft/versions"
-        }
-    },
-    "User": [],
-    "DEBUG": true
+    "VersionSeparation": false,
+    "Memory": 2048,
+    "CheckUpdate": true,
+    "DownloadServer": "BMCLAPI",
 }

@@ -1,0 +1,9 @@
+{
+    "PREFIX": "PREFIX", 
+    "EXEC": "$PREFIX/Claset", 
+    "CACHE": "$PREFIX/Claset/Cache",
+    "MINECRFT": "$PREFIX/.minecraft", 
+    "ASSETS": "$PREFIX/.minecraft/assets", 
+    "VERSION": "$PREFIX/.minecraft/version",
+    "LIBRERIES": "$PREFIX/.minecraft/libraries"
+}

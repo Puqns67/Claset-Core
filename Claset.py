@@ -1,5 +1,5 @@
 #
-#ui.py
+#Claset.py
 #主操作函数
 #
 
@@ -7,15 +7,17 @@
 import os
 import os.path
 import time
+import Claset
 
 #函数
 def basecheck():       #基础检测
-    check = os.path.exists("CPML")
+    check = os.path.exists("Claset")
     if check == False:
-        print("Error: CPML folder not found!")
+        print("Error: Claset folder not found!")
         print("       Program will to Stop!")
         time.sleep(5)
         exit()
+'''
     check = os.path.exists("CPML.json")
     if check == False:
         import json
@@ -23,18 +25,13 @@ def basecheck():       #基础检测
         jsonConfig = json.dumps(DefaultConfig, indent=4, ensure_ascii=False)
         with open("CPML.json", mode="w+") as w:
             w.write(jsonConfig)
-
+'''
 
 #UI_Terminal
 #启动前执行
 basecheck()
-UIVeesio = 0
 
 #基础包
-import CPML.Tools
-import CPML.User
-import platform
-
 
 #基础命值
 Config = CPML.Tools.loadjson("CPML.json")

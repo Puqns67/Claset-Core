@@ -1,10 +1,13 @@
 #
-#CPML/User.py
+#Claset/Tools/Configs/User.py
 #管理用户
 #
+from Claset.Tools.Loadjson import Loadjson
 
-def getver():
-    return(1)
+class User():
+    def __init__(self):
+        loadjson("./Claset/Configs/Users.json")
+
 
 #返回list形式的User列表
 def listt(Config):

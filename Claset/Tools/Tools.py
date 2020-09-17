@@ -1,5 +1,5 @@
 #
-#CPML\Tools.py
+#Claset\Tools\Tools.py
 #工具包
 #
 
@@ -41,65 +41,6 @@ def getplatform(gettype):
         types = {'AMD64':64, 'x86_64': 64, 'i386': 32, 'x86': 32, "aarch64": 64, "aarch32": 32, "arm64": 64, "arm32": 32}
         return(types[seq])
 
-
-def loadjson(jsonpath, filetype=None, os=None):
-    if filetype == None:
-        import json
-        loadedjson = json.load(open(jsonpath))
-        return(loadedjson)
-    elif filetype == "MCV":     #整理出libraries和一些其他链接和信息
-    #准备给他重写了
-    #太乱了,看不下去了
-        jsondict = loadjson(jsonpath)
-        libraries = jsondict["libraries"]
-        output = []
-        os = getplatform("system")
-
-        seqq = {}
-        seq = jsondict["assetIndex"]
-        seqq["ID"] = seq["id"]
-        seqq["Size"] = seq["size"]
-        seqq["Url"] = seq["url"]
-        seqq["Type"] = "assetIndex"
-        output.append(seqq)
-
-        seqq = {}
-        seq = jsondict["downloads"]["client"]
-        seqq["Size"] = seq["size"]
-        seqq["Url"] = seq["url"]
-        seqq["Type"] = "client"
-        output.append(seqq)
-
-        for seqq in range(len(libraries)):
-            seq = "rules" in libraries[seqq]
-            if seq == True:#含rules项
-                seqw = len(libraries[seqq]["rules"])
-                while seqw > 0:
-                    seq = "action"
-                    if seq == True:
-                        
-                    
-
-
-
-        print(output)
-        
-
-
-    elif filetype == "MCAI":#转换AssetsIndex为list[dict]格式
-        seq = loadjson(jsonpath)
-        MCAI = seq["objects"]
-        MCAIL = list(MCAI)
-        output = []
-        for i in range(len(MCAIL)):
-            seq = {}
-            seq["Name"] = MCAIL[i]
-            seq["Hash"] = MCAI[MCAIL[i]]["hash"]
-            seq["Size"] = MCAI[MCAIL[i]]["size"]
-            output.append(seq)
-        return(output)
-    else:
-        return("Dont find this file type")
 
 def dfcheck(checktype, path, MCver=None, size=None):
     import os, os.path
