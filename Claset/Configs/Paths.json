@@ -1,5 +1,5 @@
 {
-    "PREFIX": "PREFIX", 
+    "PREFIX": "$PREFIX", 
     "EXEC": "$PREFIX/Claset", 
     "CACHE": "$PREFIX/Claset/Cache",
     "MINECRFT": "$PREFIX/.minecraft", 

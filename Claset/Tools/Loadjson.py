@@ -1,12 +1,17 @@
 #
 #Claoset\Tools\Loadjson.py
 #
+
 import json
 
+from Claset.Base.Path import path
+
 def loadjson(jsonpath, filetype=None, os=None):
+    if "$" in jsonpath:
+        jsonpath = path(jsonpath)
     if filetype == None:
-        loadedjson = json.load(open(jsonpath))
-        return(loadedjson)
+        with open(jsonpath) as openedjson:
+            return(json.load(openedjson))
     elif filetype == "MCV":     #整理出libraries和一些其他链接和信息
         jsondict = loadjson(jsonpath)
         libraries = jsondict["libraries"]
@@ -43,3 +48,4 @@ def loadjson(jsonpath, filetype=None, os=None):
         MCAIL = list(MCAI)
         output = []
         for i in range(len(MCAIL)):
+            pass
