@@ -5,5 +5,10 @@
     "MINECRFT": "$PREFIX/.minecraft", 
     "ASSETS": "$PREFIX/.minecraft/assets", 
     "VERSION": "$PREFIX/.minecraft/version",
-    "LIBRERIES": "$PREFIX/.minecraft/libraries"
+    "LIBRERIES": "$PREFIX/.minecraft/libraries", 
+    "MCVersion": "$CACHE/MCVersionJson",
+    "MCAssetIndex": "$CACHE/MCAssetIndex",
+    "MCVersionManifest": "$CACHE", 
+    "WEBUPDATE": "https://puqns67.github.io/Claset",
+    "WEBUPDATECN": "https://puqns67.gitee.io/claset"
 }

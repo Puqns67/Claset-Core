@@ -19,12 +19,7 @@
             "__init__.py": "/CPML/__init__.py"
         }
     }, 
-    "DownloadCachePath" : {
-        "MCVersion": "/MCVersionJson", 
-        "MCAssetIndex": "/MCAssetIndex", 
-        "MCVersionManifest": "/."
-    }, 
-	"MinecraftServers": {
+    "MinecraftServers": {
 		"Vanilla": {
 			"Launcher": "https://launcher.mojang.com", 
 			"LauncherMeta": "https://launchermeta.mojang.com", 
