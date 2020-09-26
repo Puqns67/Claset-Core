@@ -1,13 +1,14 @@
-#Version=1
+#Version=2
 #Claset/Update/Ignorefile.py
 #忽略文件
 #
 
+from os.path import isfile
 from Claset.Base.Path import path
 
 def ignorefile():
     ignore = []
-    if os.path.isfile(path("$PREFIX/.gitignore")) == True:
+    if isfile(path("$PREFIX/.gitignore")) == True:
 
         for line in open(path("$PREFIX/.gitignore")):
             if "\n" in line:
@@ -21,3 +22,4 @@ def ignorefile():
         ignore = [".git", "__pycache__"]
 
     return(ignore)
+
