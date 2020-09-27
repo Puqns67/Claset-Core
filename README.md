@@ -10,7 +10,7 @@ PyQt5在学了
 
 ## Git Repositories
 ### Claset
-* In [Github](https://github.com/Puqns67/Claset")
+* In [Github](https://github.com/Puqns67/Claset)
 * In [Gitee](https://gitee.com/puqns67/Claset)
 
 ### Claset_Update
