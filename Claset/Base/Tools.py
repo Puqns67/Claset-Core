@@ -3,9 +3,7 @@
 #工具包
 #
 
-def getver():
-    return(0)
-
+from Claset.Base.Loadjson import loadjson
 
 def getconfig(ctype):
     if ctype == "CPML":

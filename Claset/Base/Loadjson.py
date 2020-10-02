@@ -1,12 +1,14 @@
+#VERSION=1
 #
 #Claoset\Tools\Loadjson.py
+#用于解析Json
 #
 
 import json
 
 from Claset.Base.Path import path
 
-def loadjson(jsonpath, filetype=None, os=None):
+def loadjson(jsonpath, filetype=None):
     if "$" in jsonpath:
         jsonpath = path(jsonpath)
     if filetype == None:

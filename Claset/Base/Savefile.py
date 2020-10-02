@@ -1,10 +1,10 @@
-#VERSION=1
+#VERSION=2
 #
 #Claset/Base/Savefile.py
 #保存文件
 #
 
-from json import dump, dumps
+from json import dumps
 from Claset.Base.Path import path as pathmd
 
 def save(path, filecontent ,filetype="json", filename=None):
@@ -24,5 +24,9 @@ def save(path, filecontent ,filetype="json", filename=None):
 
     elif filetype == "log":
         with open(path, mode="a+") as thefile:
+            thefile.write(filecontent)
+
+    elif filetype == "txt":
+        with open(path, mode="w+") as thefile:
             thefile.write(filecontent)
     
