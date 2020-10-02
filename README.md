@@ -5,10 +5,10 @@
 这个玩意现在还完全不可用,并且开学了,开发效率-70%
 PyQt5在学了
 
-使用Python3.8.5的环境编写,未测试其他的版本
+使用Python3.8.6的环境编写,未测试其他的版本
 
 
-## Git Repositories
+## Git仓库/Git Repositories
 ### Claset
 * In [Github](https://github.com/Puqns67/Claset)
 * In [Gitee](https://gitee.com/puqns67/Claset)
@@ -16,7 +16,9 @@ PyQt5在学了
 ### Claset_Update
 * In [Github](https://github.com/Puqns67/Claset_Update)
 
-## License
-All will use [GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt), in repositories at [File](https://github.com/Puqns67/Claset/blob/master/LICENSE)
+## 许可/License
+全部使用[GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt), 在仓库中为此[文件](./LICENSE)
 
-## Thank you
+All will use [GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt), in repositories at this [File](./LICENSE)
+
+## 谢谢你的使用/Thank you for using
