@@ -1,4 +1,5 @@
-#Version=2
+#Version=3
+#
 #Claset/Update/Ignorefile.py
 #忽略文件
 #
@@ -19,7 +20,7 @@ def ignorefile():
                 ignore.append(line)
         
     else:
-        ignore = [".git", "__pycache__"]
+        ignore = [".git/", "__pycache__/", "Cache/", "Claset/Configs/"]
 
     return(ignore)
 
