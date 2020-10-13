@@ -1,4 +1,4 @@
-#VERSION=0
+#VERSION=1
 #
 #Claset/Base/Download.py
 #通过url下载数据
@@ -16,11 +16,14 @@ from Claset.Base.DFCheck import dfcheck
 
 class downloadmanager():
     def __init__(self):
-        self.configs = loadjson("$EXEC/Configs/Download.json")
+        self.Configs = loadjson("$EXEC/Configs/Download.json")
         self.jobqueue = Queue(maxsize=0)
+        self.DownloadStatus = False
+        self.DownloadServiceStatus = False
+
 
     #简易下载器
-    def download(self, fullurl=None, outputpath="$PREFIX", filename=None, size=None, jobbase=None):
+    def download(self, URL=None, outputpath="$PREFIX", filename=None, size=None, jobbase=None):
         if fullurl == None:
             raise KeyError("DontHaveURL")
         if jobbase == None:
@@ -29,14 +32,14 @@ class downloadmanager():
         outputpath = pathmd(outputpath)
 
         if filename == None:
-            seq = re.match(r"(.*)/(,*)", fullurl).span()
-            filename = fullurl[seq[1]:]
+            seq = re.match(r"(.*)/(,*)", URL).span()
+            filename = URL[seq[1]:]
         outputpaths = outputpath + "/" + filename
 
         dfcheck("dm", outputpath)
 
         #openurl
-        url = urllib.request.Request(fullurl, headers=self.configs["Headers"])
+        url = urllib.request.Request(URL, headers=self.Configs["Headers"])
 
         try:
             website = urllib.request.urlopen(url)
@@ -69,24 +72,39 @@ class downloadmanager():
     #下载服务
     def downloadservice(self):
         self.Threads = []
+        self.ServiceStartTime = int(time())
+
         while True:
             while len(self.jobqueue.queue) != 0:
                 job = self.jobqueue.get()
                 ThreadID = self.Service_ReturnFirstIdleThreadId()
+
                 if ThreadID == "AppendNewThread":
                     ThreadID = str(len(self.Threads))
                     athread = threading.Thread(target=self.download, kwargs=job, name=f"DownloadThread{ThreadID}", daemon=True)
                     self.Threads.append(athread)
+                    self.Threads[-1].start()
                 else:
                     ThreadID = str(ThreadID)
                     athread = threading.Thread(target=self.download, kwargs=job, name=f"DownloadThread{ThreadID}", daemon=True)
                     self.Threads[int(ThreadID)] = athread
+                    self.Threads[int(ThreadID)].start()
 
-                self.Service_StartAllNotActivatedThread()
+                if self.DownloadStatus == False:
+                    self.DownloadStatus = True
 
             self.Service_StartAllNotActivatedThread()
+            self.Service_CheckAllThreadStopped()
 
-            sleep(self.configs["ServiceSleepTime"])
+            if self.DownloadServiceStatus == False:
+                if self.Service_CheckAllThreadStopped():
+                    break
+
+            if (self.ServiceStartTime + self.Configs["ServiceAutoStop"]) <= int(time()):
+                if self.Service_CheckAllThreadStopped():
+                    break
+
+            sleep(self.Configs["ServiceSleepTime"])
 
     def Service_ReturnFirstIdleThreadId(self):
         if len(self.Threads) < self.configs["MaxThread"]:
@@ -96,7 +114,7 @@ class downloadmanager():
                 if type(self.Threads[i]) == threading.Thread:
                     if self.Threads[i].is_alive() == False:
                         return(i)
-            sleep(self.configs["ServiceSleepTime"])
+            sleep(self.Configs["ServiceSleepTime"])
 
     def Service_StartAllNotActivatedThread(self):
         for i in range(len(self.Threads)):
@@ -105,6 +123,21 @@ class downloadmanager():
                     self.Threads[i].start()
                 except RuntimeError as info:
                     pass
+
+    def Service_CheckAllThreadStopped(self):
+        seq = ""
+
+        for i in range(len(self.Threads)):
+            if self.Threads[i].is_alive() == False:
+                seq += "-"
+
+        if "-" in seq:
+            self.DownloadStatus = False
+            return(True)
+        else:
+            if self.DownloadStatus == False:
+                self.DownloadStatus = True
+            return(False)
 
 
     #向jobqueue放入任务
@@ -122,8 +155,14 @@ class downloadmanager():
 
     
     #启动服务
-    def startservice(self):
-        self.DownloadService = threading.Thread(target=self.downloadservice, name="DownloadManager", daemon=True)
-        self.DownloadService.start()
+    def StartService(self):
+        if self.DownloadServiceStatus == False:
+            self.DownloadServiceStatus = True
+            self.DownloadService = threading.Thread(target=self.downloadservice, name="DownloadManager", daemon=True)
+            self.DownloadService.start()
+    
+
+    def StopService(self):
+        self.DownloadServiceStatus = False
 
 
