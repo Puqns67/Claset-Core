@@ -1,52 +1,8 @@
+#VERSION=0
 #
-#CPML\Downloads.py
+#Claset/Game/Download/Doenloads.py
 #将现成的版本JSON解析并提供下载功能
 #
-import CPML.Tools
-from CPML.Tools import urldownload
-import time
-
-def getver():
-    return(0)
-
-def muiThreaDownload(urllist, MaxThread):
-    #标准输入格式
-    #deque[{"Name": "…", "Url": "…", "Size":"…", "Path":"…"}, {…}, …]
-    def DNF():
-        #用于启动线程
-        pass
-    if len(urllist) <= DConfig["MaxThread"]:
-        seq = len(urllist)
-    else:
-        seq = DConfig["MaxThread"]
-
-    for i in range(seq):
-        seq = urllist.get()
-        t = threading.Thread(target=urldownload)
-        t.start()
-        ts[i] = t
-
-    for i in range(seq):
-        ts[i].join()
-
-
-
-    settime = time.time()
-    from queue import Queue
-    if len(urllist) <= MaxThread:
-        MaxThread = len(urllist)
-
-    for i in range(MaxThread):
-        
-        t = threading.Thread(target=urldownload)
-        t.start()
-        ts[i] = t
-
-    for i in range(seq):
-        ts[i].join()
-
-   
-    
 
     
 def urlreplace(url, urltype, Config=None, DConfig=None):

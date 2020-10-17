@@ -1,4 +1,4 @@
-#VERSION=1
+#VERSION=3
 #
 #Claset/Base/Download.py
 #通过url下载数据
