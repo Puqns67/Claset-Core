@@ -4,10 +4,12 @@
 #通过url下载数据
 #
 
-import re, urllib.request, threading
+import urllib.request, threading
 
 from queue import Queue
 from time import time, sleep
+from io import BytesIO
+from re import match
 
 from Claset.Base.Savefile import save
 from Claset.Base.Path import path as pathmd
@@ -15,76 +17,87 @@ from Claset.Base.Loadjson import loadjson
 from Claset.Base.DFCheck import dfcheck
 
 class downloadmanager():
-    def __init__(self):
+    def __init__(self, DoType=None):
         self.Configs = loadjson("$EXEC/Configs/Download.json")
         self.jobqueue = Queue(maxsize=0)
         self.DownloadStatus = False
         self.DownloadServiceStatus = False
+        self.Threads = []
+        self.ThreadINFOs = []
+
+        for i in range(self.Configs["MaxThread"]):
+            self.ThreadINFOs.append({"ID": i})
+
+        if DoType != None:
+            if DoType == "Start":
+                self.StartService()
 
 
     #简易下载器
-    def download(self, URL=None, outputpath="$PREFIX", filename=None, size=None, jobbase=None):
-        if fullurl == None:
+    def download(self, ThreadID, URL=None, OutputPath="$PREFIX", FileName=None, Size=None, Job=None):
+        if URL == None:
             raise KeyError("DontHaveURL")
-        if jobbase == None:
-            print(__name__, "DontHave\'jobbase\'")
+        if Job == None:
+            print("DontHave\'Job\'")
 
-        outputpath = pathmd(outputpath)
+        OutputPath = pathmd(OutputPath)
 
-        if filename == None:
-            seq = re.match(r"(.*)/(,*)", URL).span()
-            filename = URL[seq[1]:]
-        outputpaths = outputpath + "/" + filename
+        if FileName == None:
+            FileName = URL[match(r"(.*)/(,*)", URL).span()[1]:]
 
-        dfcheck("dm", outputpath)
+        OutputPaths = OutputPath + "/" + FileName
+        dfcheck("dm", OutputPath)
 
-        #openurl
         url = urllib.request.Request(URL, headers=self.Configs["Headers"])
-
-        try:
-            website = urllib.request.urlopen(url)
-        except urllib.error.HTTPError as info:
-            self.add(jobbase)
-            return(info)
-        except http.client.RemoteDisconnected as info:
-            self.add(jobbase)
-            return(info)
         
-        WebSiteInfo = {}
-        WebSiteInfo["httpcode"] = website.getcode()
-        WebSiteInfo["EndURL"] = website.geturl()
-
-        ReadedWebsite = website.read()
-
         try:
-            OpenedURL = str(ReadedWebsite, encoding="utf8")
-        except UnicodeDecodeError:
-            OpenedURL = ReadedWebsite
-            save(outputpaths, OpenedURL, "bytes")
-        else:
-            save(outputpaths, OpenedURL, "txt")
+            with urllib.request.urlopen(url) as Response:
+                File = BytesIO()
+                NowSize = 0
+                Length = Response.getheader('content-length')
 
-        if size != None:
-            if dfcheck("fs", outputpaths, size=size) != True:
-                self.add(jobbase)
+                if Length:
+                    BlockSize = int(Length) // 50
+                else:
+                    BlockSize = 9999999
+
+                while True:
+                    OneWhile = Response.read(BlockSize)
+                    if not OneWhile:
+                        break
+                    File.write(OneWhile)
+                    NowSize += len(OneWhile)
+                    if Length:
+                        self.ThreadINFOs[ThreadID]["Percent"] = int((NowSize / int(Length)) * 100)
+                if Size != None:
+                    if NowSize != Size:
+                        self.add(Job)
+                        raise ValueError("SizeError")
+
+                save(OutputPath, File.getbuffer())
+
+        except urllib.error.HTTPError as info:
+            self.add(Job)
+            return(info)
 
 
     #下载服务
     def downloadservice(self):
-        self.Threads = []
         self.ServiceStartTime = int(time())
-
         while True:
             while len(self.jobqueue.queue) != 0:
                 job = self.jobqueue.get()
                 ThreadID = self.Service_ReturnFirstIdleThreadId()
 
                 if ThreadID == "AppendNewThread":
-                    ThreadID = str(len(self.Threads))
+                    ThreadID = len(self.Threads)
+                    job["ThreadID"] = ThreadID
+                    ThreadID = str(ThreadID)
                     athread = threading.Thread(target=self.download, kwargs=job, name=f"DownloadThread{ThreadID}", daemon=True)
                     self.Threads.append(athread)
                     self.Threads[-1].start()
                 else:
+                    job["ThreadID"] = ThreadID
                     ThreadID = str(ThreadID)
                     athread = threading.Thread(target=self.download, kwargs=job, name=f"DownloadThread{ThreadID}", daemon=True)
                     self.Threads[int(ThreadID)] = athread
@@ -93,21 +106,24 @@ class downloadmanager():
                 if self.DownloadStatus == False:
                     self.DownloadStatus = True
 
+                self.ServiceStartTime = int(time())
+
             self.Service_StartAllNotActivatedThread()
-            self.Service_CheckAllThreadStopped()
+
+            if self.Service_CheckAllThreadStopped():
+                self.ServiceStartTime = int(time())
 
             if self.DownloadServiceStatus == False:
-                if self.Service_CheckAllThreadStopped():
+                if self.Service_CheckAllThreadStopped() == False:
                     break
 
             if (self.ServiceStartTime + self.Configs["ServiceAutoStop"]) <= int(time()):
-                if self.Service_CheckAllThreadStopped():
-                    break
+                break
 
             sleep(self.Configs["ServiceSleepTime"])
 
     def Service_ReturnFirstIdleThreadId(self):
-        if len(self.Threads) < self.configs["MaxThread"]:
+        if len(self.Threads) < self.Configs["MaxThread"]:
             return("AppendNewThread")
         while True:
             for i in range(len(self.Threads)):
@@ -128,15 +144,17 @@ class downloadmanager():
         seq = ""
 
         for i in range(len(self.Threads)):
-            if self.Threads[i].is_alive() == False:
+            if self.Threads[i].is_alive():
+                seq += "+"
+            elif self.Threads[i].is_alive() == False:
                 seq += "-"
 
-        if "-" in seq:
-            self.DownloadStatus = False
+        if "+" in seq:
+            self.DownloadStatus = True
             return(True)
         else:
-            if self.DownloadStatus == False:
-                self.DownloadStatus = True
+            if self.DownloadStatus == True:
+                self.DownloadStatus = False
             return(False)
 
 
@@ -146,11 +164,11 @@ class downloadmanager():
             for i in range(len(inputjob)):
                 job = inputjob[i]
                 jobbase = dict(job)
-                job["jobbase"] = job
+                job["Job"] = jobbase
                 self.jobqueue.put(job)
         elif type(inputjob) == type(dict()):
             jobbase = dict(inputjob)
-            inputjob["jobbase"] = jobbase
+            inputjob["Job"] = jobbase
             self.jobqueue.put(inputjob)
 
     
