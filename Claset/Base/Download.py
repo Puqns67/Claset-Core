@@ -1,15 +1,15 @@
-#VERSION=3
+#VERSION=5
 #
 #Claset/Base/Download.py
 #通过url下载数据
 #
 
-import urllib.request, threading
+import urllib.request, threading, re
 
 from queue import Queue
 from time import time, sleep
 from io import BytesIO
-from re import match
+from random import randint
 
 from Claset.Base.Savefile import save
 from Claset.Base.Path import path as pathmd
@@ -19,47 +19,47 @@ from Claset.Base.DFCheck import dfcheck
 class downloadmanager():
     def __init__(self, DoType=None):
         self.Configs = loadjson("$EXEC/Configs/Download.json")
-        self.jobqueue = Queue(maxsize=0)
+        self.ReCompile = re.compile("[a-zA-Z0-9_.-]+$")
+        self.JobQueue = Queue(maxsize=0)
         self.DownloadStatus = False
         self.DownloadServiceStatus = False
         self.Threads = []
         self.ThreadINFOs = []
+        self.Projects = {}
 
         for i in range(self.Configs["MaxThread"]):
             self.ThreadINFOs.append({"ID": i})
 
-        if DoType != None:
-            if DoType == "Start":
-                self.StartService()
+        if DoType == "Start":
+            self.StartService()
 
 
     #简易下载器
-    def download(self, ThreadID, URL=None, OutputPath="$PREFIX", FileName=None, Size=None, Job=None):
+    def download(self, ThreadID, URL=None, OutputPath="$PREFIX", FileName=None, Size=None, ProjectID=None):
         if URL == None:
             raise KeyError("DontHaveURL")
-        if Job == None:
-            print("DontHave\'Job\'")
 
         OutputPath = pathmd(OutputPath)
 
         if FileName == None:
-            FileName = URL[match(r"(.*)/(,*)", URL).span()[1]:]
+            Seqq, Seqw = self.ReCompile.search(URL).span()
+            FileName = URL[Seqq:Seqw]
 
         OutputPaths = OutputPath + "/" + FileName
         dfcheck("dm", OutputPath)
 
-        url = urllib.request.Request(URL, headers=self.Configs["Headers"])
+        Request = urllib.request.Request(URL, headers=self.Configs["Headers"])
         
         try:
-            with urllib.request.urlopen(url) as Response:
+            with urllib.request.urlopen(Request) as Response:
                 File = BytesIO()
                 NowSize = 0
-                Length = Response.getheader('content-length')
+                Length = int(Response.getheader('content-length'))
 
                 if Length:
-                    BlockSize = int(Length) // 50
+                    BlockSize = int(Length / 50)
                 else:
-                    BlockSize = 9999999
+                    BlockSize = Length
 
                 while True:
                     OneWhile = Response.read(BlockSize)
@@ -68,13 +68,16 @@ class downloadmanager():
                     File.write(OneWhile)
                     NowSize += len(OneWhile)
                     if Length:
-                        self.ThreadINFOs[ThreadID]["Percent"] = int((NowSize / int(Length)) * 100)
+                        self.ThreadINFOs[ThreadID]["Percent"] = int((NowSize / Length) * 100)
+
                 if Size != None:
                     if NowSize != Size:
                         self.add(Job)
                         raise ValueError("SizeError")
 
-                save(OutputPath, File.getbuffer())
+                save(OutputPaths, File.getbuffer(), filetype="bytes")
+                if ProjectID != None:
+                    self.Project_addCompletes(ProjectID)
 
         except urllib.error.HTTPError as info:
             self.add(Job)
@@ -85,21 +88,24 @@ class downloadmanager():
     def downloadservice(self):
         self.ServiceStartTime = int(time())
         while True:
-            while len(self.jobqueue.queue) != 0:
-                job = self.jobqueue.get()
+            while len(self.JobQueue.queue) != 0:
+                Job = self.JobQueue.get()
                 ThreadID = self.Service_ReturnFirstIdleThreadId()
 
                 if ThreadID == "AppendNewThread":
                     ThreadID = len(self.Threads)
-                    job["ThreadID"] = ThreadID
+
+                    self.ThreadINFOs[ThreadID]["Jobbase"] = Job
+                    Job["ThreadID"] = ThreadID
                     ThreadID = str(ThreadID)
-                    athread = threading.Thread(target=self.download, kwargs=job, name=f"DownloadThread{ThreadID}", daemon=True)
+                    athread = threading.Thread(target=self.download, kwargs=Job, name=f"DownloadThread{ThreadID}", daemon=True)
                     self.Threads.append(athread)
                     self.Threads[-1].start()
                 else:
-                    job["ThreadID"] = ThreadID
+                    self.ThreadINFOs[ThreadID]["Jobbase"] = Job
+                    Job["ThreadID"] = ThreadID
                     ThreadID = str(ThreadID)
-                    athread = threading.Thread(target=self.download, kwargs=job, name=f"DownloadThread{ThreadID}", daemon=True)
+                    athread = threading.Thread(target=self.download, kwargs=Job, name=f"DownloadThread{ThreadID}", daemon=True)
                     self.Threads[int(ThreadID)] = athread
                     self.Threads[int(ThreadID)].start()
 
@@ -159,17 +165,19 @@ class downloadmanager():
 
 
     #向jobqueue放入任务
-    def add(self, inputjob):
-        if type(inputjob) == type(list()):
-            for i in range(len(inputjob)):
-                job = inputjob[i]
-                jobbase = dict(job)
-                job["Job"] = jobbase
-                self.jobqueue.put(job)
-        elif type(inputjob) == type(dict()):
-            jobbase = dict(inputjob)
-            inputjob["Job"] = jobbase
-            self.jobqueue.put(inputjob)
+    def add(self, InputJob):
+        if type(InputJob) == type(list()):
+            ProjectID = self.Project_create(len(InputJob))
+            for i in range(len(InputJob)):
+                Job = InputJob[i]
+                Job["ProjectID"] = ProjectID
+                self.JobQueue.put(Job)
+            return(ProjectID)
+        elif type(InputJob) == type(dict()):
+            ProjectID = self.Project_create(1)
+            InputJob["ProjectID"] = ProjectID
+            self.JobQueue.put(InputJob)
+            return(ProjectID)
 
     
     #启动服务
@@ -180,7 +188,33 @@ class downloadmanager():
             self.DownloadService.start()
     
 
+    #停止服务
     def StopService(self):
         self.DownloadServiceStatus = False
 
+    
+    #建立Project
+    def Project_create(self, AllProject=0):
+        while True:
+            seqq = ""
+            intt = randint(0,999999999)
+            for i in self.Projects.keys():
+                if intt == i:
+                    seqq += "-"
+            if "-" in seqq:
+                continue
+            self.Projects[intt] = {"CompletedProject": 0, "AllProject": AllProject}
+            return(intt)
+
+            
+    def Project_addCompletes(self, ProjectID, CompleledProject=1):
+        self.Projects[ProjectID]["CompletedProject"] += CompleledProject
+
+
+    #通过ProjectID阻塞线程
+    def Project_join(self, ProjectID):
+        while True:
+            if self.Projects[ProjectID]["CompletedProject"] == self.Projects[ProjectID]["AllProject"]:
+                break
+            sleep(self.Configs["ServiceSleepTime"])
 
