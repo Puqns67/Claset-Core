@@ -19,7 +19,7 @@ from Claset.Base.DFCheck import dfcheck
 class downloadmanager():
     def __init__(self, DoType=None):
         self.Configs = loadjson("$EXEC/Configs/Download.json")
-        self.ReCompile = re.compile("[a-zA-Z0-9_.-]+$")
+        self.ReCompile = re.compile(self.Configs["ReadFileNameReString"])
         self.JobQueue = Queue(maxsize=0)
         self.DownloadStatus = False
         self.DownloadServiceStatus = False
@@ -33,6 +33,19 @@ class downloadmanager():
         if DoType == "Start":
             self.StartService()
 
+    def reload(self):
+        self.StopService(True)
+        self.Configs = loadjson("$EXEC/Configs/Download.json")
+        self.ReCompile = re.compile(self.Configs["ReadFileNameReString"])
+        self.JobQueue = Queue(maxsize=0)
+        self.DownloadStatus = False
+        self.DownloadServiceStatus = False
+        self.Threads = []
+        self.ThreadINFOs = []
+        self.Projects = {}
+
+        for i in range(self.Configs["MaxThread"]):
+            self.ThreadINFOs.append({"ID": i})
 
     #简易下载器
     def download(self, ThreadID, URL=None, OutputPath="$PREFIX", FileName=None, Size=None, ProjectID=None):
@@ -55,20 +68,24 @@ class downloadmanager():
                 File = BytesIO()
                 NowSize = 0
                 Length = int(Response.getheader('content-length'))
-
+                
                 if Length:
+                    self.ThreadINFOs[ThreadID]["Length"] = Length
                     BlockSize = int(Length / 50)
                 else:
-                    BlockSize = Length
+                    BlockSize = 99999999999
 
                 while True:
                     OneWhile = Response.read(BlockSize)
+
                     if not OneWhile:
                         break
+
                     File.write(OneWhile)
                     NowSize += len(OneWhile)
+
                     if Length:
-                        self.ThreadINFOs[ThreadID]["Percent"] = int((NowSize / Length) * 100)
+                        self.ThreadINFOs[ThreadID]["DownloadedSize"] = NowSize
 
                 if Size != None:
                     if NowSize != Size:
@@ -76,6 +93,7 @@ class downloadmanager():
                         raise ValueError("SizeError")
 
                 save(OutputPaths, File.getbuffer(), filetype="bytes")
+
                 if ProjectID != None:
                     self.Project_addCompletes(ProjectID)
 
@@ -165,7 +183,7 @@ class downloadmanager():
 
 
     #向jobqueue放入任务
-    def add(self, InputJob):
+    def add(self, InputJob, autoStartService=True):
         if type(InputJob) == type(list()):
             ProjectID = self.Project_create(len(InputJob))
             for i in range(len(InputJob)):
@@ -178,21 +196,37 @@ class downloadmanager():
             InputJob["ProjectID"] = ProjectID
             self.JobQueue.put(InputJob)
             return(ProjectID)
+        
+        if autoStartService:
+            self.StartService()
 
     
     #启动服务
     def StartService(self):
         if self.DownloadServiceStatus == False:
+            try:
+                if self.DownloadService:
+                    if self.DownloadService.is_alive():
+                        self.DownloadStatus = True
+                        return(0)
+            except AttributeError:
+                pass
             self.DownloadServiceStatus = True
             self.DownloadService = threading.Thread(target=self.downloadservice, name="DownloadManager", daemon=True)
             self.DownloadService.start()
     
 
     #停止服务
-    def StopService(self):
+    def StopService(self, join=False):
         self.DownloadServiceStatus = False
 
+        if join:
+            while True:
+                if self.DownloadService.is_alive() == False:
+                    break
+                sleep(self.Configs["ServiceSleepTime"])
     
+
     #建立Project
     def Project_create(self, AllProject=0):
         while True:
@@ -217,4 +251,5 @@ class downloadmanager():
             if self.Projects[ProjectID]["CompletedProject"] == self.Projects[ProjectID]["AllProject"]:
                 break
             sleep(self.Configs["ServiceSleepTime"])
+
 
