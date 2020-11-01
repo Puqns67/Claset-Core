@@ -1,4 +1,4 @@
-#VERSION=5
+#VERSION=6
 #
 #Claset/Base/Download.py
 #通过url下载数据
@@ -18,6 +18,9 @@ from Claset.Base.DFCheck import dfcheck
 
 class downloadmanager():
     def __init__(self, DoType=None):
+        #self.DownloadService
+        #self.DownloadServiceStatus
+        #self.DownloadStatus
         self.Configs = loadjson("$EXEC/Configs/Download.json")
         self.ReCompile = re.compile(self.Configs["ReadFileNameReString"])
         self.JobQueue = Queue(maxsize=0)
@@ -33,19 +36,13 @@ class downloadmanager():
         if DoType == "Start":
             self.StartService()
 
-    def reload(self):
+    def reload(self, DoType=None):
         self.StopService(True)
-        self.Configs = loadjson("$EXEC/Configs/Download.json")
-        self.ReCompile = re.compile(self.Configs["ReadFileNameReString"])
-        self.JobQueue = Queue(maxsize=0)
-        self.DownloadStatus = False
-        self.DownloadServiceStatus = False
-        self.Threads = []
-        self.ThreadINFOs = []
-        self.Projects = {}
+        del(self.DownloadService)
+        del(self.DownloadServiceStatus)
+        del(self.DownloadStatus)
+        self.__init__(DoType)
 
-        for i in range(self.Configs["MaxThread"]):
-            self.ThreadINFOs.append({"ID": i})
 
     #简易下载器
     def download(self, ThreadID, URL=None, OutputPath="$PREFIX", FileName=None, Size=None, ProjectID=None):
@@ -218,13 +215,13 @@ class downloadmanager():
 
     #停止服务
     def StopService(self, join=False):
-        self.DownloadServiceStatus = False
-
-        if join:
-            while True:
-                if self.DownloadService.is_alive() == False:
-                    break
-                sleep(self.Configs["ServiceSleepTime"])
+        if self.DownloadServiceStatus:
+            self.DownloadServiceStatus = False
+            if join:
+                while True:
+                    if self.DownloadService.is_alive() == False:
+                        break
+                    sleep(self.Configs["ServiceSleepTime"])
     
 
     #建立Project
