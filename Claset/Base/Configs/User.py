@@ -5,14 +5,14 @@
 #
 
 import base64
-from Claset.Base.Loadjson import loadjson
+from Claset.Base.Loadfile import loadfile
 from Claset.Base.Path import path
 from Claset.Base.Savefile import save as savefile
 
 class user():
     def __init__(self):
         self.path = "$EXEC/Configs/Users.json"
-        self.users = loadjson(path(self.path))
+        self.users = loadfile(self.path, "json")
 
 
     #返回list形式的User列表
@@ -106,6 +106,5 @@ class user():
 
     #重新从文件加载数据
     def reload(self):
-        self.users = loadjson(path(self.path))
-
+        self.users = loadfile(self.path, "json")
 

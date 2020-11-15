@@ -1,13 +1,13 @@
-#VERSION=3
+#VERSION=4
 #
 #Claset/Base/__init.py
 #
 
 import Claset.Base.Path
-import Claset.Base.Loadjson
+import Claset.Base.Loadfile
+import Claset.Base.Savefile
 import Claset.Base.Configs
 import Claset.Base.Tools
-import Claset.Base.Savefile
 import Claset.Base.Logs
 import Claset.Base.Download
 

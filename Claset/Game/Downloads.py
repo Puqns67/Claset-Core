@@ -1,10 +1,11 @@
 #VERSION=0
 #
-#Claset/Game/Download/Doenloads.py
+#Claset/Game/Download.py
 #将现成的版本JSON解析并提供下载功能
 #
 
-    
+
+"""
 def urlreplace(url, urltype, Config=None, DConfig=None):
 
     if Config == None:
@@ -102,3 +103,4 @@ def downloadgame(iverison, saveame):
     print("UsedTime:", time.time() - startime)
     
 
+"""

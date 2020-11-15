@@ -1,4 +1,4 @@
-#VERSION=6
+#VERSION=8
 #
 #Claset/Base/Download.py
 #通过url下载数据
@@ -13,15 +13,15 @@ from random import randint
 
 from Claset.Base.Savefile import save
 from Claset.Base.Path import path as pathmd
-from Claset.Base.Loadjson import loadjson
+from Claset.Base.Loadfile import loadfile
 from Claset.Base.DFCheck import dfcheck
 
 class downloadmanager():
     def __init__(self, DoType=None):
-        #self.DownloadService
+        self.DownloadService = ""
         #self.DownloadServiceStatus
         #self.DownloadStatus
-        self.Configs = loadjson("$EXEC/Configs/Download.json")
+        self.Configs = loadfile("$EXEC/Configs/Download.json")
         self.ReCompile = re.compile(self.Configs["ReadFileNameReString"])
         self.JobQueue = Queue(maxsize=0)
         self.DownloadStatus = False
@@ -86,16 +86,16 @@ class downloadmanager():
 
                 if Size != None:
                     if NowSize != Size:
-                        self.add(Job)
+                        self.add(self.ThreadINFOs[ThreadID]["Jobbase"])
                         raise ValueError("SizeError")
 
                 save(OutputPaths, File.getbuffer(), filetype="bytes")
 
                 if ProjectID != None:
-                    self.Project_addCompletes(ProjectID)
+                    self.Project_addJob(ProjectID)
 
         except urllib.error.HTTPError as info:
-            self.add(Job)
+            self.add(self.ThreadINFOs[ThreadID]["Jobbase"])
             return(info)
 
 
@@ -158,7 +158,7 @@ class downloadmanager():
             if self.Threads[i].is_alive() == False:
                 try:
                     self.Threads[i].start()
-                except RuntimeError as info:
+                except RuntimeError:
                     pass
 
     def Service_CheckAllThreadStopped(self):
@@ -180,16 +180,27 @@ class downloadmanager():
 
 
     #向jobqueue放入任务
-    def add(self, InputJob, autoStartService=True):
+    def add(self, InputJob, autoStartService=True, ProjectID=None):
+        if ProjectID != None:
+            pass
+
         if type(InputJob) == type(list()):
-            ProjectID = self.Project_create(len(InputJob))
+            if ProjectID == None:
+                ProjectID = self.Project_create(len(InputJob))
+            else:
+                self.Project_addJob(ProjectID, len(InputJob))
+
             for i in range(len(InputJob)):
                 Job = InputJob[i]
                 Job["ProjectID"] = ProjectID
                 self.JobQueue.put(Job)
             return(ProjectID)
+
         elif type(InputJob) == type(dict()):
-            ProjectID = self.Project_create(1)
+            if ProjectID == None:
+                ProjectID = self.Project_create(1)
+            else:
+                self.Project_addJob(ProjectID, AllProject=1)
             InputJob["ProjectID"] = ProjectID
             self.JobQueue.put(InputJob)
             return(ProjectID)
@@ -208,6 +219,7 @@ class downloadmanager():
                         return(0)
             except AttributeError:
                 pass
+
             self.DownloadServiceStatus = True
             self.DownloadService = threading.Thread(target=self.downloadservice, name="DownloadManager", daemon=True)
             self.DownloadService.start()
@@ -238,8 +250,12 @@ class downloadmanager():
             return(intt)
 
             
-    def Project_addCompletes(self, ProjectID, CompleledProject=1):
-        self.Projects[ProjectID]["CompletedProject"] += CompleledProject
+    def Project_addJob(self, ProjectID, AllProject=None, CompleledProject=None):
+        if AllProject != None:
+            self.Projects[ProjectID]["AllProject"] += AllProject
+
+        if CompleledProject != None:
+            self.Projects[ProjectID]["CompletedProject"] += CompleledProject
 
 
     #通过ProjectID阻塞线程

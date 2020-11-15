@@ -9,11 +9,11 @@ import os, os.path
 from Claset.Update.Ignorefile import ignorefile
 from Claset.Base.Path import path as pathmd
 
-def listfile(path="$PREFIX"):
-
+def listfile(path="$PREFIX", Replace=False):
+    path = pathmd(path)
     something = {"Dirs": [path], "Files": []}
     ignores = ignorefile()
-    output = []
+    output, outputd = [], []
 
     while something["Dirs"]:
 
@@ -42,10 +42,16 @@ def listfile(path="$PREFIX"):
             something["Dirs"].append(item)
         while newFiles:
             something["Files"].append(newFiles.pop())
-    
-    for i in something["Files"]:
-        i = i.replace(os.getcwd(), "")
-        output.append(i)
+    print(something)
+
+    if Replace:
+        for i in something["Files"]:
+            i = i.replace(path, "")
+            output.append(i)
+    else:
+        for i in something["Files"]:
+            i = i.replace(os.getcwd(), "")
+            output.append(i)
 
     return(output)
 

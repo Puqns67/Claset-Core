@@ -1,9 +1,12 @@
+#VERSION=1
 #
 #Claset\Tools\Tools.py
 #工具包
 #
 
-from Claset.Base.Loadjson import loadjson
+import platform
+
+from Claset.Base.Loadfile import loadfile
 
 def getconfig(ctype):
     if ctype == "CPML":
@@ -22,7 +25,6 @@ def getconfig(ctype):
 
 
 def getplatform(gettype):
-    import platform
     if gettype == "System":
         return(platform.system())
     elif gettype == "system":

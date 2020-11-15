@@ -4,5 +4,11 @@
 #提取文件版本
 #
 
+from Claset.
 from Claset.Update.Listfile import listfile
-def 
+
+def findversion():
+    FileList = listfile()
+    FileVerList = list()
+    for FileList:
+        

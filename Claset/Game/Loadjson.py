@@ -1,7 +1,7 @@
 #VERSION=1
 #
-#Claoset\Tools\Loadjson.py
-#用于解析Json
+#Claset\Game\Loadjson.py
+#用于解析游戏Json
 #
 
 import json
