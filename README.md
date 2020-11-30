@@ -9,6 +9,7 @@ PyQt5在学了
 
 因为是在学Python中,所以学会了新姿势后随时重构整个工程的,现在的版本就是个完全的未完成品,不要急
 
+刚刚checkout了15天以来的更改,我先缓缓.....
 
 ## Git仓库/Git Repositories
 ### Claset
