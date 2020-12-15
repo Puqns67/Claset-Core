@@ -1,9 +1,9 @@
-#VERSION=1
+#VERSION=2
 #
 #Claset\Update\__init__.py
 #
 
-#import Claset.Update.Findversion
-import Claset.Update.Ignorefile
-import Claset.Update.Listfile
-import Claset.Update.Update
+#from . import Findversion
+from . import Ignorefile
+from . import Listfile
+from . import Update

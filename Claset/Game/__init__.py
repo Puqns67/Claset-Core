@@ -1,6 +1,7 @@
+#VERSION=1
 #
 #Claset/Game/__init__.py
 #
 
-import Claset.Game.Downloads
+from . import Downloads
 

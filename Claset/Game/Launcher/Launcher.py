@@ -1,15 +1,7 @@
+#VERSION=0
 #
-#CPML/Launcher.py
+#Claset/Game/Launcher/Launcher.py
 #游戏启动器
 #
 
-def getver():
-    return(0)
-
-def listdownloaded(MinecraftVersionsDir):
-    pass
-
-
-def launchgame(MinecraftVersionsDir, VersionName):
-    pass
-
+pass

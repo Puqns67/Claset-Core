@@ -1,7 +1,7 @@
 #VERSION=0
 #
 #Claset/Base/Logs.py
-#日志记录器
+#日志记录
 #
 
 from time import sleep

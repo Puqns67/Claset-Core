@@ -1,23 +1,23 @@
-#VERSION=1
+#VERSION=2
 #
 #Claset/Base/Loadfile.py
 #通过url下载数据
 #
 
-import json
+from json import load
 
-from Claset.Base.Path import path
+from Claset.Base.Path import path as pathmd
 
 def loadfile(path, filetype=None):
-    if "$" in jsonpath:
-        path = path(path)
+    if "$" in path:
+        path = pathmd(path)
 
     if filetype == "json":
         with open(path) as openedfile:
-            return(json.load(openedfile))
+            return(load(openedfile))
 
     elif filetype == "bytes":
-        with open(path, "b") as openedfile:
+        with open(path, "bw") as openedfile:
             return(openedfile)
 
     elif filetype == None:
