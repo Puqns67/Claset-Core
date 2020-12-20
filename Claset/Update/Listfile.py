@@ -13,7 +13,7 @@ def listfile(path="$PREFIX", Replace=False):
     path = pathmd(path)
     something = {"Dirs": [path], "Files": []}
     ignores = ignorefile()
-    output, outputd = [], []
+    output = []
 
     while something["Dirs"]:
 

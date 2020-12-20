@@ -6,7 +6,8 @@
 
 from time import sleep
 from queue import Queue
-from Claset.Base.Savefile import save
+
+from Claset.Base.Savefile import savefile
 
 pass
 

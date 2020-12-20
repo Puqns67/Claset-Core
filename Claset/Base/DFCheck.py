@@ -1,4 +1,4 @@
-#VERSION=0
+#VERSION=2
 #
 #Claset/Base/DFCheck.py
 #检测文件夹/文件是否存在和体积是否正常
@@ -18,13 +18,15 @@ from Claset.Base.Path import path as pathmd
 
 
 def dfcheck(checktype, path, size=None):
-    path = pathmd(path)
+    if "$" in path:
+        path = pathmd(path)
     if "s" in checktype:
         if "f" in checktype:
             tsize = getsize(path)
             if size != tsize:
                 return(False)
             return(True)
+
     if "d" in checktype:
         if "m" in checktype:
             try:
@@ -32,5 +34,6 @@ def dfcheck(checktype, path, size=None):
             except FileExistsError:
                 pass
         return(exists(path))
+
     if "f" in checktype:return(exists(path))
 

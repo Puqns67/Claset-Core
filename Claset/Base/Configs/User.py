@@ -4,10 +4,11 @@
 #管理用户
 #
 
-import base64
+from base64 import b64encode, b64decode
+
 from Claset.Base.Loadfile import loadfile
 from Claset.Base.Path import path
-from Claset.Base.Savefile import save as savefile
+from Claset.Base.Savefile import savefile
 
 class user():
     def __init__(self):
@@ -43,7 +44,7 @@ class user():
             newuser["Password"] = None
         else:
             import base64
-            password = str(base64.b64encode(bytes(password, encoding="utf8")), encoding="utf8")
+            password = str(b64encode(bytes(password, encoding="utf8")), encoding="utf8")
             newuser["Password"] = password
 
         self.users.append(newuser)
@@ -85,7 +86,7 @@ class user():
     #返回解码base64后的密码
     def decode(self, name):
         password = self.users[self.userid(name)]["Password"]
-        password = str(base64.b64decode(bytes(password, encoding="utf8")), encoding="utf8")
+        password = str(b64decode(bytes(password, encoding="utf8")), encoding="utf8")
         return(password)
 
 

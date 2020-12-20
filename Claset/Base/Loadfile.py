@@ -1,7 +1,7 @@
 #VERSION=2
 #
 #Claset/Base/Loadfile.py
-#通过url下载数据
+#读取文件
 #
 
 from json import load
@@ -17,7 +17,7 @@ def loadfile(path, filetype=None):
             return(load(openedfile))
 
     elif filetype == "bytes":
-        with open(path, "bw") as openedfile:
+        with open(path, "b") as openedfile:
             return(openedfile)
 
     elif filetype == None:

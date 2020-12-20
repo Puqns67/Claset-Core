@@ -1,4 +1,4 @@
-#VERSION=3
+#VERSION=4
 #
 #Claset/Base/Path.py
 #地址转换
@@ -6,7 +6,7 @@
 
 from json import load
 from os import getcwd
-from os.path import abspath, exists
+from os.path import abspath
 
 def path(init, DisableabsPath=True):
     with open(getcwd() + "/Claset/Configs/Paths.json") as config: 
@@ -21,9 +21,6 @@ def path(init, DisableabsPath=True):
                 break
             if i in init:
                 init = init.replace("$" + i, Config[i])
-
-        if exists(init) == True:
-            break
 
     if DisableabsPath == False:
         init = abspath(init)

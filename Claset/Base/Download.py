@@ -11,7 +11,7 @@ from time import time, sleep
 from io import BytesIO
 from random import randint
 
-from Claset.Base.Savefile import save
+from Claset.Base.Savefile import savefile
 from Claset.Base.Path import path as pathmd
 from Claset.Base.Loadfile import loadfile
 from Claset.Base.DFCheck import dfcheck
@@ -59,11 +59,11 @@ class downloadmanager():
         dfcheck("dm", OutputPath)
 
         Request = urllib.request.Request(URL, headers=self.Configs["Headers"])
+        File = BytesIO()
+        NowSize = 0
         
         try:
             with urllib.request.urlopen(Request) as Response:
-                File = BytesIO()
-                NowSize = 0
                 Length = int(Response.getheader('content-length'))
                 
                 if Length:
@@ -80,23 +80,21 @@ class downloadmanager():
 
                     File.write(OneWhile)
                     NowSize += len(OneWhile)
-
-                    if Length:
-                        self.ThreadINFOs[ThreadID]["DownloadedSize"] = NowSize
-
-                if Size != None:
-                    if NowSize != Size:
-                        self.add(self.ThreadINFOs[ThreadID]["Jobbase"])
-                        raise ValueError("SizeError")
-
-                save(OutputPaths, File.getbuffer(), filetype="bytes")
-
-                if ProjectID != None:
-                    self.Project_addJob(ProjectID)
+                    self.ThreadINFOs[ThreadID]["DownloadedSize"] += NowSize
 
         except urllib.error.HTTPError as info:
             self.add(self.ThreadINFOs[ThreadID]["Jobbase"])
             return(info)
+        else:
+            if Size != None:
+                if NowSize != Size:
+                    self.add(self.ThreadINFOs[ThreadID]["Jobbase"])
+                    raise ValueError("SizeError")
+
+            savefile(OutputPaths, File.getbuffer(), filetype="bytes")
+
+            if ProjectID != None:
+                self.Project_addJob(ProjectID)
 
 
     #下载服务

@@ -4,6 +4,7 @@
 #测试函数Claset
 #
 
-import Claset
+import Claset, time
 
-print(Claset.Update.Listfile.listfile("Claset", Replace=True))
+path = Claset.Base.AdvancedPath.path(Others=True)
+path.printCompleteConfigs()

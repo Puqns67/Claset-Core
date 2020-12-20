@@ -7,7 +7,7 @@
 from json import dumps
 from Claset.Base.Path import path as pathmd
 
-def save(path, filecontent ,filetype="json", filename=None):
+def savefile(path, filecontent ,filetype="json", filename=None):
 
     if not filename == None:
         path += filename
