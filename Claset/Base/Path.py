@@ -9,9 +9,9 @@ from os import getcwd
 from os.path import abspath
 
 def path(init, DisableabsPath=True):
-    with open(getcwd() + "/Claset/Configs/Paths.json") as config: 
+    with open(getcwd() + "/Claset/Configs/Paths.json") as config:
         Config = load(config)["Prefixs"]
-    
+
     ConfigKeys = Config.keys()
 
     while "$" in init:
@@ -26,3 +26,4 @@ def path(init, DisableabsPath=True):
         init = abspath(init)
 
     return(init)
+

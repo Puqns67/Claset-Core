@@ -1,7 +1,7 @@
 #VERSION=0
 #
 #Claset/Game/Download.py
-#将现成的版本JSON解析并提供下载功能
+#下载游戏
 #
 
 
@@ -61,10 +61,10 @@ def downloadgame(iverison, saveame):
         if MCVML["versions"][i]["id"] == iverison:
             pversion = MCVML["versions"][i]
             break
-    
+
     if not Config["Settings"]["DownloadServer"] == "Vanilla":
         pversion["url"] = urlreplace(pversion["url"], "launchermeta", Config, DConfig)
-    
+
     seq = CachePath + DConfig["DownloadCachePath"]["MCVersion"]
 
     #thread1 = threading.Thread(target=urldownload, args=(pversion["url"], seq, ))
@@ -73,7 +73,7 @@ def downloadgame(iverison, saveame):
 
     if CPML.Tools.dfcheck("file", seqq) == False:
         urldownload(pversion["url"], seq, name)
-    
+
     List = CPML.Tools.loadjson(seqq, "MCV")
 
     for i in range(len(List)):
@@ -85,7 +85,7 @@ def downloadgame(iverison, saveame):
             seq["Url"] =  DConfig["MinecraftServers"][Config["Settings"]["DownloadServer"]]["Libraries"] + "/" + List[i]["Path"]
             seq["Size"] = List[i]["Size"]
             seqq = "/" + seqq
-            seqq = List[i]["Path"].replace(seqq, "") 
+            seqq = List[i]["Path"].replace(seqq, "")
             seq["Path"] = os.getcwd() + Config["Settings"]["DefaultPath"]["Libraries"] + "/" + seqq
             DownloadQ.put(seq)
         elif List[i]["Type"] == "assetIndex":
@@ -101,6 +101,6 @@ def downloadgame(iverison, saveame):
 
     print(DownloadQ.queue)
     print("UsedTime:", time.time() - startime)
-    
+
 
 """

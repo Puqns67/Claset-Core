@@ -7,12 +7,13 @@
 from json import dumps
 from Claset.Base.Path import path as pathmd
 
-def savefile(path, filecontent ,filetype="json", filename=None):
+def savefile(path, filecontent, filetype="json", filename=None):
 
     if not filename == None:
         path += filename
 
-    path = pathmd(path)
+    if "$" in path:
+        path = pathmd(path)
 
     if filetype == "json":
         with open(path, mode="w+") as thefile:
@@ -29,4 +30,4 @@ def savefile(path, filecontent ,filetype="json", filename=None):
     elif filetype == "txt":
         with open(path, mode="w+") as thefile:
             thefile.write(filecontent)
-    
+

@@ -1,13 +1,35 @@
-#VERSION=1
+#VERSION=0
 #
 #Claset\Game\Loadjson.py
 #用于解析游戏Json
 #
 
-import json
+from Claset.Base.Path import path as pathmd
+from Claset.Base.AdvancedPath import path as apathmd
+from Claset.Base.Loadfile import loadfile
 
-from Claset.Base.Path import path
+    
+def AssetsIndex(path):
+    initfile = loadfile(path, "json")
+    objects = initfile["objects"]
+    output = list()
 
+    for i in objects:
+        output.append({
+            "FileName": objects[i]["hash"],
+            "URL": "$Assets\\" + objects[i]["hash"][:2] + "\\" + objects[i]["hash"],
+            "Size": objects[i]["size"],
+            "OutputPath": "$ASSETS\\objects\\" + objects[i]["hash"][:2], 
+            "Overwrite": False
+        })
+    
+    return(output)
+
+
+def Version():
+    pass
+
+"""
 def loadjson(jsonpath, filetype=None):
     if "$" in jsonpath:
         jsonpath = path(jsonpath)
@@ -51,3 +73,4 @@ def loadjson(jsonpath, filetype=None):
         output = []
         for i in range(len(MCAIL)):
             pass
+"""

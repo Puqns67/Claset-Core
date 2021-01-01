@@ -2,3 +2,5 @@ Cache/
 __pycache__/
 .git/
 .history/
+.minecraft/
+out/

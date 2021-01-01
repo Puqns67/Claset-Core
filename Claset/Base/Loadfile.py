@@ -23,4 +23,4 @@ def loadfile(path, filetype=None):
     elif filetype == None:
         with open(path) as openedfile:
             return(openedfile)
-            
+

@@ -10,7 +10,9 @@ from Claset.Update.Ignorefile import ignorefile
 from Claset.Base.Path import path as pathmd
 
 def listfile(path="$PREFIX", Replace=False):
-    path = pathmd(path)
+    if "$" in path:
+        path = pathmd(path)
+
     something = {"Dirs": [path], "Files": []}
     ignores = ignorefile()
     output = []
@@ -29,7 +31,7 @@ def listfile(path="$PREFIX", Replace=False):
             for ignore in ignores:
                 if ignore in item:
                     seq += "-"
-                    
+
             if "-" in seq:
                 continue
 
@@ -40,15 +42,15 @@ def listfile(path="$PREFIX", Replace=False):
 
         for item in newDirs:
             something["Dirs"].append(item)
+
         while newFiles:
             something["Files"].append(newFiles.pop())
-    print(something)
 
-    if Replace:
+    if Replace == True:
         for i in something["Files"]:
             i = i.replace(path, "")
             output.append(i)
-    else:
+    elif Replace == False:
         for i in something["Files"]:
             i = i.replace(os.getcwd(), "")
             output.append(i)

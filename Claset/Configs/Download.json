@@ -1,9 +1,9 @@
 {
-    "MaxThread": 32,
-    "ServiceSleepTime": 1,
+    "MaxThread": 8,
+    "ServiceSleepTime": 0.1,
     "ServiceAutoStop": 600,
-    "ReadFileNameReString": "[a-zA-Z0-9_.-]$",
+    "ReadFileNameReString": "([a-zA-Z0-9_.-]*)$",
     "Headers": {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36"
+        "User-Agent": "ClasetDownloadModle/0.1.0"
     }
 }
