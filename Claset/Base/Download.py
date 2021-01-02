@@ -46,6 +46,7 @@ class downloadmanager():
         del(self.DownloadService)
         del(self.DownloadServiceStatus)
         del(self.DownloadStatus)
+        del(self.AdvancedPath)
         self.__init__(DoType)
 
 
@@ -81,6 +82,7 @@ class downloadmanager():
         try:
             with urllib.request.urlopen(Request) as Response:
                 Length = int(Response.getheader('content-length'))
+                BlockSize = 0
 
                 if Length:
                     self.ThreadINFOs[ThreadID]["Length"] = Length
