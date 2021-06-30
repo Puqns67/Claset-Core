@@ -2,5 +2,6 @@
     "VersionSeparation": false,
     "Memory": 2048,
     "CheckUpdate": true,
-    "DownloadServer": "BMCLAPI"
+    "DownloadServer": "BMCLAPI",
+    "Debug": true
 }

@@ -1,15 +1,13 @@
-#VERSION=0
+#VERSION=1
 #
 #Claset\Game\Loadjson.py
 #用于解析游戏Json
 #
 
-from Claset.Base.Path import path as pathmd
-from Claset.Base.AdvancedPath import path as apathmd
 from Claset.Base.Loadfile import loadfile
 
     
-def AssetsIndex(path):
+def AssetsIndex(path) -> list:
     initfile = loadfile(path, "json")
     objects = initfile["objects"]
     output = list()
@@ -17,10 +15,11 @@ def AssetsIndex(path):
     for i in objects:
         output.append({
             "FileName": objects[i]["hash"],
-            "URL": "$Assets\\" + objects[i]["hash"][:2] + "\\" + objects[i]["hash"],
+            "URL": "$Assets/" + objects[i]["hash"][:2] + "/" + objects[i]["hash"],
             "Size": objects[i]["size"],
-            "OutputPath": "$ASSETS\\objects\\" + objects[i]["hash"][:2], 
-            "Overwrite": False
+            "OutputPath": "$ASSETS/objects/" + objects[i]["hash"][:2], 
+            "Overwrite": False,
+            "Retry": 3
         })
     
     return(output)

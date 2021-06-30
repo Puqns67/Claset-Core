@@ -1,4 +1,4 @@
-#VERSION=2
+#VERSION=3
 #
 #Claset/Base/Savefile.py
 #保存文件
@@ -7,7 +7,7 @@
 from json import dumps
 from Claset.Base.Path import path as pathmd
 
-def savefile(path, filecontent, filetype="json", filename=None):
+def savefile(path, filecontent, filetype="json", filename=None) -> None:
 
     if not filename == None:
         path += filename

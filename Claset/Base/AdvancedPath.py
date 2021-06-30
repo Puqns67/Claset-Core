@@ -1,4 +1,4 @@
-#VERSION=3
+#VERSION=4
 #
 #Claset/Base/AdvancedPath.py
 #高级地址转换, 也许也可以用来转配置文件？
@@ -77,21 +77,21 @@ class path():
             loaded = self.load_other_str(i)
             for ii in loaded.keys():
                 self.CompleteConfigs[ii] = loaded[ii]
-        
+
         CompleteConfigsList = sorted(self.CompleteConfigs, reverse=True)
         CompleteConfigs = dict()
         for i in CompleteConfigsList:
             CompleteConfigs[i] = self.CompleteConfigs[i]
-        
+
         self.CompleteConfigs = CompleteConfigs
 
 
-    def path(self, init, Others=False, DisableabsPath=True):
+    def path(self, init, Others=False, DisableabsPath=True) -> str:
         #如果启用了Others且未载过Others则通过getFromOthersKeys取得额外的Key
         if Others == True:
             if self.OthersType == False:
                 self.getFromOthersKeys()
-        
+
         if DisableabsPath == False:
             if self.DisableabsPath == True:
                 self.DisableabsPath = False
@@ -107,7 +107,6 @@ class path():
 
         if self.DisableabsPath == False:
             init = abspath(init)
-
         return(init)
 
     #

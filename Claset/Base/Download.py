@@ -1,10 +1,10 @@
-#VERSION=8
+#VERSION=10
 #
 #Claset/Base/Download.py
 #通过url下载数据
 #
 
-import urllib.request, threading, re
+import requests, threading, re
 
 from queue import Queue
 from time import time, sleep
@@ -17,13 +17,9 @@ from Claset.Base.Loadfile import loadfile
 from Claset.Base.DFCheck import dfcheck
 from Claset.Base.AdvancedPath import path as apathmd
 
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
 
 class downloadmanager():
     def __init__(self, DoType=None):
-        #self.DownloadServiceStatus
-        #self.DownloadStatus
         self.Configs = loadfile("$EXEC/Configs/Download.json", "json")
         self.ReCompile = re.compile(self.Configs["ReadFileNameReString"])
         self.JobQueue = Queue(maxsize=0)
@@ -31,7 +27,7 @@ class downloadmanager():
         self.DownloadServiceStatus = False
         self.Threads = []
         self.ThreadINFOs = []
-        self.Projects = {}
+        self.Projects = {"0": {"CompletedProject": 0, "AllProject": 0}}
         self.AdvancedPath = apathmd(Others=True)
         self.DownloadService = ""
 
@@ -52,20 +48,29 @@ class downloadmanager():
 
     #简易下载器
     def download(
-        self, ThreadID, URL=None, OutputPath="$PREFIX", 
-        FileName=None, Size=None, ProjectID=None, Retry=0, 
-        Overwrite=True
+        self, ThreadID, URL=None, OutputPath="$PREFIX",
+        FileName=None, Size=None, ProjectID=None, Retry=0,
+        Overwrite=True, Timeout=None
         ):
-        if URL == None:
-            raise KeyError("DontHaveURL")
+        #ThreadID: 线程id
+        #URL: 链接地址
+        #OutputPath: 输出位置
+        #FileName: 文件名
+        #Size: 文件大小(字节)
+        #ProjectID: 任务id
+        #Retry: 重试次数
+        #Overwrite: 覆盖已有的文件
+        #Timeout: 传输超时
 
-        if "$" in URL:
-            URL = self.AdvancedPath.path(URL)
+        if URL == None: raise KeyError("not have URL")
+        if "$" in URL: URL = self.AdvancedPath.path(URL)
+        if Timeout == None: Timeout = self.Configs["Timeout"]
+        if Retry < 0: self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=0)
+        self.ThreadINFOs[ThreadID]["Jobbase"]["Retry"] -= 1
 
         OutputPath = pathmd(OutputPath)
 
-        if FileName == None:
-            FileName = self.ReCompile.search(URL).group(1)
+        if FileName == None: FileName = self.ReCompile.search(URL).group(1)
 
         OutputPaths = OutputPath + "\\" + FileName
 
@@ -75,48 +80,31 @@ class downloadmanager():
                     self.Project_addJob(ProjectID, CompleledProject=1)
                 return("FileExist")
 
-        Request = urllib.request.Request(URL, headers=self.Configs['Headers'])
+        RSession = requests.Session()
+        RSession.headers = self.Configs['Headers']
         File = BytesIO()
-        NowSize = 0
-
         try:
-            with urllib.request.urlopen(Request) as Response:
-                Length = int(Response.getheader('content-length'))
-                BlockSize = 0
-
-                if Length:
-                    self.ThreadINFOs[ThreadID]["Length"] = Length
-                    if BlockSize <= 100:
-                        BlockSize = Length
-                    else:
-                        BlockSize = int(Length / 50)
-                else:
-                    BlockSize = 99999999999
-
-                while True:
-                    OneWhile = Response.read(BlockSize)
-
-                    if not OneWhile:
-                        break
-
-                    File.write(OneWhile)
-                    NowSize += len(OneWhile)
-                    self.ThreadINFOs[ThreadID]["DownloadedSize"] = NowSize
-
-        except urllib.error.HTTPError:
+            Request = RSession.get(URL, timeout=Timeout)
+            StatusCode = str(Request.status_code)
+            if StatusCode[0] in ["4", "5"]: Request.raise_for_status()
+            File.write(Request.content)
+        except (
+            requests.exceptions.ProxyError,
+            requests.exceptions.HTTPError,
+            requests.exceptions.SSLError,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout
+        ):
             self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=ProjectID)
 
-        else:
-            if Size != None:
-                if NowSize != Size:
-                    self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=ProjectID)
-                    print(NowSize, Size)
-                
-            dfcheck("dm", OutputPath)
-            savefile(OutputPaths, File.getbuffer(), filetype="bytes")
+        if Size != None:
+            if len(File.getbuffer()) != Size:
+                self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=ProjectID)
 
-            if ProjectID != None:
-                self.Project_addJob(ProjectID, CompleledProject=1)
+        dfcheck("dm", OutputPath)
+        savefile(OutputPaths, File.getbuffer(), filetype="bytes")
+
+        if ProjectID != None: self.Project_addJob(ProjectID, CompleledProject=1)
 
 
     #下载服务
@@ -144,26 +132,22 @@ class downloadmanager():
                     self.Threads[int(ThreadID)] = athread
                     self.Threads[int(ThreadID)].start()
 
-                if self.DownloadStatus == False:
-                    self.DownloadStatus = True
+                if self.DownloadStatus == False: self.DownloadStatus = True
 
                 self.ServiceStartTime = int(time())
 
             self.Service_StartAllNotActivatedThread()
 
-            if self.Service_CheckAllThreadStopped():
-                self.ServiceStartTime = int(time())
+            if self.Service_CheckAllThreadStopped(): self.ServiceStartTime = int(time())
 
             if self.DownloadServiceStatus == False:
-                if self.Service_CheckAllThreadStopped() == False:
-                    break
+                if self.Service_CheckAllThreadStopped() == False: break
 
-            if (self.ServiceStartTime + self.Configs["ServiceAutoStop"]) <= int(time()):
-                break
+            if (self.ServiceStartTime + self.Configs["ServiceAutoStop"]) <= int(time()): break
 
             sleep(self.Configs["ServiceSleepTime"])
 
-    def Service_ReturnFirstIdleThreadId(self):
+    def Service_ReturnFirstIdleThreadId(self) -> int:
         if len(self.Threads) < self.Configs["MaxThread"]:
             return("AppendNewThread")
         while True:
@@ -176,12 +160,10 @@ class downloadmanager():
     def Service_StartAllNotActivatedThread(self):
         for i in range(len(self.Threads)):
             if self.Threads[i].is_alive() == False:
-                try:
-                    self.Threads[i].start()
-                except RuntimeError:
-                    pass
+                try: self.Threads[i].start()
+                except RuntimeError: pass
 
-    def Service_CheckAllThreadStopped(self):
+    def Service_CheckAllThreadStopped(self) -> bool:
         seq = ""
 
         for i in range(len(self.Threads)):
@@ -257,10 +239,10 @@ class downloadmanager():
 
 
     #建立Project
-    def Project_create(self, AllProject=0):
+    def Project_create(self, AllProject=0) -> int:
         while True:
             seqq = ""
-            intt = randint(0,999999999)
+            intt = randint(1,999999999)
             for i in self.Projects.keys():
                 if intt == i:
                     seqq += "-"
@@ -284,5 +266,4 @@ class downloadmanager():
             if self.Projects[ProjectID]["CompletedProject"] == self.Projects[ProjectID]["AllProject"]:
                 break
             sleep(self.Configs["ServiceSleepTime"])
-
 

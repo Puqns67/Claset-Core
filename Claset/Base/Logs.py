@@ -1,4 +1,4 @@
-#VERSION=0
+#VERSION=1
 #
 #Claset/Base/Logs.py
 #日志记录
@@ -9,5 +9,6 @@ from queue import Queue
 
 from Claset.Base.Savefile import savefile
 
-pass
+def gen_log():
+    pass
 

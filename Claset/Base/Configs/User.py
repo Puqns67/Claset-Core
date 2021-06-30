@@ -1,4 +1,4 @@
-#VERSION=1
+#VERSION=2
 #
 #Claset/Base/Configs/User.py
 #管理用户
@@ -7,7 +7,6 @@
 from base64 import b64encode, b64decode
 
 from Claset.Base.Loadfile import loadfile
-from Claset.Base.Path import path
 from Claset.Base.Savefile import savefile
 
 class user():
@@ -26,7 +25,7 @@ class user():
 
     #创建用户,返回修改后的Config["User"]
     def create(self, usertype, name, password=None):
-        
+
         if not self.userid(name) == "DontFindThisUser":
             if self.users[self.userid(name)]["Name"] == name:
                 return("UserNameRepeat")
@@ -39,7 +38,7 @@ class user():
             newuser["Default"] = True
         else:
             newuser["Default"] = False
-        
+
         if usertype == "Offline":
             newuser["Password"] = None
         else:
@@ -48,15 +47,15 @@ class user():
             newuser["Password"] = password
 
         self.users.append(newuser)
-    
-    
+
+
     #删除用户
     def remove(self, name):
         newconfig = self.users
 
         if self.userid(name) == "DontFindThisUser":
             return("DontHaveThisUserInConfig")#若无此账户则返回
-        
+
         #设置另一个default账户且删除要删除的账户
         if newconfig[self.userid(name)]["Default"] == True:
             newconfig.remove(newconfig[self.userid(name)])
@@ -64,7 +63,7 @@ class user():
                 newconfig[0]["Default"] = True
         else:
             newconfig.remove(newconfig[self.userid(name)])
-        
+
         self.users = newconfig
 
 

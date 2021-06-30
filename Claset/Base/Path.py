@@ -1,4 +1,4 @@
-#VERSION=4
+#VERSION=5
 #
 #Claset/Base/Path.py
 #地址转换
@@ -8,7 +8,7 @@ from json import load
 from os import getcwd
 from os.path import abspath
 
-def path(init, DisableabsPath=True):
+def path(init, DisableabsPath=True) -> str:
     with open(getcwd() + "/Claset/Configs/Paths.json") as config:
         Config = load(config)["Prefixs"]
 
