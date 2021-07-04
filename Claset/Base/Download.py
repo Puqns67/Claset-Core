@@ -1,21 +1,23 @@
-#VERSION=10
+#VERSION=11
 #
 #Claset/Base/Download.py
 #通过url下载数据
 #
 
-import requests, threading, re
+import re
+import threading
 
-from queue import Queue
-from time import time, sleep
 from io import BytesIO
+from queue import Queue
 from random import randint
+from time import sleep, time
 
-from Claset.Base.Savefile import savefile
-from Claset.Base.Path import path as pathmd
-from Claset.Base.Loadfile import loadfile
-from Claset.Base.DFCheck import dfcheck
+import requests
 from Claset.Base.AdvancedPath import path as apathmd
+from Claset.Base.DFCheck import dfcheck
+from Claset.Base.Loadfile import loadfile
+from Claset.Base.Path import path as pathmd
+from Claset.Base.Savefile import savefile
 
 
 class downloadmanager():
@@ -157,7 +159,7 @@ class downloadmanager():
                         return(i)
             sleep(self.Configs["ServiceSleepTime"])
 
-    def Service_StartAllNotActivatedThread(self):
+    def Service_StartAllNotActivatedThread(self) -> None:
         for i in range(len(self.Threads)):
             if self.Threads[i].is_alive() == False:
                 try: self.Threads[i].start()
@@ -182,7 +184,7 @@ class downloadmanager():
 
 
     #向jobqueue放入任务
-    def add(self, InputJob, autoStartService=True, ProjectID=None):
+    def add(self, InputJob, autoStartService=True, ProjectID=None) -> int:
         if ProjectID != None:
             pass
 
@@ -196,6 +198,10 @@ class downloadmanager():
                 Job = InputJob[i]
                 Job["ProjectID"] = ProjectID
                 self.JobQueue.put(Job)
+
+            if autoStartService:
+                self.StartService()
+
             return(ProjectID)
 
         elif type(InputJob) == type(dict()):
@@ -205,14 +211,17 @@ class downloadmanager():
                 self.Project_addJob(ProjectID, AllProject=1)
             InputJob["ProjectID"] = ProjectID
             self.JobQueue.put(InputJob)
+
+            if autoStartService:
+                self.StartService()
+
             return(ProjectID)
 
-        if autoStartService:
-            self.StartService()
+
 
 
     #启动服务
-    def StartService(self):
+    def StartService(self) -> None:
         if self.DownloadServiceStatus == False:
             try:
                 if self.DownloadService:
@@ -228,7 +237,7 @@ class downloadmanager():
 
 
     #停止服务
-    def StopService(self, join=False):
+    def StopService(self, join=False) -> None:
         if self.DownloadServiceStatus:
             self.DownloadServiceStatus = False
             if join:
@@ -252,7 +261,7 @@ class downloadmanager():
             return(intt)
 
 
-    def Project_addJob(self, ProjectID, AllProject=None, CompleledProject=None):
+    def Project_addJob(self, ProjectID, AllProject=None, CompleledProject=None) -> None:
         if AllProject != None:
             self.Projects[ProjectID]["AllProject"] += AllProject
 
@@ -261,7 +270,7 @@ class downloadmanager():
 
 
     #通过ProjectID阻塞线程
-    def Project_join(self, ProjectID):
+    def Project_join(self, ProjectID) -> None:
         while True:
             if self.Projects[ProjectID]["CompletedProject"] == self.Projects[ProjectID]["AllProject"]:
                 break

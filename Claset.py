@@ -6,7 +6,8 @@
 
 import Claset, time
 nowtime = time.time()
-dm = Claset.Base.Download.downloadmanager("Start")
+Logger = Claset.Base.Logs.Logs()
+dm = Claset.Base.Download.downloadmanager(DoType="Start", Logger=Logger)
 asstets = Claset.Game.Loadjson.AssetsIndex("$PREFIX\\1.16.json")
 ass = dm.add(asstets)
 while True:

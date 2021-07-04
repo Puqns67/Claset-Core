@@ -1,0 +1,9 @@
+{
+    "Format": {
+        "Perfix": "[{Name}]",
+        "Value": "{Value}",
+        "Time": "%Y/%m/%d-%H:%M:%S",
+        "FullLog": "[{Time}]{Perfixs}: {Value}."
+    },
+    "ProgressiveWrite": true
+}

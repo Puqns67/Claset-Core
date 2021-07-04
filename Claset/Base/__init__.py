@@ -1,4 +1,4 @@
-#VERSION=6
+#VERSION=7
 #
 #Claset/Base/__init.py
 #
@@ -9,4 +9,4 @@ from . import Savefile
 from . import Configs
 from . import Download
 from . import AdvancedPath
-
+from . import Logs
