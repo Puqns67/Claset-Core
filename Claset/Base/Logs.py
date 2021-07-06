@@ -1,4 +1,4 @@
-#VERSION=2
+#VERSION=3
 #
 #Claset/Base/Logs.py
 #日志记录
@@ -11,7 +11,7 @@ from Claset.Base.Path import path as pathmd
 
 
 class Logs():
-    def __init__(self, LogPath="$EXEC/Log.log", Configs=None):
+    def __init__(self, LogPath="$EXEC/Logs/Log.log", Configs=None):
         if Configs == None:
             self.Configs = loadfile("$EXEC/Configs/Logs.json", "json")
         else:
@@ -29,7 +29,10 @@ class Logs():
 
 
 
-    def GenLog(self, Perfixs=[], Value=".", SaveToFile=True):
+    def GenLog(self, Perfixs=[], Text=".", Type="INFO", SaveToFile=True) -> None:
+        if not (Type in self.Configs["Types"]): Type == "INFO"
+        if (Type == "DEBUG") and (self.Configs["Debug"] == False): return None
+
         Perfix = ""
 
         #Perfixs
@@ -37,13 +40,13 @@ class Logs():
             for Name in Perfixs:
                 Perfix += self.Configs["Format"]["Perfix"].replace(r"{Name}", str(Name))
         
-        #Value
-        Value.replace(r"{Value}", Value)
+        #Text
+        Text.replace(r"{Text}", Text)
 
         #Time
         Time = strftime(self.Configs["Format"]["Time"], localtime())
 
-        FullLog = self.Configs["Format"]["FullLog"].replace(r"{Time}", Time).replace(r"{Perfixs}", Perfix).replace(r"{Value}", Value) + "\n"
+        FullLog = self.Configs["Format"]["FullLog"].replace(r"{Time}", Time).replace(r"{Perfixs}", Perfix).replace(r"{Text}", Text) + "\n"
 
         if SaveToFile == True:
             if self.Configs["ProgressiveWrite"] == True:
@@ -53,3 +56,5 @@ class Logs():
                 self.LogFile.write(FullLog)
 
         print(FullLog, end="")
+
+        return None

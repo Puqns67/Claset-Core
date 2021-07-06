@@ -2,8 +2,14 @@
     "Format": {
         "Perfix": "[{Name}]",
         "Value": "{Value}",
-        "Time": "%Y/%m/%d-%H:%M:%S",
-        "FullLog": "[{Time}]{Perfixs}: {Value}."
+        "Time": "%Y/%m/%d_%H:%M:%S",
+        "FullLog": "[{Time}]{Perfixs}: {Text}."
     },
-    "ProgressiveWrite": true
+    "ProgressiveWrite": true,
+    "Debug": true,
+    "Types": [
+        "INFO",
+        "WARN",
+        "DEBUG"
+    ]
 }

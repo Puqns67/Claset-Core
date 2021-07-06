@@ -1,10 +1,10 @@
 {
     "MaxThread": 16,
     "ServiceSleepTime": 0.1,
-    "ServiceAutoStop": 600,
+    "ServiceAutoStop": 300,
     "ReadFileNameReString": "([a-zA-Z0-9_.-]*)$",
     "Headers": {
-        "user-agent": "Claset/0.1.0"
+        "user-agent": "Claset/0.1.1"
     },
     "Timeout": 60
 }

@@ -1,4 +1,4 @@
-#VERSION=11
+#VERSION=12
 #
 #Claset/Base/Download.py
 #通过url下载数据
@@ -21,7 +21,7 @@ from Claset.Base.Savefile import savefile
 
 
 class downloadmanager():
-    def __init__(self, DoType=None):
+    def __init__(self, DoType=None, Logger=None):
         self.Configs = loadfile("$EXEC/Configs/Download.json", "json")
         self.ReCompile = re.compile(self.Configs["ReadFileNameReString"])
         self.JobQueue = Queue(maxsize=0)
@@ -29,17 +29,23 @@ class downloadmanager():
         self.DownloadServiceStatus = False
         self.Threads = []
         self.ThreadINFOs = []
-        self.Projects = {"0": {"CompletedProject": 0, "AllProject": 0}}
+        self.Projects = {0: {"CompletedTasksCount": 0, "AllTasksCount": 0, "FailuredTasksCount": 0, "Tasks": []}}
         self.AdvancedPath = apathmd(Others=True)
         self.DownloadService = ""
 
         for i in range(self.Configs["MaxThread"]):
             self.ThreadINFOs.append({"ID": i})
 
+        if Logger != None:
+            self.Logger = Logger
+            self.LogHeader = ["Downloader"]
+        
         if DoType == "Start":
             self.StartService()
 
-    def reload(self, DoType=None):
+
+
+    def Reload(self, DoType=None):
         self.StopService(True)
         del(self.DownloadService)
         del(self.DownloadServiceStatus)
@@ -52,7 +58,7 @@ class downloadmanager():
     def download(
         self, ThreadID, URL=None, OutputPath="$PREFIX",
         FileName=None, Size=None, ProjectID=None, Retry=0,
-        Overwrite=True, Timeout=None
+        Overwrite=True, Timeout=None, OfficialURL=None
         ):
         #ThreadID: 线程id
         #URL: 链接地址
@@ -63,12 +69,27 @@ class downloadmanager():
         #Retry: 重试次数
         #Overwrite: 覆盖已有的文件
         #Timeout: 传输超时
+        #OfficialURL：官方URL(不适用)
+
+        if Timeout == None: Timeout = self.Configs["Timeout"]
+
+        if self.Logger != None:
+            ThreadIDStr = str(ThreadID)
+            if self.Configs["MaxThread"] >= 100:
+                if len(ThreadIDStr) == 1: ThreadIDStr = "00" + ThreadIDStr
+                elif len(ThreadIDStr) == 2: ThreadIDStr = "0" + ThreadIDStr
+            elif self.Configs["MaxThread"] >= 10:
+                if len(ThreadIDStr) == 1: ThreadIDStr = "0" + ThreadIDStr
+
+        if Retry < 0:
+            if self.Logger != None: 
+                self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" Retry count is max")
+            self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=0, SourceProjectID=ProjectID)
+            return("RetryFailure")
+        self.ThreadINFOs[ThreadID]["Jobbase"]["Retry"] -= 1
 
         if URL == None: raise KeyError("not have URL")
         if "$" in URL: URL = self.AdvancedPath.path(URL)
-        if Timeout == None: Timeout = self.Configs["Timeout"]
-        if Retry < 0: self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=0)
-        self.ThreadINFOs[ThreadID]["Jobbase"]["Retry"] -= 1
 
         OutputPath = pathmd(OutputPath)
 
@@ -79,7 +100,9 @@ class downloadmanager():
         if Overwrite == False:
             if dfcheck("f", OutputPaths) == True:
                 if ProjectID != None:
-                    self.Project_addJob(ProjectID, CompleledProject=1)
+                    self.Project_addJob(ProjectID, CompletedTasksCount=1)
+                if self.Logger != None: 
+                    self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" is Exist")
                 return("FileExist")
 
         RSession = requests.Session()
@@ -97,20 +120,33 @@ class downloadmanager():
             requests.exceptions.ConnectionError,
             requests.exceptions.ReadTimeout
         ):
+            if self.Logger != None: 
+                self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" Download failure, By ConnectionError, From \"" + URL + "\"", Type="WARN")
             self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=ProjectID)
+            return("DownloadFailure")
 
         if Size != None:
             if len(File.getbuffer()) != Size:
+                if self.Logger != None: 
+                    self.Logger.GenLog(
+                        Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], 
+                        Text="File \"" + FileName + "\" Download failure, By SizeError, From \"" + URL + "\", Buffer size " + str(len(File.getbuffer())), 
+                        Type="WARN")
                 self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=ProjectID)
+                self.Project_addJob(ProjectID, CompletedTasksCount=1)
+                return("SizeFailure")
 
         dfcheck("dm", OutputPath)
         savefile(OutputPaths, File.getbuffer(), filetype="bytes")
 
-        if ProjectID != None: self.Project_addJob(ProjectID, CompleledProject=1)
+        if self.Logger != None: self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" Downloaded", Type="DEBUG")
+        if ProjectID != None: self.Project_addJob(ProjectID, CompletedTasksCount=1)
 
 
     #下载服务
     def downloadservice(self):
+        if self.Logger != None: 
+            self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadService"], Text="Download Service Started.")
         self.ServiceStartTime = int(time())
         while True:
             while len(self.JobQueue.queue) != 0:
@@ -145,7 +181,10 @@ class downloadmanager():
             if self.DownloadServiceStatus == False:
                 if self.Service_CheckAllThreadStopped() == False: break
 
-            if (self.ServiceStartTime + self.Configs["ServiceAutoStop"]) <= int(time()): break
+            if (self.ServiceStartTime + self.Configs["ServiceAutoStop"]) <= int(time()):
+                if self.Logger != None: 
+                    self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadService"], Text="Download Service Auto Stopped.")
+                break
 
             sleep(self.Configs["ServiceSleepTime"])
 
@@ -184,40 +223,63 @@ class downloadmanager():
 
 
     #向jobqueue放入任务
-    def add(self, InputJob, autoStartService=True, ProjectID=None) -> int:
-        if ProjectID != None:
-            pass
-
+    def add(self, InputJob, autoStartService=True, ProjectID=None, FailuredTasksCount=1, SourceProjectID=None) -> int:
         if type(InputJob) == type(list()):
+            JobTotal = len(InputJob)
             if ProjectID == None:
-                ProjectID = self.Project_create(len(InputJob))
+                ProjectID = self.Project_create(JobTotal)
             else:
-                self.Project_addJob(ProjectID, len(InputJob))
+                self.Project_addJob(ProjectID, JobTotal)
 
-            for i in range(len(InputJob)):
+            for i in range(JobTotal):
                 Job = InputJob[i]
                 Job["ProjectID"] = ProjectID
                 self.JobQueue.put(Job)
 
-            if autoStartService:
+            if autoStartService == True:
                 self.StartService()
+
+            if self.Logger != None: 
+                self.Logger.GenLog(self.LogHeader + ["AddTask"], "Added " + str(JobTotal) + " tasks to Project " + str(ProjectID))
 
             return(ProjectID)
 
         elif type(InputJob) == type(dict()):
             if ProjectID == None:
                 ProjectID = self.Project_create(1)
+            elif ProjectID == 0:
+                self.Project_addJob(ProjectID, AllTasksCount=1, FailuredTasksCount=FailuredTasksCount, SourceProjectID=SourceProjectID)
             else:
-                self.Project_addJob(ProjectID, AllProject=1)
+                self.Project_addJob(ProjectID, AllTasksCount=1)
             InputJob["ProjectID"] = ProjectID
-            self.JobQueue.put(InputJob)
+            
+            if ProjectID != 0:
+                self.JobQueue.put(InputJob)
+            else:
+                self.Projects[0]["Tasks"].append(InputJob)
 
-            if autoStartService:
+            if autoStartService == True:
                 self.StartService()
+            
+            if self.Logger != None: 
+                self.Logger.GenLog(Perfixs=self.LogHeader + ["AddTask"], Text="Added 1 task to " + str(ProjectID))
 
             return(ProjectID)
 
 
+    #重试来自Project0的任务
+    def Retry(self) -> int:
+        if self.Logger != None: 
+            self.Logger.GenLog(Perfixs=self.LogHeader + ["Retry"], Text="Retry tasks from Project 0")
+        Tasks = []
+        for i in self.Projects[0]["Tasks"]:
+            del(i["ThreadID"])
+            i["Retry"] = 5
+            if i["OfficialURL"]:
+                i["URL"] = i["OfficialURL"]
+                del(i["OfficialURL"])
+            Tasks.append(i)
+        return(self.add(Tasks))
 
 
     #启动服务
@@ -248,31 +310,34 @@ class downloadmanager():
 
 
     #建立Project
-    def Project_create(self, AllProject=0) -> int:
+    def Project_create(self, AllTasksCount=0) -> int:
         while True:
-            seqq = ""
-            intt = randint(1,999999999)
-            for i in self.Projects.keys():
-                if intt == i:
-                    seqq += "-"
-            if "-" in seqq:
+            NewProjectID = randint(1,4096)
+            if NewProjectID in self.Projects.keys():
                 continue
-            self.Projects[intt] = {"CompletedProject": 0, "AllProject": AllProject}
-            return(intt)
+            self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0}
+            if self.Logger != None: 
+                self.Logger.GenLog(Perfixs=self.LogHeader + ["CreateProject"], Text="Created New Project " + str(NewProjectID))
+            return(NewProjectID)
 
 
-    def Project_addJob(self, ProjectID, AllProject=None, CompleledProject=None) -> None:
-        if AllProject != None:
-            self.Projects[ProjectID]["AllProject"] += AllProject
+    def Project_addJob(self, ProjectID, AllTasksCount=None, CompletedTasksCount=None, FailuredTasksCount=None, SourceProjectID=None) -> None:
+        if ProjectID == 0:
+            if (FailuredTasksCount == None) or (SourceProjectID == None): raise ValueError
+            self.Projects[SourceProjectID]["FailuredTasksCount"] += FailuredTasksCount
 
-        if CompleledProject != None:
-            self.Projects[ProjectID]["CompletedProject"] += CompleledProject
+        if AllTasksCount != None:
+            self.Projects[ProjectID]["AllTasksCount"] += AllTasksCount
+
+        if CompletedTasksCount != None:
+            self.Projects[ProjectID]["CompletedTasksCount"] += CompletedTasksCount
 
 
     #通过ProjectID阻塞线程
-    def Project_join(self, ProjectID) -> None:
+    def Project_join(self, ProjectID) -> int:
         while True:
-            if self.Projects[ProjectID]["CompletedProject"] == self.Projects[ProjectID]["AllProject"]:
+            if (self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["FailuredTasksCount"]) == self.Projects[ProjectID]["AllTasksCount"]:
                 break
             sleep(self.Configs["ServiceSleepTime"])
+        return(self.Projects[ProjectID]["FailuredTasksCount"])
 

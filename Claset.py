@@ -4,13 +4,10 @@
 #测试函数Claset
 #
 
-import Claset, time
-nowtime = time.time()
+import Claset
 Logger = Claset.Base.Logs.Logs()
 dm = Claset.Base.Download.downloadmanager(DoType="Start", Logger=Logger)
 asstets = Claset.Game.Loadjson.AssetsIndex("$PREFIX\\1.16.json")
 ass = dm.add(asstets)
-while True:
-    time.sleep(1)
-    print(dm.Threads)
-    print(dm.Projects)
+if dm.Project_join(ass) != 0:
+    dm.Project_join(dm.Retry())
