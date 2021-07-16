@@ -3,7 +3,7 @@
         "Perfix": "[{Name}]",
         "Value": "{Value}",
         "Time": "%Y/%m/%d_%H:%M:%S",
-        "FullLog": "[{Time}]{Perfixs}: {Text}."
+        "FullLog": "[{Time}]{{Type}}{Perfixs}: {Text}."
     },
     "ProgressiveWrite": true,
     "Debug": true,

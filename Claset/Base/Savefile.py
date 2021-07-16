@@ -1,11 +1,13 @@
-#VERSION=3
+#VERSION=4
 #
 #Claset/Base/Savefile.py
 #保存文件
 #
 
 from json import dumps
-from Claset.Base.Path import path as pathmd
+
+from . import Path
+
 
 def savefile(path, filecontent, filetype="json", filename=None) -> None:
 
@@ -13,7 +15,7 @@ def savefile(path, filecontent, filetype="json", filename=None) -> None:
         path += filename
 
     if "$" in path:
-        path = pathmd(path)
+        path = Path.path(path)
 
     if filetype == "json":
         with open(path, mode="w+") as thefile:

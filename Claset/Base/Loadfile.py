@@ -1,4 +1,4 @@
-#VERSION=2
+#VERSION=3
 #
 #Claset/Base/Loadfile.py
 #读取文件
@@ -6,11 +6,11 @@
 
 from json import load
 
-from Claset.Base.Path import path as pathmd
+from . import Path
 
 def loadfile(path, filetype=None):
     if "$" in path:
-        path = pathmd(path)
+        path = Path.path(path)
 
     if filetype == "json":
         with open(path) as openedfile:

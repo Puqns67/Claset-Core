@@ -1,4 +1,4 @@
-#VERSION=4
+#VERSION=5
 #
 #Claset/Base/AdvancedPath.py
 #高级地址转换, 也许也可以用来转配置文件？
@@ -8,40 +8,38 @@ from re import compile as recompile
 from os import getcwd
 from os.path import abspath
 
-from Claset.Base.Path import path as pathmd
-from Claset.Base.Loadfile import loadfile
+from . import Path
+from . import Loadfile
 
-class rekeys():
-    def __init__(self):
-        self.SearchFile = recompile(r"&F<(.+)>.+")
-        self.SearchVariable = recompile(r".+&V<(.+)>.*")
 
 class path():
-    def __init__(self, init=None, Others=False, DisableabsPath=True):
-        self.Configs = loadfile("$EXEC/Configs/Paths.json", "json")
+    class rekeys():
+        def __init__(self):
+            self.SearchFile = recompile(r"&F<(.+)>.+")
+            self.SearchVariable = recompile(r".+&V<(.+)>.*")
+
+    def __init__(self, Others=False, OtherTypes=[], DisableabsPath=True):
+        self.Configs = Loadfile.loadfile("$EXEC/Configs/Paths.json", "json")
         self.OthersType = Others
         self.DisableabsPath = DisableabsPath
         self.ReSearch = None
         self.CompleteConfigs = self.Configs["Prefixs"]
 
         if self.OthersType == True:
-            self.ReSearch = rekeys()
-            self.getFromOthersKeys()
-
-        if init != None:
-            pathmd(init)
+            self.ReSearch = self.rekeys()
+            self.getFromOthersKeys(OtherTypes)
 
 
     def load_other_str(self, Objects, ID=0):
         if self.ReSearch == None:#如不存在已加载的ReSearch就加载他
-            self.ReSearch = rekeys()
+            self.ReSearch = self.rekeys()
 
         FindFile = self.ReSearch.SearchFile.match(Objects[ID])
 
         if FindFile == None:
             return(Objects[ID])
         else:
-            File = loadfile(FindFile.group(1), "json")
+            File = Loadfile.loadfile(FindFile.group(1), "json")
             Variables = []
             OVariables = []
 
@@ -72,8 +70,13 @@ class path():
             return(File)
 
 
-    def getFromOthersKeys(self):
-        for i in self.Configs["Others"]:#顺序获取之后再放入Perfixs
+    def getFromOthersKeys(self, OtherTypes):
+        if len(OtherTypes) == 0:
+            OthersKeys = self.Configs["Others"]
+        else:
+            OthersKeys = self.Configs["Others"] + OtherTypes
+
+        for i in OthersKeys:#顺序获取之后再放入Perfixs
             loaded = self.load_other_str(i)
             for ii in loaded.keys():
                 self.CompleteConfigs[ii] = loaded[ii]

@@ -11,13 +11,5 @@
         "MCAssetIndex": "$CACHE/MCAssetIndex",
         "MCVersionManifest": "$CACHE"
     },
-    "Others": [
-        [
-            "&F<$EXEC/Configs/GameDownloadMirrors.json>&V<1>",
-            "&F<$EXEC/Configs/Settings.json>&V<DownloadServer>"
-        ],
-        [
-            "&F<$EXEC/Configs/GameDownloadMirrors.json>&V<Official>"
-        ]
-    ]
+    "Others": []
 }

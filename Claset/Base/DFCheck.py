@@ -1,4 +1,4 @@
-#VERSION=5
+#VERSION=6
 #
 #Claset/Base/DFCheck.py
 #检测文件夹/文件是否存在和体积是否正常
@@ -15,12 +15,12 @@ from os import makedirs
 from os.path import exists, getsize
 from re import search
 
-from Claset.Base.Path import path as pathmd
+from . import Path
 
 
 def dfcheck(checktype, path, size=None) -> bool:
     if "$" in path:
-        path = pathmd(path)
+        path = Path.path(path)
 
     if "s" in checktype:
         if "f" in checktype:

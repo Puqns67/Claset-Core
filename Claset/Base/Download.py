@@ -1,4 +1,4 @@
-#VERSION=12
+#VERSION=13
 #
 #Claset/Base/Download.py
 #通过url下载数据
@@ -13,16 +13,16 @@ from random import randint
 from time import sleep, time
 
 import requests
-from Claset.Base.AdvancedPath import path as apathmd
-from Claset.Base.DFCheck import dfcheck
-from Claset.Base.Loadfile import loadfile
-from Claset.Base.Path import path as pathmd
-from Claset.Base.Savefile import savefile
+from . import AdvancedPath
+from . import DFCheck
+from . import Loadfile
+from . import Path
+from . import Savefile
 
 
 class downloadmanager():
     def __init__(self, DoType=None, Logger=None):
-        self.Configs = loadfile("$EXEC/Configs/Download.json", "json")
+        self.Configs = Loadfile.loadfile("$EXEC/Configs/Download.json", "json")
         self.ReCompile = re.compile(self.Configs["ReadFileNameReString"])
         self.JobQueue = Queue(maxsize=0)
         self.DownloadStatus = False
@@ -30,7 +30,7 @@ class downloadmanager():
         self.Threads = []
         self.ThreadINFOs = []
         self.Projects = {0: {"CompletedTasksCount": 0, "AllTasksCount": 0, "FailuredTasksCount": 0, "Tasks": []}}
-        self.AdvancedPath = apathmd(Others=True)
+        self.AdvancedPath = AdvancedPath.path(Others=True, OtherTypes=[["&F<$EXEC/Configs/GameDownloadMirrors.json>&V<1>", "&F<$EXEC/Configs/Settings.json>&V<DownloadServer>"], ["&F<$EXEC/Configs/GameDownloadMirrors.json>&V<Official>"]])
         self.DownloadService = ""
 
         for i in range(self.Configs["MaxThread"]):
@@ -90,19 +90,17 @@ class downloadmanager():
 
         if URL == None: raise KeyError("not have URL")
         if "$" in URL: URL = self.AdvancedPath.path(URL)
-
-        OutputPath = pathmd(OutputPath)
-
+        if "$" in OutputPath: OutputPath = Path.path(OutputPath)
         if FileName == None: FileName = self.ReCompile.search(URL).group(1)
 
         OutputPaths = OutputPath + "\\" + FileName
 
         if Overwrite == False:
-            if dfcheck("f", OutputPaths) == True:
+            if DFCheck.dfcheck("f", OutputPaths) == True:
                 if ProjectID != None:
                     self.Project_addJob(ProjectID, CompletedTasksCount=1)
                 if self.Logger != None: 
-                    self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" is Exist")
+                    self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" is Exist, Skipping.")
                 return("FileExist")
 
         RSession = requests.Session()
@@ -136,11 +134,12 @@ class downloadmanager():
                 self.Project_addJob(ProjectID, CompletedTasksCount=1)
                 return("SizeFailure")
 
-        dfcheck("dm", OutputPath)
-        savefile(OutputPaths, File.getbuffer(), filetype="bytes")
+        DFCheck.dfcheck("dm", OutputPath)
+        Savefile.savefile(OutputPaths, File.getbuffer(), filetype="bytes")
 
         if self.Logger != None: self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" Downloaded", Type="DEBUG")
         if ProjectID != None: self.Project_addJob(ProjectID, CompletedTasksCount=1)
+        return("Done")
 
 
     #下载服务
@@ -279,6 +278,7 @@ class downloadmanager():
                 i["URL"] = i["OfficialURL"]
                 del(i["OfficialURL"])
             Tasks.append(i)
+        self.Projects[0]["Tasks"] = []
         return(self.add(Tasks))
 
 

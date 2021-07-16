@@ -6,19 +6,19 @@
 
 from time import localtime, strftime
 
-from Claset.Base.Loadfile import loadfile
-from Claset.Base.Path import path as pathmd
+from . import Loadfile
+from . import Path
 
 
 class Logs():
     def __init__(self, LogPath="$EXEC/Logs/Log.log", Configs=None):
         if Configs == None:
-            self.Configs = loadfile("$EXEC/Configs/Logs.json", "json")
+            self.Configs = Loadfile.loadfile("$EXEC/Configs/Logs.json", "json")
         else:
             self.Configs = Configs
 
         if "$" in LogPath:
-            LogPath = pathmd(LogPath)
+            LogPath = Path.path(LogPath)
 
         if self.Configs["ProgressiveWrite"] == True:
             self.LogPath = LogPath
@@ -46,7 +46,7 @@ class Logs():
         #Time
         Time = strftime(self.Configs["Format"]["Time"], localtime())
 
-        FullLog = self.Configs["Format"]["FullLog"].replace(r"{Time}", Time).replace(r"{Perfixs}", Perfix).replace(r"{Text}", Text) + "\n"
+        FullLog = self.Configs["Format"]["FullLog"].replace(r"{Time}", Time).replace(r"{Type}", Type).replace(r"{Perfixs}", Perfix).replace(r"{Text}", Text) + "\n"
 
         if SaveToFile == True:
             if self.Configs["ProgressiveWrite"] == True:
