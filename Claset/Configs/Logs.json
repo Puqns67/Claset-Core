@@ -10,6 +10,7 @@
     "Types": [
         "INFO",
         "WARN",
-        "DEBUG"
+        "DEBUG",
+        "ERROR"
     ]
 }

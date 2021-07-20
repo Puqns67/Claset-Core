@@ -1,4 +1,4 @@
-#VERSION=13
+#VERSION=15
 #
 #Claset/Base/Download.py
 #通过url下载数据
@@ -83,7 +83,7 @@ class downloadmanager():
 
         if Retry < 0:
             if self.Logger != None: 
-                self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" Retry count is max")
+                self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" Retry count is max", Type="ERROR")
             self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=0, SourceProjectID=ProjectID)
             return("RetryFailure")
         self.ThreadINFOs[ThreadID]["Jobbase"]["Retry"] -= 1
@@ -121,6 +121,7 @@ class downloadmanager():
             if self.Logger != None: 
                 self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" Download failure, By ConnectionError, From \"" + URL + "\"", Type="WARN")
             self.add(self.ThreadINFOs[ThreadID]["Jobbase"], ProjectID=ProjectID)
+            self.Project_addJob(ProjectID, CompletedTasksCount=1)
             return("DownloadFailure")
 
         if Size != None:
@@ -178,7 +179,10 @@ class downloadmanager():
             if self.Service_CheckAllThreadStopped(): self.ServiceStartTime = int(time())
 
             if self.DownloadServiceStatus == False:
-                if self.Service_CheckAllThreadStopped() == False: break
+                if self.Service_CheckAllThreadStopped() == False:
+                    if self.Logger != None: 
+                        self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadService"], Text="Download Service Stopped, All Thread Stopped.")
+                    break
 
             if (self.ServiceStartTime + self.Configs["ServiceAutoStop"]) <= int(time()):
                 if self.Logger != None: 
@@ -302,7 +306,7 @@ class downloadmanager():
     def StopService(self, join=False) -> None:
         if self.DownloadServiceStatus:
             self.DownloadServiceStatus = False
-            if join:
+            if join == False:
                 while True:
                     if self.DownloadService.is_alive() == False:
                         break
