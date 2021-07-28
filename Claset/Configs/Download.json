@@ -4,7 +4,7 @@
     "ServiceAutoStop": 300,
     "ReadFileNameReString": "([a-zA-Z0-9_.-]*)$",
     "Headers": {
-        "user-agent": "Claset/0.1.1"
+        "user-agent": "Claset/0.1.2"
     },
-    "Timeout": 60
+    "Timeout": 15
 }

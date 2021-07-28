@@ -1,7 +1,8 @@
-#VERSION=15
+#VERSION=16
 #
 #Claset/Base/Download.py
 #通过url下载数据
+#即将弃用
 #
 
 import re
@@ -33,16 +34,21 @@ class downloadmanager():
         self.AdvancedPath = AdvancedPath.path(Others=True, OtherTypes=[["&F<$EXEC/Configs/GameDownloadMirrors.json>&V<1>", "&F<$EXEC/Configs/Settings.json>&V<DownloadServer>"], ["&F<$EXEC/Configs/GameDownloadMirrors.json>&V<Official>"]])
         self.DownloadService = ""
 
+        #全局Session
+        self.RequestsSession = requests.Session()
+        self.RequestsSession.headers = self.Configs['Headers']
+        
+        #创建空ThreadINFOs
         for i in range(self.Configs["MaxThread"]):
             self.ThreadINFOs.append({"ID": i})
 
+        #定义全局Logger
         if Logger != None:
             self.Logger = Logger
             self.LogHeader = ["Downloader"]
         
         if DoType == "Start":
             self.StartService()
-
 
 
     def Reload(self, DoType=None):
@@ -58,7 +64,7 @@ class downloadmanager():
     def download(
         self, ThreadID, URL=None, OutputPath="$PREFIX",
         FileName=None, Size=None, ProjectID=None, Retry=0,
-        Overwrite=True, Timeout=None, OfficialURL=None
+        Overwrite=True, Timeout=None, OfficialURL=None, Session=None
         ):
         #ThreadID: 线程id
         #URL: 链接地址
@@ -70,6 +76,7 @@ class downloadmanager():
         #Overwrite: 覆盖已有的文件
         #Timeout: 传输超时
         #OfficialURL：官方URL(不适用)
+        #Session: 全局Session
 
         if Timeout == None: Timeout = self.Configs["Timeout"]
 
@@ -103,11 +110,12 @@ class downloadmanager():
                     self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadThread", ThreadIDStr], Text="File \"" + FileName + "\" is Exist, Skipping.")
                 return("FileExist")
 
-        RSession = requests.Session()
-        RSession.headers = self.Configs['Headers']
+        if Session == None:
+            Session = requests.Session()
+            Session.headers = self.Configs['Headers']
         File = BytesIO()
         try:
-            Request = RSession.get(URL, timeout=Timeout)
+            Request = Session.get(URL, timeout=Timeout)
             StatusCode = str(Request.status_code)
             if StatusCode[0] in ["4", "5"]: Request.raise_for_status()
             File.write(Request.content)
@@ -158,6 +166,7 @@ class downloadmanager():
 
                     self.ThreadINFOs[ThreadID]["Jobbase"] = Job
                     Job["ThreadID"] = ThreadID
+                    Job["Session"] = self.RequestsSession
                     ThreadID = str(ThreadID)
                     athread = threading.Thread(target=self.download, kwargs=Job, name=f"DownloadThread{ThreadID}", daemon=True)
                     self.Threads.append(athread)
