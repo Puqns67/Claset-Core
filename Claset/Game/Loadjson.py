@@ -20,7 +20,8 @@ def AssetsIndex(path) -> list:
             "OutputPath": "$ASSETS/objects/" + objects[i]["hash"][:2], 
             "Overwrite": False,
             "Retry": 3,
-            "OfficialURL": "$OfficialAssets/" + objects[i]["hash"][:2] + "/" + objects[i]["hash"]
+            "OtherURL": "$OfficialAssets/" + objects[i]["hash"][:2] + "/" + objects[i]["hash"],
+            "Sha1": objects[i]["hash"]
         })
     
     return(output)

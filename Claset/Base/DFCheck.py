@@ -10,7 +10,6 @@
 #m：在d存在的时候创建文件夹,在检查文件不存在且文件夹没满足时创建文件夹
 #s：在d不存在的时候检测文件大小
 
-
 from os import makedirs
 from os.path import exists, getsize
 from re import search

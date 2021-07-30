@@ -1,5 +1,5 @@
 {
-    "MaxThread": 16,
+    "MaxThread": 32,
     "ServiceSleepTime": 0.1,
     "ServiceAutoStop": 300,
     "ReadFileNameReString": "([a-zA-Z0-9_.-]*)$",

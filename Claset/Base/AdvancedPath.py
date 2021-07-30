@@ -4,12 +4,11 @@
 #高级地址转换, 也许也可以用来转配置文件？
 #
 
-from re import compile as recompile
 from os import getcwd
 from os.path import abspath
+from re import compile as recompile
 
-from . import Path
-from . import Loadfile
+from . import Loadfile, Path
 
 
 class path():

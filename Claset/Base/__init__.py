@@ -1,6 +1,6 @@
-#VERSION=8
+#VERSION=9
 #
-#Claset/Base/__init.py
+#Claset/Base/__init__.py
 #
 
 from . import Path
@@ -8,6 +8,5 @@ from . import Loadfile
 from . import Savefile
 from . import Configs
 from . import Download
-from . import Download_ThreadPool
 from . import AdvancedPath
 from . import Logs

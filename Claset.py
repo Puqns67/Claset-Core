@@ -12,7 +12,7 @@ LogHeader = ["Claset/Main"]
 StartTime = time.time()
 Logger = Claset.Base.Logs.Logs()
 Logger.GenLog(Perfixs=LogHeader, Text="Started!!!")
-Downloader = Claset.Base.Download_ThreadPool.downloadmanager(Logger=Logger)
+Downloader = Claset.Base.Download.downloadmanager(Logger=Logger)
 AssetsIndex = Claset.Game.Loadjson.AssetsIndex("./1.17.json")
 Downloader.Project_join(Downloader.add(AssetsIndex))
 Logger.GenLog(Perfixs=LogHeader, Text="Stopped!!!")
