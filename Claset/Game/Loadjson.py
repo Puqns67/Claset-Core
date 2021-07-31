@@ -21,7 +21,9 @@ def AssetsIndex(path) -> list:
             "Overwrite": False,
             "Retry": 3,
             "OtherURL": "$OfficialAssets/" + objects[i]["hash"][:2] + "/" + objects[i]["hash"],
-            "Sha1": objects[i]["hash"]
+            "Sha1": objects[i]["hash"],
+            "ConnectTimeout": 3,
+            "ReadTimeout": 15
         })
     
     return(output)

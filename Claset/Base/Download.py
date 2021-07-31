@@ -15,6 +15,16 @@ import requests
 
 from . import AdvancedPath, DFCheck, Loadfile, Path, Savefile
 
+#Exceptions
+class DownloadException(Exception): pass
+class FileExist(DownloadException): pass
+class Timeout(DownloadException): pass 
+class ConnectTimeout(Timeout): pass
+class ReadTimeout(Timeout): pass
+class HashError(DownloadException): pass
+class SizeError(DownloadException): pass
+class SchemaError(DownloadException): pass
+
 
 class downloadmanager():
     def __init__(self, Logger=None):
@@ -38,33 +48,34 @@ class downloadmanager():
 
 
     #简易下载器
-    def download(self, Base) -> str:
+    def download(self, Base) -> None:
         #URL: 链接地址
         #OutputPath: 输出位置
         #FileName: 文件名
         #Size: 文件大小(字节)
         #ProjectID: 任务id
         #Overwrite: 覆盖已有的文件
-        #Timeout: 传输超时
+        #ConnectTimeout: 连接超时(若为空则使用全局设置)
+        #ReadTimeout: 下载超时(若为空则使用全局设置)
         #Session: 全局Session
         #Base: 源Jobs
         #Sha1: 使用sha1验证下载结果
 
         if not "URL" in Base: raise KeyError("not have URL")
         if not "OutputPath" in Base: Base["OutputPath"] = "$PERFIX"
-        if not "FileName" in Base: Base["FileName"] = None
+        if not "FileName" in Base: Base["FileName"] = self.ReCompile.search(Base["URL"]).group(1)
         if not "Size" in Base: Base["Size"] = None
         if not "ProjectID" in Base: Base["ProjectID"] = None
         if not "Overwrite" in Base: Base["Overwrite"] = True
-        if not "Timeout" in Base: Base["Timeout"] = None
         if not "Session" in Base: Base["Session"] = None
         if not "Sha1" in Base: Base["Sha1"] = None
+        if not "ConnectTimeout" in Base: Base["ConnectTimeout"] = self.Configs["Timeouts"]["Connect"]
+        if not "ReadTimeout" in Base: Base["ReadTimeout"] = self.Configs["Timeouts"]["Read"]
+        if not "Retry" in Base: Base["Retry"] = self.Configs["Retry"]
         RawBase = Base
 
-        if Base["Timeout"] == None: Base["Timeout"] = self.Configs["Timeout"]
         if "$" in Base["URL"]: Base["URL"] = self.AdvancedPath.path(Base["URL"])
         if "$" in Base["OutputPath"]: Base["OutputPath"] = Path.path(Base["OutputPath"])
-        if Base["FileName"] == None: Base["FileName"] = self.ReCompile.search(Base["URL"]).group(1)
 
         OutputPaths = Base["OutputPath"] + "\\" + Base["FileName"]
 
@@ -73,30 +84,51 @@ class downloadmanager():
                 if Base["ProjectID"] != None:
                     self.Project_addJob(Base["ProjectID"], CompletedTasksCount=1)
                 if self.Logger != None:
-                    self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadTask"], Text="File \"" + Base["FileName"] + "\" is Exist, Skipping.")
-                return("FileExist")
+                    self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadTask"], Text="File \"" + Base["FileName"] + "\" is Exist, Skipping")
+                raise FileExist
 
         if Base["Session"] == None:
             Session = requests.Session()
             Session.headers = self.Configs['Headers']
         File = BytesIO()
+
         try:
-            Request = Base["Session"].get(Base["URL"], timeout=Base["Timeout"])
+            Request = Base["Session"].get(Base["URL"], timeout=(Base["ConnectTimeout"], Base["ReadTimeout"]))
             StatusCode = str(Request.status_code)
             if StatusCode[0] in ["4", "5"]: Request.raise_for_status()
             File.write(Request.content)
+        except requests.exceptions.ConnectTimeout:
+            if self.Logger != None:
+                self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadTask"], Text="File \"" + Base["FileName"] + "\" Connect timeout, From \"" + Base["URL"] + "\"", Type="WARN")
+            self.add(RawBase, ProjectID=Base["ProjectID"])
+            self.Project_addJob(Base["ProjectID"], FailuredTasksCount=1)
+            raise ConnectTimeout
+        except requests.exceptions.ReadTimeout:
+            if self.Logger != None:
+                self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadTask"], Text="File \"" + Base["FileName"] + "\" Download timeout, From \"" + Base["URL"] + "\"", Type="WARN")
+            self.add(RawBase, ProjectID=Base["ProjectID"])
+            self.Project_addJob(Base["ProjectID"], FailuredTasksCount=1)
+            raise ReadTimeout
+        except (
+            requests.exceptions.MissingSchema,
+            requests.exceptions.InvalidSchema
+        ):
+            if self.Logger != None:
+                self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadTask"], Text="URL \"" + Base["URL"] + "\" ", Type="WARN")
+            self.add(RawBase, ProjectID=0)
+            self.Project_addJob(Base["ProjectID"], ErrorTasksCount=1)
+            raise SchemaError
         except (
             requests.exceptions.ProxyError,
             requests.exceptions.HTTPError,
             requests.exceptions.SSLError,
-            requests.exceptions.ConnectionError,
-            requests.exceptions.ReadTimeout
+            requests.exceptions.ConnectionError
         ):
             if self.Logger != None:
                 self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadTask"], Text="File \"" + Base["FileName"] + "\" Download failure, By ConnectionError, From \"" + Base["URL"] + "\"", Type="WARN")
             self.add(RawBase, ProjectID=Base["ProjectID"])
-            self.Project_addJob(Base["ProjectID"], CompletedTasksCount=1)
-            return("DownloadFailure")
+            self.Project_addJob(Base["ProjectID"], FailuredTasksCount=1)
+            raise DownloadException
 
         if Base["Size"] != None:
             if len(File.getbuffer()) != Base["Size"]:
@@ -104,8 +136,8 @@ class downloadmanager():
                     self.Logger.GenLog(
                         Perfixs=self.LogHeader + ["DownloadTask"], Text="File \"" + Base["FileName"] + "\" Download failure, By SizeError, From \"" + Base["URL"] + "\", Buffer size " + str(len(File.getbuffer())), Type="WARN")
                 self.add(RawBase, ProjectID=Base["ProjectID"])
-                self.Project_addJob(Base["ProjectID"], CompletedTasksCount=1)
-                return("SizeFailure")
+                self.Project_addJob(Base["ProjectID"], FailuredTasksCount=1)
+                return("SizeError")
 
         if Base["Sha1"] != None:
             hashobj = sha1(File.getbuffer()).hexdigest()
@@ -113,8 +145,8 @@ class downloadmanager():
                 if self.Logger != None:
                     self.Logger.GenLog(Perfixs=self.LogHeader + ["DownloadTask"], Text="File \"" + Base["FileName"] + "\" hash verification failed", Type="WARN")
                 self.add(RawBase, ProjectID=Base["ProjectID"])
-                self.Project_addJob(Base["ProjectID"], CompletedTasksCount=1)
-                return("HashFailure")
+                self.Project_addJob(Base["ProjectID"], FailuredTasksCount=1)
+                return("HashError")
 
         DFCheck.dfcheck("dm", Base["OutputPath"])
         Savefile.savefile(OutputPaths, File.getbuffer(), filetype="bytes")
@@ -124,7 +156,7 @@ class downloadmanager():
         return("Done")
 
 
-    def add(self, InputJob, ProjectID=None, FailuredTasksCount=1, SourceProjectID=None) -> int:
+    def add(self, InputJob, ProjectID=None) -> int:
         if type(InputJob) == type(list()):
             JobTotal = len(InputJob)
             if ProjectID == None:
@@ -146,10 +178,8 @@ class downloadmanager():
         elif type(InputJob) == type(dict()):
             if ProjectID == None:
                 ProjectID = self.Project_create(1)
-            elif ProjectID == 0:
-                self.Project_addJob(ProjectID, AllTasksCount=1, FailuredTasksCount=FailuredTasksCount, SourceProjectID=SourceProjectID)
-            else:
-                self.Project_addJob(ProjectID, AllTasksCount=1)
+
+            self.Project_addJob(ProjectID, AllTasksCount=1)
             InputJob["ProjectID"] = ProjectID
 
             if ProjectID == 0:
@@ -159,7 +189,7 @@ class downloadmanager():
                 self.DownloadsTasks.append(self.ThreadPool.submit(self.download, Base=InputJob))
 
             if self.Logger != None:
-                self.Logger.GenLog(Perfixs=self.LogHeader + ["AddTask"], Text="Added 1 task to " + str(ProjectID))
+                self.Logger.GenLog(Perfixs=self.LogHeader + ["AddTask"], Text="Added 1 task to Project " + str(ProjectID))
 
             return(ProjectID)
 
@@ -186,29 +216,31 @@ class downloadmanager():
             NewProjectID = randint(1,4096)
             if NewProjectID in self.Projects.keys():
                 continue
-            self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0}
+            self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0, "ErrorTasksCount":0}
             if self.Logger != None:
                 self.Logger.GenLog(Perfixs=self.LogHeader + ["CreateProject"], Text="Created New Project " + str(NewProjectID))
             return(NewProjectID)
 
 
-    def Project_addJob(self, ProjectID, AllTasksCount=None, CompletedTasksCount=None, FailuredTasksCount=None, SourceProjectID=None) -> None:
-        if ProjectID == 0:
-            if (FailuredTasksCount == None) or (SourceProjectID == None): raise ValueError
-            self.Projects[SourceProjectID]["FailuredTasksCount"] += FailuredTasksCount
-
+    def Project_addJob(self, ProjectID, AllTasksCount=None, CompletedTasksCount=None, FailuredTasksCount=None, ErrorTasksCount=None) -> None:
         if AllTasksCount != None:
             self.Projects[ProjectID]["AllTasksCount"] += AllTasksCount
 
         if CompletedTasksCount != None:
             self.Projects[ProjectID]["CompletedTasksCount"] += CompletedTasksCount
 
+        if FailuredTasksCount != None:
+            self.Projects[ProjectID]["FailuredTasksCount"] += FailuredTasksCount
+        
+        if ErrorTasksCount != None:
+            self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
+
 
     #通过ProjectID阻塞线程
     def Project_join(self, ProjectID) -> int:
         while True:
-            if (self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["FailuredTasksCount"]) == self.Projects[ProjectID]["AllTasksCount"]:
+            if (self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["FailuredTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) == self.Projects[ProjectID]["AllTasksCount"]:
                 break
-            sleep(self.Configs["ServiceSleepTime"])
-        return(self.Projects[ProjectID]["FailuredTasksCount"])
+            sleep(self.Configs["SleepTime"])
+        return(self.Projects[ProjectID]["ErrorTasksCount"])
 

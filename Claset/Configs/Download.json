@@ -1,10 +1,13 @@
 {
     "MaxThread": 32,
-    "ServiceSleepTime": 0.1,
-    "ServiceAutoStop": 300,
+    "SleepTime": 0.1,
     "ReadFileNameReString": "([a-zA-Z0-9_.-]*)$",
     "Headers": {
         "user-agent": "Claset/0.1.2"
     },
-    "Timeout": 15
+    "Timeouts": {
+        "Connect": 5,
+        "Read": 30
+    },
+    "Retry": 5
 }
