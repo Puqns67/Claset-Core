@@ -18,3 +18,4 @@ def getVersionManifest(Downloader, ver="v1"):
     Path = Pathmd.path("$MCVersionManifest/")
     print(URL, Path)
     return(Downloader.add({"URL": URL, "OutputPath": Path, "Retry": 3}))
+

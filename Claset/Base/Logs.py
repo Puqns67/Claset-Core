@@ -1,4 +1,4 @@
-#VERSION=5
+#VERSION=7
 #
 #Claset/Base/Logs.py
 #日志记录
@@ -22,8 +22,10 @@ class Logs():
 
         if self.Configs["ProgressiveWrite"] == True:
             self.LogPath = LogPath
+            with open(self.LogPath, mode="w") as File:
+                pass
         else:
-            self.LogFile = open(LogPath, mode="w+")
+            self.LogFile = open(LogPath, mode="w")
 
 
 
@@ -40,15 +42,6 @@ class Logs():
         
         #Text
         Text.replace(r"{Text}", Text)
-
-        """
-        if Type == "WARN":
-            Text = "\033[1;31m" + Text + "\033[0m"
-        elif Type == "DEBUG":
-            Text = "\033[1;36m" + Text + "\033[0m"
-        elif Type == "INFO":
-            Text = "\033[1;32m" + Text + "\033[0m"
-        """   
 
         #Time
         Time = strftime(self.Configs["Format"]["Time"], localtime())
