@@ -8,10 +8,11 @@ from time import localtime, strftime
 
 from . import Loadfile
 from . import Path
+from . import DFCheck
 
 
 class Logs():
-    def __init__(self, LogPath="$EXEC/Logs/Log.log", Configs=None):
+    def __init__(self, LogPath="$EXEC/Logs/", LogName="Claset-log-{TIME}.log", Configs=None):
         if Configs == None:
             self.Configs = Loadfile.loadfile("$EXEC/Configs/Logs.json", "json")
         else:
@@ -20,16 +21,22 @@ class Logs():
         if "$" in LogPath:
             LogPath = Path.path(LogPath)
 
+        DFCheck.dfcheck("dm" , LogPath)
+        self.LogFileName = self.genLogFileName(LogName)
         if self.Configs["ProgressiveWrite"] == True:
             self.LogPath = LogPath
-            with open(self.LogPath, mode="w") as File:
-                pass
+            self.LogContent = None
         else:
-            self.LogFile = open(LogPath, mode="w")
+            self.LogContent = open(self.LogFileName, mode="w")
 
+    def genLogFileName(self, LogName):
+        if r"{TIME}" in LogName:
+            TIME = strftime("%Y-%m-%d_%H-%M-%S", localtime())
+            LogName.replace(r"{TIME}", TIME)
 
+        return(LogName)
 
-    def GenLog(self, Perfixs=[], Text="", Type="INFO", SaveToFile=True) -> None:
+    def genLog(self, Perfixs=[], Text="", Type="INFO", SaveToFile=True) -> None:
         if not (Type in self.Configs["Types"]): Type == "INFO"
         if (Type == "DEBUG") and (self.Configs["Debug"] == False): return None
 
@@ -50,10 +57,9 @@ class Logs():
 
         if SaveToFile == True:
             if self.Configs["ProgressiveWrite"] == True:
-                with open(self.LogPath, mode="a") as File:
-                    File.write(FullLog)
+                with open(self.LogPath + self.LogFileName, mode="a") as File: File.write(FullLog)
             else:
-                self.LogFile.write(FullLog)
+                self.LogContent.write(FullLog)
 
         print(FullLog, end="")
 

@@ -1,7 +1,7 @@
 #VERSION=0
 #
 #Claset.py
-#测试函数Claset
+#测试类Claset
 #
 
 
@@ -11,12 +11,12 @@ LogHeader = ["Claset/Main"]
 
 StartTime = time.time()
 Logger = Claset.Base.Logs.Logs()
-Logger.GenLog(Perfixs=LogHeader, Text="Started!!!")
+Logger.genLog(Perfixs=LogHeader, Text="Started!!!")
 Downloader = Claset.Base.Download.DownloadManager(Logger=Logger)
 AssetsIndex = Claset.Game.Loadjson.AssetsIndex("./1.17.json")
 try:
     Downloader.Project_join(Downloader.Add_tasks(AssetsIndex))
 except KeyboardInterrupt:
     Downloader.Stop()
-Logger.GenLog(Perfixs=LogHeader, Text="Stopped!!!")
-Logger.GenLog(Perfixs=LogHeader, Text="Used time: " + str(time.time() - StartTime))
+Logger.genLog(Perfixs=LogHeader, Text="Stopped!!!")
+Logger.genLog(Perfixs=LogHeader, Text="Used time: " + str(time.time() - StartTime))
