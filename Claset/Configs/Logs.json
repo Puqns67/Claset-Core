@@ -12,5 +12,25 @@
         "WARN",
         "DEBUG",
         "ERROR"
-    ]
+    ],
+    "OldLogProcess": {
+        "Type": "Delete",
+        "Types": [
+            "Delete",
+            "Archive",
+            "Archive + Delete"
+        ],
+        "Settings": {
+            "Delete": {
+                "MaxKeepFile": 3
+            },
+            "Archive": {
+                "ArchiveFileName": "Claset-Log-Archive.lzma",
+                "MaxKeepFile": 3
+            },
+            "Archive + Delete": {
+                "MaxKeepFile": 30
+            }
+        }
+    }
 }
