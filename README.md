@@ -14,14 +14,8 @@
 
 ## Git仓库/Git Repositories
 
-### Claset
-
 * [Github](https://github.com/Puqns67/Claset)
 * [Gitee](https://gitee.com/puqns67/Claset)
-
-### ClasetUpdate
-
-* [Github](https://github.com/Puqns67/Claset_Update)
 
 ## 许可/License
 
