@@ -9,7 +9,7 @@ from json import dumps
 from . import Path
 
 
-def savefile(path, filecontent, filetype="json", filename=None) -> None:
+def saveFile(path, filecontent, filetype="json", filename=None) -> None:
 
     if not filename == None:
         path += filename

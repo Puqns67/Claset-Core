@@ -1,11 +1,12 @@
-#VERSION=7
+#VERSION=8
 #
 #Claset/Base/Logs.py
 #日志记录
 #
 
 from os import listdir, remove
-from lzma import open as openLzma
+from os.path import abspath
+from tarfile import open as openTar
 from time import localtime, strftime
 from re import compile as reCompile
 
@@ -17,7 +18,7 @@ from . import DFCheck
 class Logs():
     def __init__(self, LogPath="$EXEC/Logs/", LogName=r"Claset-log-{TIME}.log", Configs=None, ProcessOldLogMode=None, LogHeader=None) -> None:
         if Configs == None:
-            self.Configs = Loadfile.loadfile("$EXEC/Configs/Logs.json", "json")
+            self.Configs = Loadfile.loadFile("$EXEC/Configs/Logs.json", "json")
         else:
             self.Configs = Configs
 
@@ -32,7 +33,7 @@ class Logs():
         else:
             self.LogHeader = ["Logger"]
 
-        DFCheck.dfcheck("dm" , LogPath)
+        DFCheck.dfCheck("dm" , LogPath)
         self.LogPath = LogPath
         self.LogFileName = self.genLogFileName(LogName)
         if self.Configs["ProgressiveWrite"] == True:
@@ -79,25 +80,32 @@ class Logs():
                     remove(self.LogPath + Filelist[i])
                     self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text=["Deleted old log file: \"", Filelist[i], "\""])
                     Filelist.remove(Filelist[i])
-        """
+
         elif self.Configs["OldLogProcess"]["Type"] == "Archive":
-            pass
-
-            print(FilelistForTime, "\n", Filelist)
-            with openLzma(self.LogPath + self.Configs["OldLogProcess"]["Settings"]["Archive"]["ArchiveFileName"]) as Archive:
-                
-
-        elif self.Configs["OldLogProcess"]["Type"] == "Archive + Delete":
-            print("WIP")
+            Temp = len(Filelist) - self.Configs["OldLogProcess"]["Settings"]["Archive"]["MaxKeepFile"]
+            if Temp >= 1:
+                with openTar(self.LogPath + self.Configs["OldLogProcess"]["Settings"]["Archive"]["ArchiveFileName"], "a") as Archive:
+                    for i in range(Temp):
+                        path = abspath(self.LogPath + Filelist[i])
+                        Archive.add(path, arcname=Filelist[i])
+                        remove(path)
+                        self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text=["Archived old log file: \"", Filelist[i], "\""])
+                        Filelist.remove(Filelist[i])
+                        
         else:
-            self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text="Unused Type")
-        """
+            self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text=["Unsupport Type: ", ])
 
     def genLog(self, Perfixs=[], Text="", Type="INFO", SaveToFile=True) -> None:
         if not (Type in self.Configs["Types"]): Type == "INFO"
         if (Type == "DEBUG") and (self.Configs["Debug"] == False): return None
-        if type(Text) == type(list()): Text = str().join(Text)
-
+        if type(Text) == type(list()):
+            try:
+                Text = str().join(Text)
+            except TypeError:
+                for i in range(len(Text)):
+                    if type(Text[i]) != type(str()): Text[i] = str(Text[i])
+                Text = str().join(Text)
+                
         Perfix = ""
 
         #Perfixs

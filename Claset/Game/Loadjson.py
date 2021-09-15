@@ -4,11 +4,11 @@
 #用于解析游戏Json
 #
 
-from Claset.Base.Loadfile import loadfile
+from Claset.Base.Loadfile import loadFile
 
     
 def AssetsIndex(path) -> list:
-    initfile = loadfile(path, "json")
+    initfile = loadFile(path, "json")
     objects = initfile["objects"]
     output = list()
 

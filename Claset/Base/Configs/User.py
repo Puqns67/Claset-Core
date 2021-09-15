@@ -6,13 +6,13 @@
 
 from base64 import b64encode, b64decode
 
-from Claset.Base.Loadfile import loadfile
-from Claset.Base.Savefile import savefile
+from Claset.Base.Loadfile import loadFile
+from Claset.Base.Savefile import saveFile
 
 class user():
     def __init__(self):
         self.path = "$EXEC/Configs/Users.json"
-        self.users = loadfile(self.path, "json")
+        self.users = loadFile(self.path, "json")
 
 
     #返回list形式的User列表
@@ -101,10 +101,10 @@ class user():
 
     #保存到文件
     def save(self):
-        savefile(self.path, self.users)
+        saveFile(self.path, self.users)
 
 
     #重新从文件加载数据
     def reload(self):
-        self.users = loadfile(self.path, "json")
+        self.users = loadFile(self.path, "json")
 

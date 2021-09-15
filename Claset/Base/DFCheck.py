@@ -17,7 +17,7 @@ from re import search
 from . import Path
 
 
-def dfcheck(checktype, path, size=None) -> bool:
+def dfCheck(checktype, path, size=None) -> bool:
     if "$" in path:
         path = Path.path(path)
 

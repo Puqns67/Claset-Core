@@ -8,7 +8,7 @@ from os import getcwd
 from os.path import abspath
 from re import compile as recompile
 
-from . import Loadfile, Path
+from . import Loadfile
 
 
 class path():
@@ -18,7 +18,7 @@ class path():
             self.SearchVariable = recompile(r".+&V<(.+)>.*")
 
     def __init__(self, Others=False, OtherTypes=[], DisableabsPath=True):
-        self.Configs = Loadfile.loadfile("$EXEC/Configs/Paths.json", "json")
+        self.Configs = Loadfile.loadFile("$EXEC/Configs/Paths.json", "json")
         self.OthersType = Others
         self.DisableabsPath = DisableabsPath
         self.ReSearch = None
@@ -29,7 +29,7 @@ class path():
             self.getFromOthersKeys(OtherTypes)
 
 
-    def load_other_str(self, Objects, ID=0):
+    def loadOtherString(self, Objects, ID=0):
         if self.ReSearch == None:#如不存在已加载的ReSearch就加载他
             self.ReSearch = self.rekeys()
 
@@ -38,7 +38,7 @@ class path():
         if FindFile == None:
             return(Objects[ID])
         else:
-            File = Loadfile.loadfile(FindFile.group(1), "json")
+            File = Loadfile.loadFile(FindFile.group(1), "json")
             Variables = []
             OVariables = []
 
@@ -59,7 +59,7 @@ class path():
                 except ValueError:
                     OVariables.append(vid)
                 else:
-                    OVariables.append(self.load_other_str(Objects, ID=ivid))
+                    OVariables.append(self.loadOtherString(Objects, ID=ivid))
 
             for ovid in OVariables:#获取
                 File = File[ovid]
@@ -76,7 +76,7 @@ class path():
             OthersKeys = self.Configs["Others"] + OtherTypes
 
         for i in OthersKeys:#顺序获取之后再放入Perfixs
-            loaded = self.load_other_str(i)
+            loaded = self.loadOtherString(i)
             for ii in loaded.keys():
                 self.CompleteConfigs[ii] = loaded[ii]
 

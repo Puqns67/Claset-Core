@@ -14,22 +14,18 @@
         "ERROR"
     ],
     "OldLogProcess": {
-        "Type": "Delete",
+        "Type": "Archive",
         "Types": [
             "Delete",
-            "Archive",
-            "Archive + Delete"
+            "Archive"
         ],
         "Settings": {
             "Delete": {
                 "MaxKeepFile": 3
             },
             "Archive": {
-                "ArchiveFileName": "Claset-Log-Archive.lzma",
-                "MaxKeepFile": 3
-            },
-            "Archive + Delete": {
-                "MaxKeepFile": 30
+                "MaxKeepFile": 3,
+                "ArchiveFileName": "Claset-Log-Archive.tar"                
             }
         }
     }

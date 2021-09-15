@@ -1,4 +1,4 @@
-#VERSION=3
+#VERSION=4
 #
 #Claset/Base/Loadfile.py
 #读取文件
@@ -8,7 +8,7 @@ from json import load
 
 from . import Path
 
-def loadfile(path, filetype=None):
+def loadFile(path, filetype=None):
     if "$" in path:
         path = Path.path(path)
 
@@ -17,8 +17,8 @@ def loadfile(path, filetype=None):
             return(load(openedfile))
 
     elif filetype == "bytes":
-        with open(path, "b") as openedfile:
-            return(openedfile)
+        with open(path, "rb") as openedfile:
+            return(openedfile.read())
 
     elif filetype == None:
         with open(path) as openedfile:
