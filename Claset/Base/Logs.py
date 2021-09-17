@@ -16,34 +16,36 @@ from . import DFCheck
 
 
 class Logs():
-    def __init__(self, LogPath="$EXEC/Logs/", LogName=r"Claset-log-{TIME}.log", Configs=None, ProcessOldLogMode=None, LogHeader=None) -> None:
+    def __init__(self, LogPath: str = "$EXEC/Logs/", LogName: str = r"Claset-log-{TIME}.log", Configs: dict = None, ProcessOldLogMode: str = None, LogHeader: list = None, ENABLE: bool = None) -> None:
         if Configs == None:
             self.Configs = Loadfile.loadFile("$EXEC/Configs/Logs.json", "json")
         else:
             self.Configs = Configs
 
-        if "$" in LogPath:
-            LogPath = Path.path(LogPath)
-        
-        if ProcessOldLogMode != None:
-            self.Configs["OldLogProcess"]["Type"] = ProcessOldLogMode
-        
-        if LogHeader != None:
-            self.LogHeader = self.logHeaderAdder(LogHeader, ["Logger"])
-        else:
-            self.LogHeader = ["Logger"]
+        if ENABLE != None: self.Configs["ENABLE"] = True
+        if self.Configs["ENABLE"] == True:
+            if "$" in LogPath:
+                LogPath = Path.path(LogPath)
+            
+            if ProcessOldLogMode != None:
+                self.Configs["OldLogProcess"]["Type"] = ProcessOldLogMode
+            
+            if LogHeader != None:
+                self.LogHeader = self.logHeaderAdder(LogHeader, ["Logger"])
+            else:
+                self.LogHeader = ["Logger"]
+    
+            DFCheck.dfCheck("dm" , LogPath)
+            self.LogPath = LogPath
+            self.LogFileName = self.genLogFileName(LogName)
+            if self.Configs["ProgressiveWrite"] == True:
+                self.LogContent = None
+            else:
+                self.LogContent = open(self.LogFileName, mode="w")
+            
+            self.processOldLog()
 
-        DFCheck.dfCheck("dm" , LogPath)
-        self.LogPath = LogPath
-        self.LogFileName = self.genLogFileName(LogName)
-        if self.Configs["ProgressiveWrite"] == True:
-            self.LogContent = None
-        else:
-            self.LogContent = open(self.LogFileName, mode="w")
-        
-        self.processOldLog()
-
-    def logHeaderAdder(self, transferHeader, Header) -> list:
+    def logHeaderAdder(self, transferHeader: list, Header: list) -> list:
         if type(transferHeader) != type(list()):
             if type(transferHeader) != type(str()):
                 transferHeader = str(transferHeader)
@@ -54,7 +56,7 @@ class Logs():
             Header = list(Header)
         return(transferHeader + Header)
 
-    def genLogFileName(self, LogName) -> str:
+    def genLogFileName(self, LogName: str) -> str:
         if r"{TIME}" in LogName:
             Time = strftime("%Y-%m-%d_%H-%M-%S", localtime())
             LogName = LogName.replace(r"{TIME}", Time)
@@ -95,7 +97,8 @@ class Logs():
         else:
             self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text=["Unsupport Type: ", ])
 
-    def genLog(self, Perfixs=[], Text="", Type="INFO", SaveToFile=True) -> None:
+    def genLog(self, Perfixs:list = list(), Text:str = str(), Type: str ="INFO", SaveToFile: bool= True) -> None:
+        if self.Configs["ENABLE"] == False: return "UnEnabled"
         if not (Type in self.Configs["Types"]): Type == "INFO"
         if (Type == "DEBUG") and (self.Configs["Debug"] == False): return None
         if type(Text) == type(list()):
