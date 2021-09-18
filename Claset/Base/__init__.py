@@ -1,4 +1,4 @@
-#VERSION=9
+#VERSION=10
 #
 #Claset/Base/__init__.py
 #
@@ -10,3 +10,4 @@ from . import Configs
 from . import Download
 from . import AdvancedPath
 from . import Logs
+from . import Exceptions

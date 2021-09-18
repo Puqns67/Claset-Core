@@ -109,7 +109,7 @@ class Logs():
                     if type(Text[i]) != type(str()): Text[i] = str(Text[i])
                 Text = str().join(Text)
                 
-        Perfix = ""
+        Perfix = str()
 
         #Perfixs
         if len(Perfixs) != 0:
