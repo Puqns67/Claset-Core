@@ -75,14 +75,12 @@ class DownloadManager():
                     OutputPath=Base["OutputPath"],
                     FileName=Base["FileName"],
                     Size=Base["Size"],
-                    ProjectID=Base["ProjectID"],
                     Overwrite=Base["Overwrite"],
                     Sha1=Base["Sha1"],
                     ConnectTimeout=Base["ConnectTimeout"],
                     ReadTimeout=Base["ReadTimeout"]
                     )
             except Exceptions.Download.Stopping:
-                Errored = True
                 Base["Retry"] = 0
             except Exceptions.Download.SizeError:
                 Errored = True
@@ -126,7 +124,6 @@ class DownloadManager():
         OutputPath:     str, # 输出位置
         FileName:       str, # 文件名
         Size:           int, # 文件大小(字节)
-        ProjectID:      int, # 任务id
         Overwrite:     bool, # 覆盖已有的文件
         Sha1:           str, # 使用sha1验证下载结果
         ConnectTimeout: int, # 连接超时(若为空则使用全局设置)
@@ -178,7 +175,6 @@ class DownloadManager():
         Savefile.saveFile(OutputPaths, File.getbuffer(), filetype="bytes")
 
         if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", FileName, "\" Downloaded"])
-        if ProjectID != None: self.projectAddJob(ProjectID, CompletedTasksCount=1)
 
 
     # 添加任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID
