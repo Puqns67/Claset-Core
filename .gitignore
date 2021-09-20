@@ -6,3 +6,6 @@ __pycache__/
 out/
 
 Logs
+
+Claset_Test.build/
+Claset_Test.dist/

@@ -1,14 +1,15 @@
-#VERSION=5
+#VERSION=7
 #
 #Claset/Base/AdvancedPath.py
-#高级地址转换, 也许也可以用来转配置文件？
+#高级地址转换
 #
 
 from os import getcwd
 from os.path import abspath
 from re import compile as recompile
 
-from . import Loadfile
+from .Loadfile import loadFile
+from .Configs import Configs
 
 
 class path():
@@ -18,7 +19,7 @@ class path():
             self.SearchVariable = recompile(r".+&V<(.+)>.*")
 
     def __init__(self, Others=False, OtherTypes=[], DisableabsPath=True):
-        self.Configs = Loadfile.loadFile("$EXEC/Configs/Paths.json", "json")
+        self.Configs = Configs().getConfig("Paths")
         self.OthersType = Others
         self.DisableabsPath = DisableabsPath
         self.ReSearch = None
@@ -30,7 +31,8 @@ class path():
 
 
     def loadOtherString(self, Objects, ID=0):
-        if self.ReSearch == None:#如不存在已加载的ReSearch就加载他
+        # 如不存在已加载的 ReSearch 则加载
+        if self.ReSearch == None:
             self.ReSearch = self.rekeys()
 
         FindFile = self.ReSearch.SearchFile.match(Objects[ID])
@@ -38,11 +40,11 @@ class path():
         if FindFile == None:
             return(Objects[ID])
         else:
-            File = Loadfile.loadFile(FindFile.group(1), "json")
+            File = Configs().getConfig(FindFile.group(1))
             Variables = []
             OVariables = []
 
-            while True:#反向读取Variables
+            while True:# 反向读取 Variables
                 Finded = self.ReSearch.SearchVariable.match(Objects[ID])
                 if Finded == None:
                     break
@@ -50,18 +52,20 @@ class path():
                     Variables.append(Finded.group(1))
                     Objects[ID] = Objects[ID].replace("&V<" + Finded.group(1) + ">", "")
 
-            if len(Variables) != 1:#反转列表
+            if len(Variables) != 1:# 反转列表
                 Variables.reverse()
 
-            for vid in Variables:#迭代load id
+            for vid in Variables:# 迭代 load id
                 try:
                     ivid = int(vid)
                 except ValueError:
                     OVariables.append(vid)
                 else:
+                    print(Objects, ivid)
                     OVariables.append(self.loadOtherString(Objects, ID=ivid))
 
-            for ovid in OVariables:#获取
+            for ovid in OVariables:# 获取
+                print(File)
                 File = File[ovid]
 
             self.OthersType = True
@@ -75,7 +79,8 @@ class path():
         else:
             OthersKeys = self.Configs["Others"] + OtherTypes
 
-        for i in OthersKeys:#顺序获取之后再放入Perfixs
+        # 顺序获取之后再放入 Perfixs
+        for i in OthersKeys:
             loaded = self.loadOtherString(i)
             for ii in loaded.keys():
                 self.CompleteConfigs[ii] = loaded[ii]
@@ -89,7 +94,7 @@ class path():
 
 
     def path(self, init, Others=False, DisableabsPath=True) -> str:
-        #如果启用了Others且未载过Others则通过getFromOthersKeys取得额外的Key
+        # 如果启用了 Others 且未载过 Others 则通过 getFromOthersKeys 取得额外的 Key
         if Others == True:
             if self.OthersType == False:
                 self.getFromOthersKeys()
@@ -110,12 +115,4 @@ class path():
         if self.DisableabsPath == False:
             init = abspath(init)
         return(init)
-
-    #
-    #DEBUG
-    #
-
-    def printCompleteConfigs(self):
-        print(self.CompleteConfigs)
-        return(self.CompleteConfigs)
 

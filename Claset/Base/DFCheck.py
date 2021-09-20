@@ -1,25 +1,25 @@
-#VERSION=6
+#VERSION=7
 #
 #Claset/Base/DFCheck.py
 #检测文件夹/文件是否存在和体积是否正常
 #
 
-#几种选项
-#f：检测文件是否存在
-#d：检测文件夹是否存在
-#m：在d存在的时候创建文件夹,在检查文件不存在且文件夹没满足时创建文件夹
-#s：在d不存在的时候检测文件大小
+# 几种选项
+# f：检测文件是否存在
+# d：检测文件夹是否存在
+# m：在d存在的时候创建文件夹,在检查文件不存在且文件夹没满足时创建文件夹
+# s：在d不存在的时候检测文件大小
 
 from os import makedirs
 from os.path import exists, getsize
 from re import search
 
-from . import Path
+from .Path import path as Path
 
 
 def dfCheck(checktype, path, size=None) -> bool:
     if "$" in path:
-        path = Path.path(path)
+        path = Path(path)
 
     if "s" in checktype:
         if "f" in checktype:

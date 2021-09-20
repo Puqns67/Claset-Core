@@ -6,11 +6,11 @@
 
 from json import load
 
-from . import Path
+from .Path import path as Path
 
 def loadFile(path, filetype=None):
     if "$" in path:
-        path = Path.path(path)
+        path = Path(path)
 
     if filetype == "json":
         with open(path) as openedfile:

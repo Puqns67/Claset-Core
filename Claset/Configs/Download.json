@@ -1,4 +1,5 @@
 {
+    "VERSION": 1,
     "MaxThread": 32,
     "SleepTime": 0.1,
     "Retry": 5,

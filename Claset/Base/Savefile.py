@@ -1,4 +1,4 @@
-#VERSION=4
+#VERSION=5
 #
 #Claset/Base/Savefile.py
 #保存文件
@@ -6,16 +6,16 @@
 
 from json import dumps
 
-from . import Path
+from .Path import path as Path
+from .DFCheck import dfCheck
 
 
-def saveFile(path, filecontent, filetype="json", filename=None) -> None:
-
-    if not filename == None:
+def saveFile(path: str, filecontent, filetype: str = "json", filename: str = None) -> None:
+    if filename != None:
         path += filename
 
     if "$" in path:
-        path = Path.path(path)
+        path = Path(path)
 
     if filetype == "json":
         with open(path, mode="w+") as thefile:

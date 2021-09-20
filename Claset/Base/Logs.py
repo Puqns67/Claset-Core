@@ -9,23 +9,24 @@ from os.path import abspath
 from tarfile import open as openTar
 from time import localtime, strftime
 from re import compile as reCompile
+from sys import stdout
 
-from . import Loadfile
-from . import Path
-from . import DFCheck
-
+from .Loadfile import loadFile
+from .Path import path
+from .DFCheck import dfCheck
+from .Configs import Configs as ConfigsClass
 
 class Logs():
     def __init__(self, LogPath: str = "$EXEC/Logs/", LogName: str = r"Claset-log-{TIME}.log", Configs: dict = None, ProcessOldLogMode: str = None, LogHeader: list = None, ENABLE: bool = None) -> None:
         if Configs == None:
-            self.Configs = Loadfile.loadFile("$EXEC/Configs/Logs.json", "json")
+            self.Configs = ConfigsClass().getConfig("Logs")
         else:
             self.Configs = Configs
 
         if ENABLE != None: self.Configs["ENABLE"] = True
         if self.Configs["ENABLE"] == True:
             if "$" in LogPath:
-                LogPath = Path.path(LogPath)
+                LogPath = path(LogPath)
             
             if ProcessOldLogMode != None:
                 self.Configs["OldLogProcess"]["Type"] = ProcessOldLogMode
@@ -35,7 +36,7 @@ class Logs():
             else:
                 self.LogHeader = ["Logger"]
     
-            DFCheck.dfCheck("dm" , LogPath)
+            dfCheck("dm" , LogPath)
             self.LogPath = LogPath
             self.LogFileName = self.genLogFileName(LogName)
             if self.Configs["ProgressiveWrite"] == True:
@@ -131,4 +132,4 @@ class Logs():
                 self.LogContent.write(FullLog)
 
         # 打印日志
-        print(FullLog, end="")
+        stdout.write(FullLog)

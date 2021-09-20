@@ -1,29 +1,28 @@
-#VERSION=2
+#VERSION=3
 #
-#Claset/Base/Configs/User.py
+#Claset/Base/User.py
 #管理用户
 #
 
 from base64 import b64encode, b64decode
 
-from Claset.Base.Loadfile import loadFile
-from Claset.Base.Savefile import saveFile
+from .Loadfile import loadFile
+from .Savefile import saveFile
 
 class user():
     def __init__(self):
-        self.path = "$EXEC/Configs/Users.json"
-        self.users = loadFile(self.path, "json")
+        self.users = loadFile("$EXEC/Configs/Users.json", "json")
 
 
-    #返回list形式的User列表
-    def listt(self):
+    # 返回list形式的User列表
+    def listt(self) -> list:
         users = []
         for i in range(len(self.users)):
             users.append(self.users[i])
         return(users)
 
 
-    #创建用户,返回修改后的Config["User"]
+    # 创建用户
     def create(self, usertype, name, password=None):
 
         if not self.userid(name) == "DontFindThisUser":
