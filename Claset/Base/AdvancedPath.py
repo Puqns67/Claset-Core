@@ -1,4 +1,4 @@
-#VERSION=7
+#VERSION=8
 #
 #Claset/Base/AdvancedPath.py
 #高级地址转换
@@ -6,18 +6,16 @@
 
 from os import getcwd
 from os.path import abspath
-from re import compile as recompile
+from re import compile as reCompile
 
 from .Loadfile import loadFile
 from .Configs import Configs
 
+from .Exceptions import Configs as Ex_Configs
+from .Exceptions import AdvancedPath as Ex_AdvancedPath
+
 
 class path():
-    class rekeys():
-        def __init__(self):
-            self.SearchFile = recompile(r"&F<(.+)>.+")
-            self.SearchVariable = recompile(r".+&V<(.+)>.*")
-
     def __init__(self, Others=False, OtherTypes=[], DisableabsPath=True):
         self.Configs = Configs().getConfig("Paths")
         self.OthersType = Others
@@ -26,61 +24,38 @@ class path():
         self.CompleteConfigs = self.Configs["Prefixs"]
 
         if self.OthersType == True:
-            self.ReSearch = self.rekeys()
+            self.ReSearch = self.ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
             self.getFromOthersKeys(OtherTypes)
 
 
-    def loadOtherString(self, Objects, ID=0):
-        # 如不存在已加载的 ReSearch 则加载
-        if self.ReSearch == None:
-            self.ReSearch = self.rekeys()
+    def loadOtherString(self, Objects):
+        if self.ReSearch == None: self.ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
 
-        FindFile = self.ReSearch.SearchFile.match(Objects[ID])
+        try:
+            File, Value = self.ReSearch.search(Objects).groups()
+            File = Configs().getConfig(File)
+        except AttributeError:
+            raise Ex_AdvancedPath.SearchError
+        except Ex_Configs.ConfigsUnregistered:
+            File = loadFile(File, "json")
+        
+        try:
+            Value = self.loadOtherString(Value)
+        except Ex_AdvancedPath.SearchError:
+            pass
 
-        if FindFile == None:
-            return(Objects[ID])
-        else:
-            File = Configs().getConfig(FindFile.group(1))
-            Variables = []
-            OVariables = []
-
-            while True:# 反向读取 Variables
-                Finded = self.ReSearch.SearchVariable.match(Objects[ID])
-                if Finded == None:
-                    break
-                else:
-                    Variables.append(Finded.group(1))
-                    Objects[ID] = Objects[ID].replace("&V<" + Finded.group(1) + ">", "")
-
-            if len(Variables) != 1:# 反转列表
-                Variables.reverse()
-
-            for vid in Variables:# 迭代 load id
-                try:
-                    ivid = int(vid)
-                except ValueError:
-                    OVariables.append(vid)
-                else:
-                    print(Objects, ivid)
-                    OVariables.append(self.loadOtherString(Objects, ID=ivid))
-
-            for ovid in OVariables:# 获取
-                print(File)
-                File = File[ovid]
-
-            self.OthersType = True
-
-            return(File)
+        return(File[Value])
 
 
     def getFromOthersKeys(self, OtherTypes):
-        if len(OtherTypes) == 0:
-            OthersKeys = self.Configs["Others"]
+        if len(self.Configs["Others"]) == 0:
+            OthersKeys = OtherTypes
         else:
             OthersKeys = self.Configs["Others"] + OtherTypes
 
         # 顺序获取之后再放入 Perfixs
         for i in OthersKeys:
+            print(i)
             loaded = self.loadOtherString(i)
             for ii in loaded.keys():
                 self.CompleteConfigs[ii] = loaded[ii]
@@ -90,6 +65,7 @@ class path():
         for i in CompleteConfigsList:
             CompleteConfigs[i] = self.CompleteConfigs[i]
 
+        self.OthersType = True
         self.CompleteConfigs = CompleteConfigs
 
 

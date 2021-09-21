@@ -5,3 +5,4 @@
 
 from . import Configs
 from . import Download
+from . import AdvancedPath

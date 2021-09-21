@@ -16,15 +16,15 @@ ConfigIDs = {
     "Paths": "Paths.json",
     "Logs": "Logs.json",
     "Mirrors": "GameDownloadMirrors.json",
-    "Settings": "Setting.json"
+    "Settings": "Settings.json"
 }
 
 class Configs():
     def __init__(self):
         self.reCompiles = None
         dfCheck("dm", "$CONFIG/")
-        if dfCheck("f", "$CONFIG/" + ConfigIDs["Paths"]) == False: self.genConfig("Paths", "$CONFIG/" + ConfigIDs["Paths"])
-        if dfCheck("f", "$CONFIG/" + ConfigIDs["Settings"]) == False: self.genConfig("Paths", "$CONFIG/" + ConfigIDs["Settings"])
+        if dfCheck("f", "$CONFIG/" + ConfigIDs["Paths"]) == False:    self.genConfig("Paths", "$CONFIG/" + ConfigIDs["Paths"])
+        if dfCheck("f", "$CONFIG/" + ConfigIDs["Settings"]) == False: self.genConfig("Settings", "$CONFIG/" + ConfigIDs["Settings"])
 
 
     # 取得配置文件
@@ -50,6 +50,7 @@ class Configs():
 
         if   ID == "Paths":    saveFile(Path, filecontent=Confs.Paths.getFile(), filetype="json")
         elif ID == "Download": saveFile(Path, filecontent=Confs.Download.getFile(), filetype="json")
+        elif ID == "Settings": saveFile(Path, filecontent=Confs.Settings.getFile(), filetype="json")
         elif ID == "Logs":     saveFile(Path, filecontent=Confs.Logs.getFile(), filetype="json")
         elif ID == "Mirrors":  saveFile(Path, filecontent=Confs.Mirrors.getFile(), filetype="json")
 

@@ -29,7 +29,7 @@ class DownloadManager():
         self.Configs = Configs().getConfig("Download")
         self.ReCompile = reCompile(self.Configs["ReadFileNameReString"])
         self.Projects = {0: {"CompletedTasksCount": 0, "AllTasksCount": 0, "FailuredTasksCount": 0, "Tasks": []}}
-        self.AdvancedPath = AdvancedPath.path(Others=True, OtherTypes=[["&F<Mirrors>&V<1>", "&F<Settings>&V<DownloadServer>"], ["&F<Mirrors>&V<Official>"]])
+        self.AdvancedPath = AdvancedPath.path(Others=True, OtherTypes=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>", "&F<Mirrors>&V<Official>"])
         self.DownloadsTasks = list()
 
         # 线程池(ThreadPool)
