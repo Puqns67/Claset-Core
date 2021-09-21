@@ -1,6 +1,7 @@
-#VERSION=0
+#VERSION=1
 #
 #Claset\Base\Configs.py
+#生成, 更新, 降级配置文件
 #
 
 from re import compile as reCompile
@@ -37,8 +38,8 @@ class Configs():
         if TargetVersion != None:
             NowConfigVersion = loadFile(FilePath, "json")["VERSION"]
             if NowConfigVersion != TargetVersion:
-                if NowConfigVersion < TargetVersion: self.updateConfig(ID, NowConfigVersion, TargetVersion)
-                else: self.downgradeConfig(ID, NowConfigVersion, TargetVersion)
+                if NowConfigVersion > TargetVersion: self.downgradeConfig(ID, NowConfigVersion, TargetVersion)
+                else: self.updateConfig(ID, NowConfigVersion, TargetVersion)
 
         return(loadFile(FilePath, "json"))
 
@@ -57,9 +58,36 @@ class Configs():
 
     # 降级配置文件版本(NowVersion)至目标版本(TargetVersion)
     def downgradeConfig(self, ID, NowVersion, TargetVersion):
-        if self.reCompiles == None: self.reCompiles = { "FindType&Key": reCompile(r"(a-zA-Z0-9_):(a-zA-Z0-9_)"), "FindOld&New": reCompile(r"(a-zA-Z0-9_)->([a-zA-Z0-9_]+)")}
+        self.genReCompiles()
 
 
     # 更新配置文件版本(NowVersion)至目标版本(TargetVersion)
     def updateConfig(self, ID, NowVersion, TargetVersion):
-        if self.reCompiles == None: self.reCompiles = { "FindType&Key": reCompile(r"(a-zA-Z0-9_):(a-zA-Z0-9_)"), "FindOld&New": reCompile(r"(a-zA-Z0-9_)->([a-zA-Z0-9_]+)")}
+        self.genReCompiles()
+    
+
+    # 生成所有的正则对象
+    def genReCompiles(self):
+        if self.reCompiles == None:
+            self.reCompiles = {
+                "FindType&Key": reCompile(r"(a-zA-Z0-9_):(a-zA-Z0-9_)"),
+                "FindOld&New": reCompile(r"(a-zA-Z0-9_)->([a-zA-Z0-9_]+)")
+            }
+
+
+    # 对配置文件的各种操作
+    def __New(self):
+        pass
+
+
+    def __Del(self):
+        pass
+
+
+    def __ChangeKey(self):
+        pass
+
+
+    def __ChangeValue(self):
+        pass
+

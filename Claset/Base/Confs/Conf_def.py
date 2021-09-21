@@ -12,10 +12,10 @@ def getFile() -> dict:
 
 def getDifference() -> dict:
     # Differences Formart:
-    #   NEW:KEY
-    #   DEL:KEY
-    #   CHANGEKEY:OLDKEY->NEWKEY
-    #   CHANGEVALUE:OLDVALUE->NEWVALUE
+    #   NEW:KEYS[->VALUE]
+    #   DEL:KEYS
+    #   CHANGEKEY:OLDKEYS->NEWKEY
+    #   CHANGEVALUE:OLDVALUES->NEWVALUE
     # Types: NEW, DEL, CHANGEKEY, CHANGEVALUE
 
     return {"Version_1": ["Difference1", "Difference2", "..."], "Version_2": ["Differences"], "...": "..."}

@@ -38,6 +38,9 @@ class DownloadManager():
         # 定义全局 Requests Session
         self.RequestsSession = Session()
         self.RequestsSession.headers = self.Configs['Headers']
+        self.RequestsSession.trust_env = self.Configs["UseSystemProxy"]
+        if self.Configs["UseSystemProxy"] == True:
+            self.RequestsSession.proxies = self.Configs["Proxies"]
 
         # 定义全局 Logger
         if Logger != None:
@@ -109,7 +112,11 @@ class DownloadManager():
                 Errored = True
                 self.projectAddJob(Base["ProjectID"], FailuredTasksCount=1)
                 if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Base["FileName"], "\" Download failure, By ConnectionError, From \"", Base["URL"], "\""], Type="WARN")
-
+            except Exception as exception:
+                Errored = True
+                self.projectAddJob(Base["ProjectID"], FailuredTasksCount=1)
+                if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["Unknown Error: ", exception], Type="WARN")
+            
             if Errored == True:
                 if Base["Retry"] > 0:
                     Base["Retry"] -= 1
@@ -146,6 +153,7 @@ class DownloadManager():
         if self.Stopping == True: raise Exceptions.Download.Stopping
 
         try:
+            # with Session.get(URL, stream=True, timeout=(ConnectTimeout, ReadTimeout)) as getObj:
             Request = Session.get(URL, timeout=(ConnectTimeout, ReadTimeout))
             StatusCode = str(Request.status_code)
             if StatusCode[0] in ["4", "5"]: Request.raise_for_status()

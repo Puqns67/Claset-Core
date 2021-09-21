@@ -1,19 +1,19 @@
-#VERSION=1
+#VERSION=2
 #
 #Claset/Base/Configs/Paths.py
 #
 
 def getLastVersion() -> int:
-    return 1
+    return 2
 
 def getFile() -> dict:
     return {
-        "VERSION": 1,
+        "VERSION": 2,
         "Prefixs": {
             "PREFIX": "$PREFIX",
             "EXEC": "$PREFIX/Claset",
             "CACHE": "$PREFIX/Claset/Cache",
-            "CONFIG": "$PREFIX/Claset/Configs",
+            "CONFIG": "$PREFIX/Claset",
             "MINECRFT": "$PREFIX/.minecraft",
             "ASSETS": "$PREFIX/.minecraft/assets",
             "VERSION": "$PREFIX/.minecraft/version",
@@ -27,4 +27,8 @@ def getFile() -> dict:
 
 
 def getDifference() -> dict:
-    return {}
+    return {
+        "1->2": [
+            "CHANGEVALUE:['Perfixs','CONFIG']->'$PREFIX/Claset'"
+        ]
+    }
