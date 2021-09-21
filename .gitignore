@@ -1,3 +1,4 @@
+# Cache
 Cache/
 __pycache__/
 .git/
@@ -7,5 +8,8 @@ out/
 
 Logs
 
+# Build
 Claset_Test.build/
 Claset_Test.dist/
+Claset_Test.onefile-build/
+Claset_Test.exe

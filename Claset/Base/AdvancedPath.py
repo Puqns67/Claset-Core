@@ -55,7 +55,6 @@ class path():
 
         # 顺序获取之后再放入 Perfixs
         for i in OthersKeys:
-            print(i)
             loaded = self.loadOtherString(i)
             for ii in loaded.keys():
                 self.CompleteConfigs[ii] = loaded[ii]

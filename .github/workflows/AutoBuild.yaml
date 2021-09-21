@@ -1,0 +1,86 @@
+name: AutoBuild
+on:
+  push:
+    branches: 
+     - master
+  workflow_dispatch:
+
+env:
+  UPLOAD_TO_RELEASE: true
+  UPLOAD_TO_ACTIONS: true
+  REMOVE_OLD_RELEASES: true
+  PYTHON_VERSION: 3.9.7
+  PYTHON_ARCHITECTURE: x64
+  RELEASES_NAME_PERFIX: Claset-AutoBuild-
+
+jobs:
+  Build:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        if: (!cancelled())
+        uses: actions/checkout@v2
+
+      - name: Setting Python Environment
+        if: (!cancelled())
+        uses: actions/setup-python@v2
+        with:
+          architecture: ${{ env.PYTHON_ARCHITECTURE }}
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setting PyPI Environment
+        run: |
+          pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install -r requirements_build.txt
+          
+      - name: Generate release tag
+        if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
+        id: genReleaseTag
+        run: echo "::set-output name=tag::$(date +'%Y/%m/%d_%H/%M/%S')"
+
+      - name: Generate release name
+        if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
+        id: genReleaseName
+        run: echo "::set-output name=name::${{ env.RELEASES_NAME_PERFIX }}${{ steps.genReleaseTag.outputs.tag }}"
+
+      - name: Show Environment
+        if: (!cancelled())
+        run: |
+          python --version
+          echo "PyPI packages list - All" ===========================
+          pip list
+          echo =========================== "" "PyPI packages list - Outdate" ===========================
+          pip list --outdate
+          echo ===========================
+
+      - name: Build
+        if: (!cancelled())
+        run: |
+          nuitka --standalone --follow-imports --onefile --assume-yes-for-downloads -o ".\Claset.exe" ".\Claset_Test.py"
+      
+      - run: ls $GITHUB_WORKSPACE
+
+      - name: Upload Build Artifact to Release
+        if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.genReleaseTag.outputs.tag }}
+          name: ${{ steps.genReleaseName.outputs.name }}
+          files: ${{ github.workspace }}\Claset.exe
+
+      - name: Upload Build Artifact to Actions
+        if: env.UPLOAD_TO_ACTIONS == 'true' && !cancelled()
+        uses: actions/upload-artifact@v2
+        with:
+          retention-days: 30
+          path: ${{ github.workspace }}\Claset.exe
+      
+      - name: Remove old Releases
+        if: env.REMOVE_OLD_RELEASES == 'true' && !cancelled()
+        uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 3
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
