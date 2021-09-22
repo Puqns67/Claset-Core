@@ -20,20 +20,7 @@ jobs:
       - name: Checkout
         if: (!cancelled())
         uses: actions/checkout@v2
-
-      - name: Setting Python Environment
-        if: (!cancelled())
-        uses: actions/setup-python@v2
-        with:
-          architecture: ${{ env.PYTHON_ARCHITECTURE }}
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Setting PyPI Environment
-        run: |
-          pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
-          pip install -r requirements_build.txt
-          
+      
       - name: Generate release tag
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
         id: genReleaseTag
@@ -43,6 +30,52 @@ jobs:
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
         id: genReleaseName
         run: echo "::set-output name=name::${{ env.RELEASES_NAME_PERFIX }}${{ steps.genReleaseTag.outputs.tag }}"
+        
+      - name: PyPI Cache
+        if: (!cancelled())
+        uses: actions/cache@v2
+        env:
+          cache-name: python-pip
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/requirements_build.txt') }}
+          restore-keys: ${{ runner.os }}-${{ env.cache-name }}
+
+      - name: Nuitka Cache
+        if: (!cancelled())
+        uses: actions/cache@v2
+        env:
+          cache-name: nuitka-gcc
+        with:
+          path: ~\AppData\Local\Nuitka\Nuitka
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}
+      
+      - name: Build Cache
+        if: (!cancelled())
+        uses: actions/cache@v2
+        env:
+          cache-name: nuitka-build
+        with:
+          path: |
+            ${{ github.workspace }}\Claset_Test.build
+            ${{ github.workspace }}\Claset_Test.dist
+            ${{ github.workspace }}\laset_Test.onefile-build
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ steps.genReleaseTag.outputs.tag }}
+          restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}-
+
+      - name: Setting Python Environment
+        if: (!cancelled())
+        uses: actions/setup-python@v2
+        with:
+          architecture: ${{ env.PYTHON_ARCHITECTURE }}
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setting PyPI Environment
+        if: (!cancelled())
+        run: |
+          pip install --upgrade pip setuptools wheel
+          pip install -r requirements_build.txt
 
       - name: Show Environment
         if: (!cancelled())
@@ -57,7 +90,7 @@ jobs:
       - name: Build
         if: (!cancelled())
         run: |
-          nuitka --standalone --follow-imports --onefile --assume-yes-for-downloads -o ".\Claset.exe" ".\Claset_Test.py"
+          nuitka --standalone --follow-imports --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\Claset.exe" "${{ github.workspace }}\Claset_Test.py"
       
       - run: ls $GITHUB_WORKSPACE
 
