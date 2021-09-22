@@ -38,7 +38,7 @@ jobs:
           cache-name: python-pip
         with:
           path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/requirements_build.txt') }}
+          key: ${{ runner.os }}-cache-${{ env.cache-name }}-${{ hashFiles('**/requirements_build.txt') }}
           restore-keys: ${{ runner.os }}-${{ env.cache-name }}
 
       - name: Nuitka Cache
@@ -48,7 +48,7 @@ jobs:
           cache-name: nuitka-gcc
         with:
           path: ~\AppData\Local\Nuitka\Nuitka
-          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          key: ${{ runner.os }}-cache-${{ env.cache-name }}
           restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}
       
       - name: Build Cache
@@ -61,7 +61,7 @@ jobs:
             ${{ github.workspace }}\Claset_Test.build
             ${{ github.workspace }}\Claset_Test.dist
             ${{ github.workspace }}\laset_Test.onefile-build
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ steps.genReleaseTag.outputs.tag }}
+          key: ${{ runner.os }}-cache-${{ env.cache-name }}-${{ steps.genReleaseTag.outputs.tag }}
           restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}-
 
       - name: Setting Python Environment
