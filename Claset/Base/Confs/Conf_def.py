@@ -12,7 +12,7 @@ def getFile() -> dict:
 
 def getDifference() -> dict:
     # Differences Formart:
-    #   NEW:KEYS[->VALUE]
+    #   NEW:KEYS->VALUE
     #   DEL:KEYS
     #   CHANGEKEY:OLDKEYS->NEWKEY
     #   CHANGEVALUE:OLDVALUES->NEWVALUE

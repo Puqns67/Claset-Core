@@ -29,6 +29,6 @@ def getFile() -> dict:
 def getDifference() -> dict:
     return {
         "1->2": [
-            "CHANGEVALUE:['Perfixs','CONFIG']->'$PREFIX/Claset'"
+            "CHANGEVALUE:[Perfixs, CONFIG]->$PREFIX/Claset"
         ]
     }

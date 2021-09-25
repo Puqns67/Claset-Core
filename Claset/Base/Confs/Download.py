@@ -32,9 +32,9 @@ def getFile() -> dict:
 def getDifference() -> dict:
     return {
         "1->2": [
-            "NEW:['UseSystemProxy']->True",
-            "NEW:['Proxies','http']->''",
-            "NEW:['Proxies','https']->''"
-            "CHANGEVALUE:['Headers','user-agent']->'Claset/0.1.5'"
+            "NEW:UseSystemProxy->True",
+            "NEW:[Proxies, http]->",
+            "NEW:['Proxies, https]->"
+            "CHANGEVALUE:[Headers, user-agent]->Claset/0.1.5"
         ]
     }

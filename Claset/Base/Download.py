@@ -16,7 +16,6 @@ from requests import Session
 
 from . import AdvancedPath
 from . import DFCheck
-from . import Loadfile
 from . import Path
 from . import Savefile
 from .Configs import Configs
@@ -83,7 +82,7 @@ class DownloadManager():
                     Sha1=Base["Sha1"],
                     ConnectTimeout=Base["ConnectTimeout"],
                     ReadTimeout=Base["ReadTimeout"]
-                    )
+                )
             except Exceptions.Download.Stopping:
                 Base["Retry"] = 0
             except Exceptions.Download.SizeError:
@@ -116,7 +115,7 @@ class DownloadManager():
                 Errored = True
                 self.projectAddJob(Base["ProjectID"], FailuredTasksCount=1)
                 if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["Unknown Error: ", exception], Type="WARN")
-            
+
             if Errored == True:
                 if Base["Retry"] > 0:
                     Base["Retry"] -= 1
@@ -136,7 +135,7 @@ class DownloadManager():
         Sha1:           str, # 使用sha1验证下载结果
         ConnectTimeout: int, # 连接超时(若为空则使用全局设置)
         ReadTimeout:    int  # 下载超时(若为空则使用全局设置)
-        ) -> None:
+    ) -> None:
 
         OutputPaths = OutputPath + "\\" + FileName
 
@@ -198,7 +197,7 @@ class DownloadManager():
 
             if self.Logger != None:
                 self.Logger.genLog(self.LogHeader + ["AddTask"], Text=["Adding ", str(JobTotal), " tasks to Project ", str(ProjectID)])
-            
+
             Temp = list()
             for i in range(JobTotal):
                 Job = InputJob[i]
