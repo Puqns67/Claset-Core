@@ -9,7 +9,10 @@ env:
   UPLOAD_TO_RELEASE: true
   UPLOAD_TO_ACTIONS: true
   REMOVE_OLD_RELEASES: true
-  CACHE_NUITKA_GCC: false
+
+  CACHE_NUITKA_GCC: true
+  CACHE_PYPI: true
+  CACHE_BUILD: false
   PYTHON_VERSION: 3.9.7
   PYTHON_ARCHITECTURE: x64
   RELEASES_NAME_PERFIX: Claset-AutoBuild-
@@ -33,7 +36,7 @@ jobs:
         run: echo "::set-output name=name::${{ env.RELEASES_NAME_PERFIX }}${{ steps.genReleaseTag.outputs.tag }}"
         
       - name: PyPI Cache
-        if: (!cancelled())
+        if: env.CACHE_PYPI == 'true' && !cancelled()
         uses: actions/cache@v2
         env:
           cache-name: python-pip
@@ -53,7 +56,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}-
       
       - name: Build Cache
-        if: (!cancelled())
+        if: env.CACHE_BUILD == 'true' && !cancelled()
         uses: actions/cache@v2
         env:
           cache-name: nuitka-build
