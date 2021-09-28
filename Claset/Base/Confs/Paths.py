@@ -1,34 +1,33 @@
-#VERSION=2
+# VERSION=2
 #
-#Claset/Base/Configs/Paths.py
+# Claset/Base/Configs/Paths.py
 #
 
-def getLastVersion() -> int:
-    return 2
 
-def getFile() -> dict:
-    return {
-        "VERSION": 2,
-        "Prefixs": {
-            "PREFIX": "$PREFIX",
-            "EXEC": "$PREFIX/Claset",
-            "CACHE": "$PREFIX/Claset/Cache",
-            "CONFIG": "$PREFIX/Claset",
-            "MINECRFT": "$PREFIX/.minecraft",
-            "ASSETS": "$PREFIX/.minecraft/assets",
-            "VERSION": "$PREFIX/.minecraft/version",
-            "LIBRERIES": "$PREFIX/.minecraft/libraries",
-            "MCVersion": "$CACHE/MCVersionJson",
-            "MCAssetIndex": "$CACHE/MCAssetIndex",
-            "MCVersionManifest": "$CACHE"
-        },
-        "Others": []
-    }
+LastVersion = 2
 
 
-def getDifference() -> dict:
-    return {
-        "1->2": [
-            "CHANGEVALUE:[Perfixs, CONFIG]->$PREFIX/Claset"
-        ]
-    }
+File = {
+    "VERSION": 2,
+    "Prefixs": {
+        "PREFIX": "$PREFIX",
+        "EXEC": "$PREFIX/Claset",
+        "CACHE": "$PREFIX/Claset/Cache",
+        "CONFIG": "$PREFIX/Claset",
+        "MINECRFT": "$PREFIX/.minecraft",
+        "ASSETS": "$PREFIX/.minecraft/assets",
+        "VERSION": "$PREFIX/.minecraft/version",
+        "LIBRERIES": "$PREFIX/.minecraft/libraries",
+        "MCVersion": "$CACHE/MCVersionJson",
+        "MCAssetIndex": "$CACHE/MCAssetIndex",
+        "MCVersionManifest": "$CACHE"
+    },
+    "Others": []
+}
+
+
+Difference = {
+    "1->2": [
+        "CHANGEVALUE:[Perfixs, CONFIG]->$PREFIX/Claset"
+    ]
+}

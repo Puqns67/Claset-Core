@@ -12,4 +12,3 @@ class ConfigsUnregistered(ConfigsErrors): pass
 
 # 配置文件已存在
 class ConfigsExist(ConfigsErrors, FileExistsError): pass
-    

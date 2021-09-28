@@ -25,7 +25,7 @@ from . import Exceptions
 
 class DownloadManager():
     def __init__(self, Logger=None):
-        self.Configs = Configs().getConfig("Download")
+        self.Configs = Configs().getConfig("Download", TargetLastVersion=2)
         self.ReCompile = reCompile(self.Configs["ReadFileNameReString"])
         self.Projects = {0: {"CompletedTasksCount": 0, "AllTasksCount": 0, "FailuredTasksCount": 0, "Tasks": []}}
         self.AdvancedPath = AdvancedPath.path(Others=True, OtherTypes=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>", "&F<Mirrors>&V<Official>"])

@@ -4,18 +4,17 @@
 #Conf 默认格式
 #
 
-def getLastVersion() -> int:
-    return int()
 
-def getFile() -> dict:
-    return {"FileContent": "FileContent"}
+LastVersion = int()
 
-def getDifference() -> dict:
-    # Differences Formart:
-    #   NEW:KEYS->VALUE
-    #   DEL:KEYS
-    #   CHANGEKEY:OLDKEYS->NEWKEY
-    #   CHANGEVALUE:OLDVALUES->NEWVALUE
-    # Types: NEW, DEL, CHANGEKEY, CHANGEVALUE
 
-    return {"Version_1": ["Difference1", "Difference2", "..."], "Version_2": ["Differences"], "...": "..."}
+File = {"FileContent": "FileContent"}
+
+# Differences Formart:
+#   REPLACE:KEYS->VALUE
+#   DELETE:KEYS->NULL
+#   [WIP]RENAMEKEY:OLDKEYS->NEWKEYNAME
+#   [WIP]REMOVEKEY:OLDKEYS->NEWKEYS
+# Types: NEW, DEL, RENAMEKEY, REMOVEKEY
+Difference = {"Version_1": ["Difference1", "Difference2", "..."], "Version_2": ["Differences"], "...": "..."}
+
