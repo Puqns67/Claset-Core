@@ -2,13 +2,14 @@ name: AutoBuild
 on:
   push:
     branches: 
-     - master
+      - master
   workflow_dispatch:
 
 env:
   UPLOAD_TO_RELEASE: true
   UPLOAD_TO_ACTIONS: true
   REMOVE_OLD_RELEASES: true
+  CACHE_NUITKA_GCC: false
   PYTHON_VERSION: 3.9.7
   PYTHON_ARCHITECTURE: x64
   RELEASES_NAME_PERFIX: Claset-AutoBuild-
@@ -42,7 +43,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}-
 
       - name: Nuitka Cache
-        if: (!cancelled())
+        if:  env.CACHE_NUITKA_GCC == 'true' && !cancelled()
         uses: actions/cache@v2
         env:
           cache-name: nuitka-gcc
