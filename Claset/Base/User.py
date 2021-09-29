@@ -11,7 +11,7 @@ from .Savefile import saveFile
 
 class user():
     def __init__(self):
-        self.users = loadFile("$EXEC/Configs/Users.json", "json")
+        self.users = loadFile("$CONFIG/Users.json", "json")
 
 
     # 返回list形式的User列表

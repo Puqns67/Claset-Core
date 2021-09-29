@@ -7,7 +7,6 @@
 from json import dumps
 
 from .Path import path as Path
-from .DFCheck import dfCheck
 
 
 def saveFile(path: str, filecontent, filetype: str = "json", filename: str = None) -> None:

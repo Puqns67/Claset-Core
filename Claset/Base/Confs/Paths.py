@@ -4,22 +4,22 @@
 #
 
 
-LastVersion = 2
+LastVersion = 3
 
 
 File = {
-    "VERSION": 2,
+    "VERSION": 3,
     "Prefixs": {
         "PREFIX": "$PREFIX",
         "EXEC": "$PREFIX/Claset",
         "CACHE": "$PREFIX/Claset/Cache",
         "CONFIG": "$PREFIX/Claset",
         "MINECRFT": "$PREFIX/.minecraft",
-        "ASSETS": "$PREFIX/.minecraft/assets",
-        "VERSION": "$PREFIX/.minecraft/version",
-        "LIBRERIES": "$PREFIX/.minecraft/libraries",
+        "ASSETS": "$MINECRFT/assets",
+        "VERSION": "$MINECRFT/version",
+        "LIBRERIES": "$MINECRFT/libraries",
         "MCVersion": "$CACHE/MCVersionJson",
-        "MCAssetIndex": "$CACHE/MCAssetIndex",
+        "MCAssetIndex": "$ASSETS/indexes",
         "MCVersionManifest": "$CACHE"
     },
     "Others": []
@@ -27,7 +27,15 @@ File = {
 
 
 Difference = {
+    "2->3": [
+        "REPLACE:VERSION->3",
+        "REPLACE:[Perfixs, ASSETS]->$MINECRFT/assets",
+        "REPLACE:[Perfixs, VERSION]->$MINECRFT/version",
+        "REPLACE:[Perfixs, LIBRERIES]->$MINECRFT/libraries",
+        "REPLACE:[Perfixs, MCAssetIndex]->$ASSETS/indexes"
+    ],
     "1->2": [
-        "CHANGEVALUE:[Perfixs, CONFIG]->$PREFIX/Claset"
+        "REPLACE:VERSION->2",
+        "REPLACE:[Perfixs, CONFIG]->$PREFIX/Claset"
     ]
 }

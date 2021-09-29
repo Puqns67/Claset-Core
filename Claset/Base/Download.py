@@ -14,21 +14,20 @@ from time import sleep
 import requests.exceptions
 from requests import Session
 
-from . import AdvancedPath
-from . import DFCheck
-from . import Path
-from . import Savefile
+from .AdvancedPath import path as aPath
+from .DFCheck import dfCheck
+from .Path import path as Path
+from .Savefile import saveFile
 from .Configs import Configs
-
-from . import Exceptions
+from .Exceptions import Download as Ex_Download
 
 
 class DownloadManager():
     def __init__(self, Logger=None):
-        self.Configs = Configs().getConfig("Download", TargetLastVersion=2)
+        self.Configs = Configs().getConfig("Download", TargetLastVersion=0)
         self.ReCompile = reCompile(self.Configs["ReadFileNameReString"])
         self.Projects = {0: {"CompletedTasksCount": 0, "AllTasksCount": 0, "FailuredTasksCount": 0, "Tasks": []}}
-        self.AdvancedPath = AdvancedPath.path(Others=True, OtherTypes=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>", "&F<Mirrors>&V<Official>"])
+        self.AdvancedPath = aPath(Others=True, OtherTypes=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>", "&F<Mirrors>&V<Official>"])
         self.DownloadsTasks = list()
 
         # 线程池(ThreadPool)
@@ -51,9 +50,9 @@ class DownloadManager():
 
     # 简易下载器(Download) 的代理运行器
     def Download(self, Base: dict) -> None:
-        if self.Stopping == True: raise Exceptions.Download.Stopping
+        if self.Stopping == True: raise Ex_Download.Stopping
 
-        if not "URL"            in Base: raise Exceptions.Download.MissingURL
+        if not "URL"            in Base: raise Ex_Download.MissingURL
         if not "OutputPath"     in Base: Base["OutputPath"]     = "$PERFIX"
         if not "FileName"       in Base: Base["FileName"]       = self.ReCompile.search(Base["URL"]).group(1)
         if not "Size"           in Base: Base["Size"]           = None
@@ -65,7 +64,7 @@ class DownloadManager():
         if not "Retry"          in Base: Base["Retry"]          = self.Configs["Retry"]
 
         if "$" in Base["URL"]: Base["URL"] = self.AdvancedPath.path(Base["URL"])
-        if "$" in Base["OutputPath"]: Base["OutputPath"] = Path.path(Base["OutputPath"])
+        if "$" in Base["OutputPath"]: Base["OutputPath"] = Path(Base["OutputPath"])
 
         Retry = True
 
@@ -83,31 +82,31 @@ class DownloadManager():
                     ConnectTimeout=Base["ConnectTimeout"],
                     ReadTimeout=Base["ReadTimeout"]
                 )
-            except Exceptions.Download.Stopping:
+            except Ex_Download.Stopping:
                 Base["Retry"] = 0
-            except Exceptions.Download.SizeError:
+            except Ex_Download.SizeError:
                 Errored = True
                 self.projectAddJob(Base["ProjectID"], FailuredTasksCount=1)
                 if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Base["FileName"], "\" Download failure, By SizeError, From \"", Base["URL"], "\""], Type="WARN")
-            except Exceptions.Download.FileExist:
+            except Ex_Download.FileExist:
                 if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Base["FileName"], "\" is Exist, Skipping"])
-            except Exceptions.Download.SchemaError:
+            except Ex_Download.SchemaError:
                 Errored = True
                 self.projectAddJob(Base["ProjectID"], ErrorTasksCount=1)
                 if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["URL \"", Base["URL"], "\""], Type="ERROR")
-            except Exceptions.Download.HashError:
+            except Ex_Download.HashError:
                 Errored = True
                 self.projectAddJob(Base["ProjectID"], FailuredTasksCount=1)
                 if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Base["FileName"], "\" hash verification failed"], Type="WARN")
-            except Exceptions.Download.ReadTimeout:
+            except Ex_Download.ReadTimeout:
                 Errored = True
                 self.projectAddJob(Base["ProjectID"], FailuredTasksCount=1)
                 if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Base["FileName"], "\" Download timeout, From \"", Base["URL"], "\""], Type="WARN")
-            except Exceptions.Download.ConnectTimeout:
+            except Ex_Download.ConnectTimeout:
                 Errored = True
                 self.projectAddJob(Base["ProjectID"], FailuredTasksCount=1)
                 if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Base["FileName"], "\" Connect timeout, From \"", Base["URL"], "\""], Type="WARN")
-            except Exceptions.Download.DownloadExceptions:
+            except Ex_Download.DownloadExceptions:
                 Errored = True
                 self.projectAddJob(Base["ProjectID"], FailuredTasksCount=1)
                 if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Base["FileName"], "\" Download failure, By ConnectionError, From \"", Base["URL"], "\""], Type="WARN")
@@ -140,7 +139,7 @@ class DownloadManager():
         OutputPaths = OutputPath + "\\" + FileName
 
         if Overwrite == False:
-            if DFCheck.dfCheck("f", OutputPaths) == True: raise Exceptions.Download.FileExist
+            if dfCheck("f", OutputPaths) == True: raise Ex_Download.FileExist
 
         if self.Configs["UseGobalRequestsSession"] == True:
             Session = self.RequestsSession
@@ -149,7 +148,7 @@ class DownloadManager():
             Session.headers = self.Configs['Headers']
 
         File = BytesIO()
-        if self.Stopping == True: raise Exceptions.Download.Stopping
+        if self.Stopping == True: raise Ex_Download.Stopping
 
         try:
             # with Session.get(URL, stream=True, timeout=(ConnectTimeout, ReadTimeout)) as getObj:
@@ -158,36 +157,36 @@ class DownloadManager():
             if StatusCode[0] in ["4", "5"]: Request.raise_for_status()
             File.write(Request.content)
         except requests.exceptions.ConnectTimeout:
-            raise Exceptions.Download.ConnectTimeout
+            raise Ex_Download.ConnectTimeout
         except requests.exceptions.ReadTimeout:
-            raise Exceptions.Download.ReadTimeout
+            raise Ex_Download.ReadTimeout
         except (
             requests.exceptions.MissingSchema,
             requests.exceptions.InvalidSchema
-        ): raise Exceptions.Download.SchemaError
+        ): raise Ex_Download.SchemaError
         except (
             requests.exceptions.ProxyError,
             requests.exceptions.HTTPError,
             requests.exceptions.SSLError,
             requests.exceptions.ConnectionError
-        ): raise Exceptions.Download.DownloadExceptions
+        ): raise Ex_Download.DownloadExceptions
 
         if Size != None:
-            if len(File.getbuffer()) != Size: raise Exceptions.Download.SizeError
+            if len(File.getbuffer()) != Size: raise Ex_Download.SizeError
 
         if Sha1 != None:
             hashobj = sha1(File.getbuffer()).hexdigest()
-            if hashobj != Sha1: raise Exceptions.Download.HashError
+            if hashobj != Sha1: raise Ex_Download.HashError
 
-        DFCheck.dfCheck("dm", OutputPath)
-        Savefile.saveFile(OutputPaths, File.getbuffer(), filetype="bytes")
+        dfCheck("dm", OutputPath)
+        saveFile(OutputPaths, File.getbuffer(), filetype="bytes")
 
         if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", FileName, "\" Downloaded"])
 
 
     # 添加任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID
     def addTasks(self, InputJob: list, ProjectID: int = None) -> int:
-        if self.Stopping == True: raise Exceptions.Download.Stopping
+        if self.Stopping == True: raise Ex_Download.Stopping
         if type(InputJob) == type(list()):
             JobTotal = len(InputJob)
             if ProjectID == None:

@@ -39,7 +39,7 @@ class Configs():
             NowConfigVersion = loadFile(FilePath, "json")["VERSION"]
             if NowConfigVersion != TargetLastVersion:
                 try:
-                    self.updateConfig(ID, FilePath, NowConfigVersion, TargetLastVersion)
+                    self.updateConfig(ID, FilePath, NowVersion=NowConfigVersion, TargetVersion=TargetLastVersion)
                 except Exception as INFO:
                     pass
 
@@ -86,29 +86,32 @@ class Configs():
             }
 
 
-    # 更新或降级配置文件版本(NowVersion)至目标版本(TargetLastVersion)
-    def updateConfig(self, ID: str, Path: str, TargetLastVersion: int, NowVersion: int = None, OverWrite: bool = True) -> None:
+    # 更新或降级配置文件版本(NowVersion)至目标版本(TargetVersion)
+    def updateConfig(self, ID: str, Path: str, TargetVersion: int, NowVersion: int = None, OverWrite: bool = True) -> None:
         if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
         if dfCheck("f", Path) and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
 
         self.genReCompiles()
         NewConfig = loadFile("$CONFIG/" + ConfigIDs[ID], "json")
         if NowVersion == None: NowVersion = NewConfig["VERSION"]
-        if TargetLastVersion < NowVersion: Reverse = True
+        if TargetVersion == 0:
+            TargetVersion = self.getInfoFromClass(ID, "Version")
+            if TargetVersion == NowVersion: return(None)
+        if TargetVersion < NowVersion: Reverse = True
         else: Reverse = False
 
-        DifferenceS = self.getDifferenceS(ID=ID, TargetLastVersion=TargetLastVersion, NowVersion=NowVersion, Reverse=Reverse)
+        DifferenceS = self.getDifferenceS(ID=ID, TargetVersion=TargetVersion, NowVersion=NowVersion, Reverse=Reverse)
 
         for Difference in DifferenceS:
             Type, Key = self.reCompiles["FindType&Key"].search(Difference).groups()
             if  Type in ["REPLACE", "DELETE"]:
-                NewConfig = self.ProcessConfig(NewConfig, Key, Type)
-
+                NewConfig = self.processConfig(NewConfig, Key, Type)
+        
         saveFile(Path, filecontent=NewConfig, filetype="json")
 
 
     # 取得版本之间的所有差异
-    def getDifferenceS(self, ID: str, NowVersion: int, TargetLastVersion: int, Reverse: bool = False) -> list:
+    def getDifferenceS(self, ID: str, NowVersion: int, TargetVersion: int, Reverse: bool = False) -> list:
         if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
         self.genReCompiles()
         Differences = self.getInfoFromClass(ID, Type="Difference")
@@ -122,16 +125,16 @@ class Configs():
 
         for DifferentsKey in ChangeList:
             if Reverse == False:
-                if (NowVersion <= DifferentsKey[0]) and (TargetLastVersion >= DifferentsKey[1]):
+                if (NowVersion <= DifferentsKey[0]) and (TargetVersion >= DifferentsKey[1]):
                     DifferenceS.extend(Differences[str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])])
             else:
-                if (NowVersion >= DifferentsKey[0]) and (TargetLastVersion <= DifferentsKey[1]):
+                if (NowVersion >= DifferentsKey[0]) and (TargetVersion <= DifferentsKey[1]):
                     DifferenceS.extend(reversed(Differences[str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])]))
         return(DifferenceS)
 
 
     # 对配置文件的各种操作
-    def ProcessConfig(self, OldConfig: dict, Key: str, Type: str) -> dict:
+    def processConfig(self, OldConfig: dict, Key: str, Type: str) -> dict:
         self.genReCompiles()
         Old, New = self.reCompiles["FindOld&New"].search(Key).groups()
 

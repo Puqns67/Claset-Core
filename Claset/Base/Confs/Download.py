@@ -23,8 +23,8 @@ File = {
         "Read": 30
     },
     "Proxies": {
-        "http": "",
-        "https": ""
+        "http": None,
+        "https": None
     }
 }
 

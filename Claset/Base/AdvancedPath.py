@@ -17,7 +17,7 @@ from .Exceptions import AdvancedPath as Ex_AdvancedPath
 
 class path():
     def __init__(self, Others=False, OtherTypes=[], DisableabsPath=True):
-        self.Configs = Configs().getConfig("Paths")
+        self.Configs = Configs().getConfig("Paths", TargetLastVersion=0)
         self.OthersType = Others
         self.DisableabsPath = DisableabsPath
         self.ReSearch = None
@@ -33,7 +33,7 @@ class path():
 
         try:
             File, Value = self.ReSearch.search(Objects).groups()
-            File = Configs().getConfig(File)
+            File = Configs().getConfig(File, TargetLastVersion=0)
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
         except Ex_Configs.ConfigsUnregistered:

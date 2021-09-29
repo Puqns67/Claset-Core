@@ -19,7 +19,7 @@ from .Configs import Configs as ConfigsClass
 class Logs():
     def __init__(self, LogPath: str = "$EXEC/Logs/", LogName: str = r"Claset-log-{TIME}.log", Configs: dict = None, ProcessOldLogMode: str = None, LogHeader: list = None, ENABLE: bool = None) -> None:
         if Configs == None:
-            self.Configs = ConfigsClass().getConfig("Logs")
+            self.Configs = ConfigsClass().getConfig("Logs", TargetLastVersion=0)
         else:
             self.Configs = Configs
 
@@ -35,7 +35,7 @@ class Logs():
                 self.LogHeader = self.logHeaderAdder(LogHeader, ["Logger"])
             else:
                 self.LogHeader = ["Logger"]
-    
+
             dfCheck("dm" , LogPath)
             self.LogPath = LogPath
             self.LogFileName = self.genLogFileName(LogName)
@@ -46,6 +46,8 @@ class Logs():
             
             self.processOldLog()
 
+
+    # 日志头合成器
     def logHeaderAdder(self, transferHeader: list, Header: list) -> list:
         if type(transferHeader) != type(list()):
             if type(transferHeader) != type(str()):
@@ -57,12 +59,16 @@ class Logs():
             Header = list(Header)
         return(transferHeader + Header)
 
+
+    # 生成日志文件文件名
     def genLogFileName(self, LogName: str) -> str:
         if r"{TIME}" in LogName:
             Time = strftime("%Y-%m-%d_%H-%M-%S", localtime())
             LogName = LogName.replace(r"{TIME}", Time)
         return(LogName)
-    
+
+
+    # 处理老日志
     def processOldLog(self) -> None:
         FilelistForTime = dict()
         LogFileFormat = reCompile(r"(Claset-log-([0-9-_]*)(\.log))")
@@ -98,6 +104,8 @@ class Logs():
         else:
             self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text=["Unsupport Type: ", ])
 
+
+    # 生成日志
     def genLog(self, Perfixs:list = list(), Text:str = str(), Type: str ="INFO", SaveToFile: bool= True) -> None:
         if self.Configs["ENABLE"] == False: return "UnEnabled"
         if not (Type in self.Configs["Types"]): Type == "INFO"
