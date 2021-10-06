@@ -1,4 +1,4 @@
-#VERSION=2
+#VERSION=3
 #
 #Claset\Base\Configs.py
 #生成, 更新, 降级配置文件
@@ -161,7 +161,7 @@ class Configs():
                 if Do in ["True", "False", "Null", "None"]:
                     if   Do == "True":  Do = True
                     elif Do == "False": Do = False
-                    elif Do == ["Null", "None"]:  Do = None
+                    elif Do in ["Null", "None"]:  Do = None
                 elif Do[-1] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
                     try: Do = int(Do)
                     except ValueError:

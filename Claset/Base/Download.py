@@ -1,4 +1,4 @@
-#VERSION=22
+#VERSION=23
 #
 #Claset/Base/Download.py
 #通过url下载数据
@@ -82,6 +82,8 @@ class DownloadManager():
                     ConnectTimeout=Base["ConnectTimeout"],
                     ReadTimeout=Base["ReadTimeout"]
                 )
+
+            # 错误处理
             except Ex_Download.Stopping:
                 Base["Retry"] = 0
             except Ex_Download.SizeError:
@@ -151,7 +153,6 @@ class DownloadManager():
         if self.Stopping == True: raise Ex_Download.Stopping
 
         try:
-            # with Session.get(URL, stream=True, timeout=(ConnectTimeout, ReadTimeout)) as getObj:
             Request = Session.get(URL, timeout=(ConnectTimeout, ReadTimeout))
             StatusCode = str(Request.status_code)
             if StatusCode[0] in ["4", "5"]: Request.raise_for_status()

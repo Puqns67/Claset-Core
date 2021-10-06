@@ -11,7 +11,7 @@ from re import compile as reCompile
 from .Loadfile import loadFile
 from .Configs import Configs
 
-from .Exceptions import Configs as Ex_Configs
+from .Exceptions.Configs import ConfigsUnregistered
 from .Exceptions import AdvancedPath as Ex_AdvancedPath
 
 
@@ -36,7 +36,7 @@ class path():
             File = Configs().getConfig(File, TargetLastVersion=0)
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
-        except Ex_Configs.ConfigsUnregistered:
+        except ConfigsUnregistered:
             File = loadFile(File, "json")
         
         try:
@@ -68,7 +68,7 @@ class path():
         self.CompleteConfigs = CompleteConfigs
 
 
-    def path(self, init, Others=False, DisableabsPath=True) -> str:
+    def path(self, init: str, Others=False, DisableabsPath: bool = True) -> str:
         # 如果启用了 Others 且未载过 Others 则通过 getFromOthersKeys 取得额外的 Key
         if Others == True:
             if self.OthersType == False:

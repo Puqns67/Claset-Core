@@ -4,11 +4,11 @@
 #
 
 
-LastVersion = 1
+LastVersion = 2
 
 
 File = {
-    "VERSION": 1,
+    "VERSION": 2,
     "ENABLE": True,
     "Format": {
         "Perfix": r"[{Name}]",
@@ -43,4 +43,9 @@ File = {
 }
 
 
-Difference = {}
+Difference = {
+    "1->2": [
+        "REPLACE:VERSION->2",
+        "REPLACE:[Format, FullLog]->[{Time}]{{Type}}{Perfixs}: {Text}"
+    ]
+}

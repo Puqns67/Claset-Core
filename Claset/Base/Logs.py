@@ -1,4 +1,4 @@
-#VERSION=8
+#VERSION=9
 #
 #Claset/Base/Logs.py
 #日志记录
@@ -11,7 +11,6 @@ from time import localtime, strftime
 from re import compile as reCompile
 from sys import stdout
 
-from .Loadfile import loadFile
 from .Path import path
 from .DFCheck import dfCheck
 from .Configs import Configs as ConfigsClass
@@ -102,7 +101,7 @@ class Logs():
                         Filelist.remove(Filelist[i])
                         
         else:
-            self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text=["Unsupport Type: ", ])
+            self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text=["Unsupport Type: ", self.Configs["OldLogProcess"]["Type"]])
 
 
     # 生成日志

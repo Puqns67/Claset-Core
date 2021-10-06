@@ -1,10 +1,9 @@
-#VERSION=11
+#VERSION=12
 #
 #Claset/Base/__init__.py
 #
 
 from . import Path
-from . import User
 from . import Loadfile
 from . import Savefile
 from . import Configs
