@@ -26,7 +26,7 @@ jobs:
       
       - name: Generate Times
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
-        id: genReleaseTag
+        id: genReleaseTimes
         run: |
           echo "::set-output name=tag::$(date +'%Y/%m/%d_%H/%M/%S')"
           echo "::set-output name=filename::$(date +'%Y-%m-%d_%H-%M-%S')"
@@ -35,8 +35,8 @@ jobs:
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
         id: genReleaseNameAndFileName
         run: |
-          echo "::set-output name=name::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTag.outputs.tag }}"
-          echo "::set-output name=name::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTag.outputs.filename }}.exe"
+          echo "::set-output name=tag::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.tag }}"
+          echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.filename }}.exe"
         
       - name: PyPI Cache
         if: env.CACHE_PYPI == 'true' && !cancelled()
@@ -103,15 +103,15 @@ jobs:
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.genReleaseTag.outputs.tag }}
-          name: ${{ steps.genReleaseNameAndFileName.outputs.name }}
+          tag_name: ${{ steps.genReleaseTimes.outputs.tag }}
+          name: ${{ steps.genReleaseNameAndFileName.outputs.tag }}
           files: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
 
       - name: Upload Build Artifact to Actions
         if: env.UPLOAD_TO_ACTIONS == 'true' && !cancelled()
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ steps.genReleaseNameAndFileName.outputs.filename }}
+          name: ${{ steps.genReleaseNameAndFileName.outputs.tag }}
           path: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
           retention-days: 30
       
