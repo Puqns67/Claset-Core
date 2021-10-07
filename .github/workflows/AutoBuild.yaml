@@ -111,7 +111,7 @@ jobs:
         if: env.UPLOAD_TO_ACTIONS == 'true' && !cancelled()
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ steps.genReleaseNameAndFileName.outputs.tag }}
+          name: ${{ steps.genReleaseNameAndFileName.outputs.filename }}
           path: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
           retention-days: 30
       
