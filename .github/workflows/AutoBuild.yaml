@@ -14,7 +14,7 @@ env:
   CACHE_BUILD: false
   PYTHON_VERSION: 3.9.7
   PYTHON_ARCHITECTURE: x64
-  RELEASES_NAME_PERFIX: Claset-AutoBuild-
+  RELEASES_NAME_PERFIX: Claset-AutoBuild
 
 jobs:
   Build:
@@ -24,15 +24,19 @@ jobs:
         if: (!cancelled())
         uses: actions/checkout@v2
       
-      - name: Generate release tag
+      - name: Generate Times
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
         id: genReleaseTag
-        run: echo "::set-output name=tag::$(date +'%Y/%m/%d_%H/%M/%S')"
+        run: |
+          echo "::set-output name=tag::$(date +'%Y/%m/%d_%H/%M/%S')"
+          echo "::set-output name=filename::$(date +'%Y-%m-%d_%H-%M-%S')"
 
       - name: Generate release name
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
-        id: genReleaseName
-        run: echo "::set-output name=name::${{ env.RELEASES_NAME_PERFIX }}${{ steps.genReleaseTag.outputs.tag }}"
+        id: genReleaseNameAndFileName
+        run: |
+          echo "::set-output name=name::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTag.outputs.tag }}"
+          echo "::set-output name=name::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTag.outputs.filename }}.exe"
         
       - name: PyPI Cache
         if: env.CACHE_PYPI == 'true' && !cancelled()
@@ -64,7 +68,7 @@ jobs:
             ${{ github.workspace }}\Claset_Test.build
             ${{ github.workspace }}\Claset_Test.dist
             ${{ github.workspace }}\Claset_Test.onefile-build
-          key: ${{ runner.os }}-cache-${{ env.cache-name }}-${{ steps.genReleaseTag.outputs.tag }}
+          key: ${{ runner.os }}-cache-${{ env.cache-name }}-${{ steps.genReleaseNameAndFileName.outputs.tag }}
           restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}-
 
       - name: Setting Python Environment
@@ -93,22 +97,23 @@ jobs:
       - name: Build
         if: (!cancelled())
         run: |
-          nuitka --standalone --follow-imports --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\Claset.exe" "${{ github.workspace }}\Claset_Test.py"
+          nuitka --standalone --follow-imports --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset_Test.py"
 
       - name: Upload Build Artifact to Release
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.genReleaseTag.outputs.tag }}
-          name: ${{ steps.genReleaseName.outputs.name }}
-          files: ${{ github.workspace }}\Claset.exe
+          name: ${{ steps.genReleaseNameAndFileName.outputs.name }}
+          files: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
 
       - name: Upload Build Artifact to Actions
         if: env.UPLOAD_TO_ACTIONS == 'true' && !cancelled()
         uses: actions/upload-artifact@v2
         with:
+          name: ${{ steps.genReleaseNameAndFileName.outputs.filename }}
+          path: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
           retention-days: 30
-          path: ${{ github.workspace }}\Claset.exe
       
       - name: Remove old Releases
         if: env.REMOVE_OLD_RELEASES == 'true' && !cancelled()
