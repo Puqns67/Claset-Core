@@ -42,3 +42,4 @@ def path(input: str, DisableabsPath: bool = True) -> str:
         input = abspath(input)
 
     return(input)
+

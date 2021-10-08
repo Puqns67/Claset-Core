@@ -15,6 +15,7 @@ from .Path import path
 from .DFCheck import dfCheck
 from .Configs import Configs as ConfigsClass
 
+
 class Logs():
     def __init__(self, LogPath: str = "$EXEC/Logs/", LogName: str = r"Claset-log-{TIME}.log", Configs: dict = None, ProcessOldLogMode: str = None, LogHeader: list = None, ENABLE: bool = None) -> None:
         if Configs == None:
@@ -47,7 +48,7 @@ class Logs():
 
 
     # 日志头合成器
-    def logHeaderAdder(self, transferHeader: list, Header: list) -> list:
+    def logHeaderAdder(self, transferHeader: list | str | int | float, Header: list | str | int | float) -> list:
         if type(transferHeader) != type(list()):
             if type(transferHeader) != type(str()):
                 transferHeader = str(transferHeader)
@@ -140,3 +141,4 @@ class Logs():
 
         # 打印日志
         stdout.write(FullLog)
+

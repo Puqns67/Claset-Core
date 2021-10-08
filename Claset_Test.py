@@ -14,7 +14,8 @@ Logger.genLog(Perfixs=LogHeader, Text="Started!!!")
 Downloader = Claset.Base.Download.DownloadManager(Logger=Logger)
 AssetsIndex = Claset.Game.Loadjson.AssetsIndex("./1.17.json")
 try:
-    Downloader.projectJoin(Downloader.addTasks(AssetsIndex))
+    ProjectID = Downloader.addTasks(AssetsIndex)
+    Downloader.projectJoin(ProjectID)
 except KeyboardInterrupt:
     Downloader.stop()
 Logger.genLog(Perfixs=LogHeader, Text="Stopped!!!")

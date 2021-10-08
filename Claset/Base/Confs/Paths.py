@@ -1,6 +1,6 @@
-# VERSION=2
+#VERSION=2
 #
-# Claset/Base/Configs/Paths.py
+#Claset/Base/Configs/Paths.py
 #
 
 

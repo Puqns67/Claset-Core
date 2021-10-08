@@ -1,22 +1,21 @@
-# VERSION=2
+#VERSION=3
 #
-# Claset/Base/Configs/Download.py
+#Claset/Base/Configs/Download.py
 #
 
 
-LastVersion = 2
+LastVersion = 3
 
 
 File = {
-    "VERSION": 2,
+    "VERSION": 3,
     "MaxThread": 32,
     "SleepTime": 0.1,
     "Retry": 5,
     "UseGobalRequestsSession": True,
     "UseSystemProxy": True,
-    "ReadFileNameReString": "([a-zA-Z0-9_.-]*)$",
     "Headers": {
-        "user-agent": "Claset/0.1.5"
+        "user-agent": "Claset/0.2.0"
     },
     "Timeouts": {
         "Connect": 5,
@@ -30,6 +29,11 @@ File = {
 
 
 Difference = {
+    "2->3": [
+        "REPLACE:VERSION->3",
+        "DELETE:ReadFileNameReString",
+        "REPLACE:[Headers, user-agent]->Claset/0.2.0"
+    ],
     "1->2": [
         "REPLACE:VERSION->2",
         "REPLACE:UseSystemProxy->True",

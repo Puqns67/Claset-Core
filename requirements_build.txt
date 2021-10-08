@@ -1,5 +1,6 @@
 # Requirements for Build
-requests>=2.25.0,<=2.26.0
-urllib3 >=1.25.0,<=1.25.11
-nuitka >= 0.6.16.4
-zstandard >= 0.15.2
+# python >=3.10.0
+requests >=2.25.0,<=2.26.0
+urllib3  >=1.25.0,<=1.25.11
+nuitka   >=0.6.16.4
+zstandard>=0.15.2

@@ -1,4 +1,4 @@
-#VERSION=3
+#VERSION=4
 #
 #Claset\Base\Configs.py
 #生成, 更新, 降级配置文件
@@ -21,8 +21,18 @@ ConfigIDs = {
 }
 
 class Configs():
-    def __init__(self):
+    def __init__(self, Logger=None, LoggerHeader: list | str | None = None):
+        # 定义全局 Logger
+        if Logger != None:
+            self.Logger = Logger
+            if LoggerHeader != None:
+                self.LogHeader = self.Logger.logHeaderAdder(LoggerHeader, ["Configs"])
+            else: self.LoggerHeader = ["Configs"]
+        else: self.Logger = None
+
         self.reCompiles = None
+
+        # 执行初始任务
         dfCheck("dm", "$CONFIG/")
         if dfCheck("f", "$CONFIG/" + ConfigIDs["Paths"]) == False:    self.genConfig("Paths", "$CONFIG/" + ConfigIDs["Paths"])
         if dfCheck("f", "$CONFIG/" + ConfigIDs["Settings"]) == False: self.genConfig("Settings", "$CONFIG/" + ConfigIDs["Settings"])
@@ -41,7 +51,7 @@ class Configs():
                 try:
                     self.updateConfig(ID, FilePath, NowVersion=NowConfigVersion, TargetVersion=TargetLastVersion)
                 except Exception as INFO:
-                    pass
+                    if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["getConfig"], Text=["Updating Config (", ID, ") Error! INFO: ", INFO], Type="WARN")
 
         return(loadFile(FilePath, "json"))
 
@@ -56,24 +66,28 @@ class Configs():
 
     # 从 Confs 类获得相关数据
     def getInfoFromClass(self, ID: str, Type: str):
-        if   Type == "Version":
-            if   ID == "Paths":    return(Confs.Paths.LastVersion)
-            elif ID == "Download": return(Confs.Download.LastVersion)
-            elif ID == "Settings": return(Confs.Settings.LastVersion)
-            elif ID == "Logs":     return(Confs.Logs.LastVersion)
-            elif ID == "Mirrors":  return(Confs.Mirrors.LastVersion)
-        elif Type == "File":
-            if   ID == "Paths":    return(Confs.Paths.File)
-            elif ID == "Download": return(Confs.Download.File)
-            elif ID == "Settings": return(Confs.Settings.File)
-            elif ID == "Logs":     return(Confs.Logs.File)
-            elif ID == "Mirrors":  return(Confs.Mirrors.File)
-        elif Type == "Difference":
-            if   ID == "Paths":    return(Confs.Paths.Difference)
-            elif ID == "Download": return(Confs.Download.Difference)
-            elif ID == "Settings": return(Confs.Settings.Difference)
-            elif ID == "Logs":     return(Confs.Logs.Difference)
-            elif ID == "Mirrors":  return(Confs.Mirrors.Difference)
+        match Type:
+            case "Version":
+                match ID:
+                    case "Paths":    return(Confs.Paths.LastVersion)
+                    case "Download": return(Confs.Download.LastVersion)
+                    case "Settings": return(Confs.Settings.LastVersion)
+                    case "Logs":     return(Confs.Logs.LastVersion)
+                    case "Mirrors":  return(Confs.Mirrors.LastVersion)
+            case "File":
+                match ID:
+                    case "Paths":    return(Confs.Paths.File)
+                    case "Download": return(Confs.Download.File)
+                    case "Settings": return(Confs.Settings.File)
+                    case "Logs":     return(Confs.Logs.File)
+                    case "Mirrors":  return(Confs.Mirrors.File)
+            case "Difference":
+                match ID:
+                    case "Paths":    return(Confs.Paths.Difference)
+                    case "Download": return(Confs.Download.Difference)
+                    case "Settings": return(Confs.Settings.Difference)
+                    case "Logs":     return(Confs.Logs.Difference)
+                    case "Mirrors":  return(Confs.Mirrors.Difference)
 
 
     # 生成所有的正则对象
@@ -97,6 +111,8 @@ class Configs():
         if TargetVersion == 0:
             TargetVersion = self.getInfoFromClass(ID, "Version")
             if TargetVersion == NowVersion: return(None)
+        
+        if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["updateConfig"], Text=["Update Config (", ID, ") From Version ", NowVersion, " to Version ", TargetVersion])
         if TargetVersion < NowVersion: Reverse = True
         else: Reverse = False
 
@@ -104,7 +120,7 @@ class Configs():
 
         for Difference in DifferenceS:
             Type, Key = self.reCompiles["FindType&Key"].search(Difference).groups()
-            if  Type in ["REPLACE", "DELETE"]:
+            if Type in ["REPLACE", "DELETE"]:
                 NewConfig = self.processConfig(NewConfig, Key, Type)
         
         saveFile(Path, filecontent=NewConfig, filetype="json")
@@ -130,14 +146,17 @@ class Configs():
             else:
                 if (NowVersion >= DifferentsKey[0]) and (TargetVersion <= DifferentsKey[1]):
                     DifferenceS.extend(reversed(Differences[str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])]))
+        if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["getDifferenceS"], Text=["Config (", ID, ")'s Differents: ", DifferenceS], Type="DEBUG")
         return(DifferenceS)
 
 
     # 对配置文件的各种操作
     def processConfig(self, OldConfig: dict, Key: str, Type: str) -> dict:
         self.genReCompiles()
-        Old, New = self.reCompiles["FindOld&New"].search(Key).groups()
-
+        if Type == "DELETE":
+            Old = Key
+            New = str()
+        else: Old, New = self.reCompiles["FindOld&New"].search(Key).groups()
         if self.reCompiles["IFStrList"].search(Old.strip()) != None:
             Old = self.__StrList2List(Old)
         else: Old = [Old]
@@ -169,7 +188,10 @@ class Configs():
                         except ValueError: pass
                 Dict[Keys[0]] = Do
                 return(Dict)
-            if Type == "DELETE":
-                Dict.pop(Keys[0])
+            elif Type == "DELETE":
+                try:
+                    Dict.pop(Keys[0])
+                except KeyError:
+                    pass
                 return(Dict)
 

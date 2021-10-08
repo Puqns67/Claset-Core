@@ -6,27 +6,27 @@
 
 from Claset.Base.Loadfile import loadFile
 
-    
-def AssetsIndex(path) -> list:
-    initfile = loadFile(path, "json")
-    objects = initfile["objects"]
-    output = list()
 
-    for i in objects:
-        output.append({
-            "FileName": objects[i]["hash"],
-            "URL": "$Assets/" + objects[i]["hash"][:2] + "/" + objects[i]["hash"],
-            "Size": objects[i]["size"],
-            "OutputPath": "$ASSETS/objects/" + objects[i]["hash"][:2], 
+def AssetsIndex(Path: str) -> list:
+    InitFile = loadFile(Path, "json")
+    Objects = InitFile["objects"]
+    Tasks = list()
+
+    for i in Objects:
+        Tasks.append({
+            "FileName": Objects[i]["hash"],
+            "URL": "$Assets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"],
+            "Size": Objects[i]["size"],
+            "OutputPath": "$ASSETS/objects/" + Objects[i]["hash"][:2], 
             "Overwrite": False,
             "Retry": 3,
-            "OtherURL": "$OfficialAssets/" + objects[i]["hash"][:2] + "/" + objects[i]["hash"],
-            "Sha1": objects[i]["hash"],
+            "OtherURL": "$OfficialAssets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"],
+            "Sha1": Objects[i]["hash"],
             "ConnectTimeout": 3,
             "ReadTimeout": 15
         })
     
-    return(output)
+    return(Tasks)
 
 
 def Version():

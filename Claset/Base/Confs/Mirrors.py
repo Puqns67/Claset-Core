@@ -1,6 +1,6 @@
-# VERSION=0
+#VERSION=0
 #
-# Claset/Base/Configs/Mirrors.py
+#Claset/Base/Configs/Mirrors.py
 #
 
 

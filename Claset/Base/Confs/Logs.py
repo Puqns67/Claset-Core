@@ -1,6 +1,6 @@
-# VERSION=0
+#VERSION=0
 #
-# Claset/Base/Configs/Logs.py
+#Claset/Base/Configs/Logs.py
 #
 
 

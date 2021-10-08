@@ -1,8 +1,5 @@
 name: AutoBuild
 on:
-  push:
-    branches: 
-      - master
   workflow_dispatch:
 
 env:
@@ -12,7 +9,7 @@ env:
   CACHE_NUITKA_GCC: true
   CACHE_PYPI: false
   CACHE_BUILD: false
-  PYTHON_VERSION: 3.9.7
+  PYTHON_VERSION: "3.10.0"
   PYTHON_ARCHITECTURE: x64
   RELEASES_NAME_PERFIX: Claset-AutoBuild
 
@@ -23,7 +20,7 @@ jobs:
       - name: Checkout
         if: (!cancelled())
         uses: actions/checkout@v2
-      
+
       - name: Generate Times
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
         id: genReleaseTimes
@@ -37,7 +34,7 @@ jobs:
         run: |
           echo "::set-output name=tag::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.tag }}"
           echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.filename }}.exe"
-        
+
       - name: PyPI Cache
         if: env.CACHE_PYPI == 'true' && !cancelled()
         uses: actions/cache@v2
@@ -57,7 +54,7 @@ jobs:
           path: ~\AppData\Local\Nuitka\Nuitka
           key: ${{ runner.os }}-cache-${{ env.cache-name }}
           restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}-
-      
+
       - name: Build Cache
         if: env.CACHE_BUILD == 'true' && !cancelled()
         uses: actions/cache@v2
@@ -114,7 +111,7 @@ jobs:
           name: ${{ steps.genReleaseNameAndFileName.outputs.filename }}
           path: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
           retention-days: 30
-      
+
       - name: Remove old Releases
         if: env.REMOVE_OLD_RELEASES == 'true' && !cancelled()
         uses: dev-drprasad/delete-older-releases@v0.2.0
