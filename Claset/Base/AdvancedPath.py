@@ -16,7 +16,7 @@ from .Exceptions import AdvancedPath as Ex_AdvancedPath
 
 
 class path():
-    def __init__(self, Others=False, OtherTypes=[], DisableabsPath=True):
+    def __init__(self, Others: bool = False, OtherTypes: list = list(), DisableabsPath: bool = True):
         self.Configs = Configs().getConfig("Paths", TargetLastVersion=0)
         self.OthersType = Others
         self.DisableabsPath = DisableabsPath
@@ -24,11 +24,11 @@ class path():
         self.CompleteConfigs = self.Configs["Prefixs"]
 
         if self.OthersType == True:
-            self.ReSearch = self.ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
+            self.ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
             self.getFromOthersKeys(OtherTypes)
 
 
-    def loadOtherString(self, Objects):
+    def loadOtherString(self, Objects: str) -> dict:
         if self.ReSearch == None: self.ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
 
         try:
@@ -47,7 +47,7 @@ class path():
         return(File[Value])
 
 
-    def getFromOthersKeys(self, OtherTypes):
+    def getFromOthersKeys(self, OtherTypes: list) -> None:
         if len(self.Configs["Others"]) == 0:
             OthersKeys = OtherTypes
         else:
@@ -68,15 +68,10 @@ class path():
         self.CompleteConfigs = CompleteConfigs
 
 
-    def path(self, init: str, Others=False, DisableabsPath: bool = True) -> str:
+    def path(self, init: str, Others: bool = False, DisableabsPath: bool = True) -> str:
         # 如果启用了 Others 且未载过 Others 则通过 getFromOthersKeys 取得额外的 Key
-        if Others == True:
-            if self.OthersType == False:
-                self.getFromOthersKeys()
-
-        if DisableabsPath == False:
-            if self.DisableabsPath == True:
-                self.DisableabsPath = False
+        if (Others == True) and (self.OthersType == False):             self.getFromOthersKeys()
+        if (DisableabsPath == False) and (self.DisableabsPath == True): self.DisableabsPath = False
 
         ConfigKeys = self.CompleteConfigs.keys()
 

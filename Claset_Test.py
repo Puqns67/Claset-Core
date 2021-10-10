@@ -20,3 +20,4 @@ except KeyboardInterrupt:
     Downloader.stop()
 Logger.genLog(Perfixs=LogHeader, Text="Stopped!!!")
 Logger.genLog(Perfixs=LogHeader, Text=["Used time: ", time.time() - StartTime])
+

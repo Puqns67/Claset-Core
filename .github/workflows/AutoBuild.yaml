@@ -14,7 +14,7 @@ env:
   RELEASES_NAME_PERFIX: Claset-AutoBuild
 
 jobs:
-  Build:
+  Build_MS_Windows:
     runs-on: windows-latest
     steps:
       - name: Checkout

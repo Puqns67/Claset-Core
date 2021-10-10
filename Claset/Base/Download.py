@@ -1,6 +1,6 @@
 #VERSION=24
 #
-#Claset/Task/Download.py
+#Claset/Base/Download.py
 #通过url下载数据
 #
 
@@ -187,8 +187,10 @@ class DownloadManager():
     def addTasks(self, InputTasks: list[dict], MainProjectID: int | None = None) -> int | None:
         if self.Stopping == True: raise Ex_Download.Stopping
         JobTotal = len(InputTasks)
-        if MainProjectID == None: MainProjectID = self.projectCreate(JobTotal)
-        self.projectAddJob(MainProjectID, JobTotal)
+        if MainProjectID == None:
+            InputProjectID = False
+            MainProjectID = self.projectCreate(AllTasksCount=JobTotal)
+        else: InputProjectID = True
         if self.Logger != None: self.Logger.genLog(self.LogHeader + ["AddTask"], Text=["Adding ", JobTotal, " tasks to Project ", MainProjectID])
 
         for InputTask in InputTasks:
@@ -196,22 +198,22 @@ class DownloadManager():
             self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
         if self.Logger != None: self.Logger.genLog(self.LogHeader + ["AddTask"], Text=["Added ", JobTotal, " tasks to Project ", MainProjectID])
-        return(MainProjectID)
+        if InputProjectID == False: return(MainProjectID)
 
 
     # 添加单个 dict 任务对象至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID
     def addTask(self, InputTask: dict, ProjectID: int = None) -> int | None:
         if self.Stopping == True: raise Ex_Download.Stopping
         if ProjectID == None:
-            InputTask["ProjectID"] = self.projectCreate(1)
+            InputProjectID = False
+            InputTask["ProjectID"] = self.projectCreate(AllTasksCount=1)
         else: InputTask["ProjectID"] = ProjectID
         if self.Logger != None: self.Logger.genLog(self.LogHeader + ["AddTask"], Text=["Adding 1 tasks to Project ", InputTask["ProjectID"]])
 
-        self.projectAddJob(InputTask["ProjectID"], AllTasksCount=1)
         self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
         if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["AddTask"], Text=["Added 1 task to Project ", InputTask["ProjectID"]])
-        return(ProjectID)
+        if InputProjectID == False: return(ProjectID)
 
 
     # 停止可停止的一切 Project 对象
@@ -234,15 +236,17 @@ class DownloadManager():
 
 
     # 建立 Project 对象
-    def projectCreate(self, AllTasksCount: int = 0) -> int:
-        while True:
-            NewProjectID = randint(1,4096)
-            if NewProjectID in self.Projects.keys():
-                continue
-            self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0, "ErrorTasksCount":0}
-            if self.Logger != None:
-                self.Logger.genLog(Perfixs=self.LogHeader + ["CreateProject"], Text="Created New Project " + str(NewProjectID))
-            return(NewProjectID)
+    def projectCreate(self, AllTasksCount: int = 0, setProjectID: int = 0) -> int:
+        if setProjectID == 0:
+            Temp = True
+            while Temp:
+                NewProjectID = randint(1,4096)
+                if not (NewProjectID in self.Projects.keys()): Temp = False
+        else: NewProjectID = setProjectID
+        self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0, "ErrorTasksCount":0}
+        if self.Logger != None:
+            self.Logger.genLog(Perfixs=self.LogHeader + ["CreateProject"], Text="Created New Project " + str(NewProjectID))
+        return(NewProjectID)
 
 
     # 向 Project 对象添加任务
