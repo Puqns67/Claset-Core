@@ -18,4 +18,6 @@ Main.onefile-build/
 Main.exe
 
 # Other
+.vscode/
 !.vscode/launch.json
+!Claset/Tools/Tests/DataSource/1.17.json

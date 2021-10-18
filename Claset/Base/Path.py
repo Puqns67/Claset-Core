@@ -16,7 +16,7 @@ def path(input: str, DisableabsPath: bool = True) -> str:
         with open(getcwd() + "/Claset/Paths.json") as ConfigFile:
             Config = load(ConfigFile)["Prefixs"]
     except FileNotFoundError:
-        Config = File
+        Config = File['Prefixs']
 
     ConfigKeys = Config.keys()
 
