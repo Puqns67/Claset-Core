@@ -1,8 +1,10 @@
-#VERSION=2
+#VERSION=3
 #
 #Claset/Game/__init__.py
 #
 
-from . import Downloads
+from . import Exceptions
+from . import Download
 from . import Loadjson
+from . import Launcher
 

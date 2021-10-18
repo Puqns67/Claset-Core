@@ -8,9 +8,9 @@ from re import compile as reCompile
 
 from . import Confs
 from .Exceptions import Configs as Ex_Configs
-from .Savefile import saveFile
-from .Loadfile import loadFile
+from .File import loadFile, saveFile
 from .DFCheck import dfCheck
+
 
 ConfigIDs = {
     "Download": "Download.json",
@@ -33,16 +33,16 @@ class Configs():
         self.reCompiles = None
 
         # 执行初始任务
-        dfCheck("dm", "$CONFIG/")
-        if dfCheck("f", "$CONFIG/" + ConfigIDs["Paths"]) == False:    self.genConfig("Paths", "$CONFIG/" + ConfigIDs["Paths"])
-        if dfCheck("f", "$CONFIG/" + ConfigIDs["Settings"]) == False: self.genConfig("Settings", "$CONFIG/" + ConfigIDs["Settings"])
+        dfCheck(Path="$CONFIG/", Type="dm")
+        if dfCheck(Path="$CONFIG/" + ConfigIDs["Paths"], Type="f") == False:    self.genConfig("Paths", "$CONFIG/" + ConfigIDs["Paths"])
+        if dfCheck(Path="$CONFIG/" + ConfigIDs["Settings"], Type="f") == False: self.genConfig("Settings", "$CONFIG/" + ConfigIDs["Settings"])
 
 
     # 取得配置文件
-    def getConfig(self, ID: str, TargetLastVersion: str = None) -> dict:
+    def getConfig(self, ID: str, TargetLastVersion: str | None = None) -> dict:
         if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered(ID)
         FilePath = "$CONFIG/" + ConfigIDs[ID]
-        if dfCheck("f", FilePath) == False: self.genConfig(ID, FilePath)
+        if dfCheck(Path=FilePath, Type="f") == False: self.genConfig(ID, FilePath)
 
         # 在要求特定的版本时检查配置文件版本，如异常则尝试更新配置文件
         if TargetLastVersion != None:
@@ -59,9 +59,9 @@ class Configs():
     # 生成配置文件
     def genConfig(self, ID: str, Path: str, OverWrite: bool = True) -> None:
         if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
-        if dfCheck("f", Path) and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
+        if dfCheck(Path=Path, Type="f") and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
 
-        saveFile(Path, filecontent=self.getInfoFromClass(ID, "File"), filetype="json")
+        saveFile(Path=Path, FileContent=self.getInfoFromClass(ID, "File"), Type="json")
 
 
     # 从 Confs 类获得相关数据
@@ -103,7 +103,7 @@ class Configs():
     # 更新或降级配置文件版本(NowVersion)至目标版本(TargetVersion)
     def updateConfig(self, ID: str, Path: str, TargetVersion: int, NowVersion: int = None, OverWrite: bool = True) -> None:
         if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
-        if dfCheck("f", Path) and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
+        if dfCheck(Path=Path, Type="f") and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
 
         self.genReCompiles()
         NewConfig = loadFile("$CONFIG/" + ConfigIDs[ID], "json")
@@ -111,7 +111,7 @@ class Configs():
         if TargetVersion == 0:
             TargetVersion = self.getInfoFromClass(ID, "Version")
             if TargetVersion == NowVersion: return(None)
-        
+
         if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["updateConfig"], Text=["Update Config (", ID, ") From Version ", NowVersion, " to Version ", TargetVersion])
         if TargetVersion < NowVersion: Reverse = True
         else: Reverse = False
@@ -122,8 +122,8 @@ class Configs():
             Type, Key = self.reCompiles["FindType&Key"].search(Difference).groups()
             if Type in ["REPLACE", "DELETE"]:
                 NewConfig = self.processConfig(NewConfig, Key, Type)
-        
-        saveFile(Path, filecontent=NewConfig, filetype="json")
+
+        saveFile(Path=Path, FileContent=NewConfig, Type="json")
 
 
     # 取得版本之间的所有差异

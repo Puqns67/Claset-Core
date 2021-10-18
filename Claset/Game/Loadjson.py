@@ -1,10 +1,10 @@
-#VERSION=1
+#VERSION=3
 #
-#Claset\Game\Loadjson.py
+#Claset/Game/Loadjson.py
 #用于解析游戏Json
 #
 
-from Claset.Base.Loadfile import loadFile
+from Claset.Base.File import loadFile
 
 
 def AssetsIndex(Path: str) -> list:

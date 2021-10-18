@@ -8,7 +8,7 @@ from os import getcwd
 from os.path import abspath
 from re import compile as reCompile
 
-from .Loadfile import loadFile
+from .File import loadFile
 from .Configs import Configs
 
 from .Exceptions.Configs import ConfigsUnregistered
@@ -37,8 +37,8 @@ class path():
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
         except ConfigsUnregistered:
-            File = loadFile(File, "json")
-        
+            File = loadFile(Path=File, Type="json")
+
         try:
             Value = self.loadOtherString(Value)
         except Ex_AdvancedPath.SearchError:

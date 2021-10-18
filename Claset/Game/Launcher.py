@@ -1,6 +1,6 @@
 #VERSION=0
 #
-#Claset/Game/Launcher/Launcher.py
+#Claset/Game/Launcher.py
 #游戏启动器
 #
 

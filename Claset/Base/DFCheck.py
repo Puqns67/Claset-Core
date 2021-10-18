@@ -14,35 +14,26 @@ from os import makedirs
 from os.path import exists, getsize
 from re import search
 
-from .Path import path as Path
+from .Path import path as Pathmd
 
 
-def dfCheck(checktype, path, size=None) -> bool:
-    if "$" in path:
-        path = Path(path)
+def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
+    if "$" in Path: Path = Pathmd(Path)
 
-    if "s" in checktype:
-        if "f" in checktype:
-            tsize = getsize(path)
-            if size != tsize:
-                return(False)
-            return(True)
-
-    if "d" in checktype:
-        if "m" in checktype:
-            try:
-                makedirs(path)
-            except FileExistsError:
-                pass
-        return(exists(path))
-
-    if "f" in checktype:
-        if exists(path) == False:
-            if "m" in checktype:
-                try:
-                    makedirs(path.replace(search(r"([a-zA-Z0-9_.-]*)$", path).group(1), ""))
-                except FileExistsError:
-                    pass
-            return(False)
-        return(True)
+    if ("s" in Type) and ("f" in Type):
+        FileSize = getsize(Path)
+        if Size != FileSize: return(False)
+        else: return(True)
+    elif "d" in Type:
+        if "m" in Type:
+            try: makedirs(Path)
+            except FileExistsError: pass
+        else: return(exists(Path))
+    elif "f" in Type:
+        if exists(Path) == False:
+            if "m" in Type:
+                try: makedirs(Path.replace(search(r"([a-zA-Z0-9_.-]*)$", Path).group(1), ""))
+                except FileExistsError: pass
+            else: return(False)
+        else: return(True)
 

@@ -27,23 +27,23 @@ class Logs():
         if self.Configs["ENABLE"] == True:
             if "$" in LogPath:
                 LogPath = path(LogPath)
-            
+
             if ProcessOldLogMode != None:
                 self.Configs["OldLogProcess"]["Type"] = ProcessOldLogMode
-            
+
             if LogHeader != None:
                 self.LogHeader = self.logHeaderAdder(LogHeader, ["Logger"])
             else:
                 self.LogHeader = ["Logger"]
 
-            dfCheck("dm" , LogPath)
+            dfCheck(Path=LogPath, Type="dm")
             self.LogPath = LogPath
             self.LogFileName = self.genLogFileName(LogName)
             if self.Configs["ProgressiveWrite"] == True:
                 self.LogContent = None
             else:
                 self.LogContent = open(self.LogFileName, mode="w")
-            
+
             self.processOldLog()
 
 
@@ -100,13 +100,13 @@ class Logs():
                         remove(path)
                         self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text=["Archived old log file: \"", Filelist[i], "\""])
                         Filelist.remove(Filelist[i])
-                        
+
         else:
             self.genLog(Perfixs=self.LogHeader + ["ProcessOldLog"], Text=["Unsupport Type: ", self.Configs["OldLogProcess"]["Type"]])
 
 
     # 生成日志
-    def genLog(self, Perfixs:list = list(), Text:str = str(), Type: str ="INFO", SaveToFile: bool= True) -> None:
+    def genLog(self, Perfixs: list = list(), Text: str | list = str(), Type: str ="INFO", SaveToFile: bool= True) -> None:
         if self.Configs["ENABLE"] == False: return "UnEnabled"
         if not (Type in self.Configs["Types"]): Type == "INFO"
         if (Type == "DEBUG") and (self.Configs["Debug"] == False): return None
@@ -117,14 +117,14 @@ class Logs():
                 for i in range(len(Text)):
                     if type(Text[i]) != type(str()): Text[i] = str(Text[i])
                 Text = str().join(Text)
-                
+
         Perfix = str()
 
         #Perfixs
         if len(Perfixs) != 0:
             for Name in Perfixs:
                 Perfix += self.Configs["Format"]["Perfix"].replace(r"{Name}", str(Name))
-        
+
         #Text
         Text = Text.replace(r"{Text}", Text)
 

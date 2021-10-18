@@ -14,17 +14,17 @@ from time import sleep
 import requests.exceptions
 from requests import Session
 
-from .AdvancedPath import path as aPath
-from .DFCheck import dfCheck
-from .Path import path as Path
-from .Savefile import saveFile
-from .Configs import Configs
 from .Exceptions import Download as Ex_Download
+from .AdvancedPath import path as aPath
+from .Logs import Logs
+from .DFCheck import dfCheck
+from .File import saveFile
+from .Configs import Configs
 
 
 class DownloadManager():
     # 下载管理器
-    def __init__(self, Logger=None):
+    def __init__(self, Logger: Logs | None = None):
         # 定义全局 Logger
         if Logger != None:
             self.Logger = Logger
@@ -66,7 +66,7 @@ class DownloadManager():
         if not "Retry"          in Task: Task["Retry"]          = self.Configs["Retry"]
 
         if "$" in Task["URL"]: Task["URL"] = self.AdvancedPath.path(Task["URL"])
-        if "$" in Task["OutputPath"]: Task["OutputPath"] = Path(Task["OutputPath"])
+        if "$" in Task["OutputPath"]: Task["OutputPath"] = self.AdvancedPath.path(Task["OutputPath"])
 
         Retry = True
 
@@ -123,7 +123,9 @@ class DownloadManager():
                 if Task["Retry"] > 0:
                     Task["Retry"] -= 1
                     Retry = True
-                else: self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
+                else:
+                    if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Task["FileName"], "\" Retry Count Max"], Type="ERROR")
+                    self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
             else: self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
 
 
@@ -142,8 +144,7 @@ class DownloadManager():
 
         OutputPaths = OutputPath + "\\" + FileName
 
-        if Overwrite == False:
-            if dfCheck("f", OutputPaths) == True: raise Ex_Download.FileExist
+        if (Overwrite == False) and (dfCheck(Path=OutputPaths, Type="f")) == True: raise Ex_Download.FileExist
 
         if self.Configs["UseGobalRequestsSession"] == True:
             Session = self.RequestsSession
@@ -177,8 +178,8 @@ class DownloadManager():
         if ((Size != None) and (len(File.getbuffer()))) != Size: raise Ex_Download.SizeError
         if ((Sha1 != None) and (sha1(File.getbuffer()).hexdigest() != Sha1)): raise Ex_Download.HashError
 
-        dfCheck("dm", OutputPath)
-        saveFile(OutputPaths, File.getbuffer(), filetype="bytes")
+        dfCheck(Path=OutputPath, Type="dm")
+        saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
 
         if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", FileName, "\" Downloaded"])
 

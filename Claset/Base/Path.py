@@ -8,25 +8,15 @@ from json import load
 from os import getcwd
 from os.path import abspath
 
+from .Confs.Paths import File
+
 
 def path(input: str, DisableabsPath: bool = True) -> str:
     try:
         with open(getcwd() + "/Claset/Paths.json") as ConfigFile:
             Config = load(ConfigFile)["Prefixs"]
     except FileNotFoundError:
-        Config = {
-            "PREFIX": "$PREFIX",
-            "EXEC": "$PREFIX/Claset",
-            "CACHE": "$PREFIX/Claset/Cache",
-            "CONFIG": "$PREFIX/Claset",
-            "MINECRFT": "$PREFIX/.minecraft",
-            "ASSETS": "$PREFIX/.minecraft/assets",
-            "VERSION": "$PREFIX/.minecraft/version",
-            "LIBRERIES": "$PREFIX/.minecraft/libraries",
-            "MCVersion": "$CACHE/MCVersionJson",
-            "MCAssetIndex": "$CACHE/MCAssetIndex",
-            "MCVersionManifest": "$CACHE"
-        }
+        Config = File
 
     ConfigKeys = Config.keys()
 

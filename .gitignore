@@ -12,10 +12,10 @@ Logs/
 
 # Build
 out/
-Claset_Test.build/
-Claset_Test.dist/
-Claset_Test.onefile-build/
-Claset_Test.exe
+Main.build/
+Main.dist/
+Main.onefile-build/
+Main.exe
 
 # Other
-.vscode/
+!.vscode/launch.json

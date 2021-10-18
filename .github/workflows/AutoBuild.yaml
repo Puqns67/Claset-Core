@@ -93,8 +93,7 @@ jobs:
 
       - name: Build
         if: (!cancelled())
-        run: |
-          nuitka --standalone --follow-imports --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset_Test.py"
+        run: nuitka --standalone --follow-imports --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Tools\Tests\Main.py"
 
       - name: Upload Build Artifact to Release
         if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
