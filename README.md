@@ -3,6 +3,7 @@
 这是一个还在学习Python的**菜鸡**写出来的东西,同时也还在**开发中**的*不算Minecraft启动器的*Minecraft启动器,写来练习Python的.
 
 使用 Python 3.10.0 64bit 的环境编写, 不支持低于 3.10 的版本.
+已测试于 Archlinux 和 Windows 11.
 
 ## 引用/Requirements
 

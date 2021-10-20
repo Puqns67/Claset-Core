@@ -142,7 +142,7 @@ class DownloadManager():
         ReadTimeout:    int  # 下载超时(若为空则使用全局设置)
     ) -> None:
 
-        OutputPaths = OutputPath + "\\" + FileName
+        OutputPaths = OutputPath + "/" + FileName
 
         if (Overwrite == False) and (dfCheck(Path=OutputPaths, Type="f")) == True: raise Ex_Download.FileExist
 
@@ -185,7 +185,7 @@ class DownloadManager():
 
 
     # 添加多个任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID
-    def addTasks(self, InputTasks: list[dict], MainProjectID: int | None = None) -> int | None:
+    def addTasks(self, InputTasks: list, MainProjectID: int | None = None) -> int | None:
         if self.Stopping == True: raise Ex_Download.Stopping
         JobTotal = len(InputTasks)
         if MainProjectID == None:
@@ -203,7 +203,7 @@ class DownloadManager():
 
 
     # 添加单个 dict 任务对象至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID
-    def addTask(self, InputTask: dict, ProjectID: int = None) -> int | None:
+    def addTask(self, InputTask: dict, ProjectID: int | None = None) -> int | None:
         if self.Stopping == True: raise Ex_Download.Stopping
         if ProjectID == None:
             InputProjectID = False

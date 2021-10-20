@@ -14,7 +14,7 @@ File = {
         "Perfix": r"[{Name}]",
         "Value": r"{Value}",
         "Time": r"%Y/%m/%d_%H:%M:%S",
-        "FullLog": r"[{Time}]{{Type}}{Perfixs}: {Text}."
+        "FullLog": r"[{Time}]{{Type}}{Perfixs}: {Text}"
     },
     "ProgressiveWrite": True,
     "Debug": True,
