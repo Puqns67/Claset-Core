@@ -17,7 +17,7 @@ def AssetsIndex(Path: str) -> list:
             "FileName": Objects[i]["hash"],
             "URL": "$Assets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"],
             "Size": Objects[i]["size"],
-            "OutputPath": "$ASSETS/objects/" + Objects[i]["hash"][:2], 
+            "OutputPath": "$ASSETS/objects/" + Objects[i]["hash"][:2],
             "Overwrite": False,
             "Retry": 3,
             "OtherURL": "$OfficialAssets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"],
@@ -25,7 +25,7 @@ def AssetsIndex(Path: str) -> list:
             "ConnectTimeout": 3,
             "ReadTimeout": 15
         })
-    
+
     return(Tasks)
 
 

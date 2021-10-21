@@ -1,4 +1,4 @@
-#VERSION=4
+#VERSION=5
 #
 #Claset\Base\Configs.py
 #生成, 更新, 降级配置文件
@@ -16,7 +16,7 @@ ConfigIDs = {
     "Download": "Download.json",
     "Paths": "Paths.json",
     "Logs": "Logs.json",
-    "Mirrors": "GameDownloadMirrors.json",
+    "Mirrors": "Mirrors.json",
     "Settings": "Settings.json"
 }
 
@@ -106,8 +106,9 @@ class Configs():
         if dfCheck(Path=Path, Type="f") and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
 
         self.genReCompiles()
-        NewConfig = loadFile("$CONFIG/" + ConfigIDs[ID], "json")
-        if NowVersion == None: NowVersion = NewConfig["VERSION"]
+
+        OldConfig = self.getConfig(ID=ID, TargetLastVersion=None)
+        if NowVersion == None: NowVersion = OldConfig["VERSION"]
         if TargetVersion == 0:
             TargetVersion = self.getInfoFromClass(ID, "Version")
             if TargetVersion == NowVersion: return(None)
@@ -121,7 +122,8 @@ class Configs():
         for Difference in DifferenceS:
             Type, Key = self.reCompiles["FindType&Key"].search(Difference).groups()
             if Type in ["REPLACE", "DELETE"]:
-                NewConfig = self.processConfig(NewConfig, Key, Type)
+                NewConfig = self.processConfig(OldConfig=OldConfig, Key=Key, Type=Type)
+            else: raise Ex_Configs.UnknownDifferenceType
 
         saveFile(Path=Path, FileContent=NewConfig, Type="json")
 
@@ -155,10 +157,10 @@ class Configs():
         self.genReCompiles()
         if Type == "DELETE":
             Old = Key
-            New = str()
+            New = None
         else: Old, New = self.reCompiles["FindOld&New"].search(Key).groups()
-        if self.reCompiles["IFStrList"].search(Old.strip()) != None:
-            Old = self.__StrList2List(Old)
+
+        if self.reCompiles["IFStrList"].search(Old.strip()) != None: Old = self.__StrList2List(Old)
         else: Old = [Old]
         return(self.__SetToDict(Keys=Old, Dict=OldConfig, Type=Type, Do=New))
 
@@ -169,7 +171,7 @@ class Configs():
 
 
     # 将设置写入 Dict
-    def __SetToDict(self, Keys: list, Dict: dict, Type: str, Do=None) -> dict:
+    def __SetToDict(self, Keys: list, Dict: dict, Type: str, Do: str | None = None) -> dict:
         if len(Keys) > 1:
             if Dict.get(Keys[0]) == None: Dict[Keys[0]] = dict()
             Dict[Keys[0]] = self.__SetToDict(Keys=Keys[1:], Dict=Dict[Keys[0]], Type=Type, Do=Do)

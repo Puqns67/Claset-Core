@@ -1,4 +1,4 @@
-#VERSION=24
+#VERSION=25
 #
 #Claset/Base/Download.py
 #通过url下载数据
@@ -11,8 +11,7 @@ from random import randint
 from re import compile as reCompile
 from time import sleep
 
-import requests.exceptions
-from requests import Session
+from requests import Session, exceptions as Ex_Requests
 
 from .Exceptions import Download as Ex_Download
 from .AdvancedPath import path as aPath
@@ -31,32 +30,31 @@ class DownloadManager():
             self.LogHeader = ["Claset/Downloader"]
         else: self.Logger = None
 
-        self.Configs = Configs(Logger=Logger, LoggerHeader=self.LogHeader).getConfig("Download", TargetLastVersion=0)
+        self.Configs = Configs(Logger=self.Logger, LoggerHeader=self.LogHeader).getConfig("Download", TargetLastVersion=0)
         self.FindFileName = reCompile(r"([a-zA-Z0-9_.-]+)$")
         self.Projects = dict()
-        self.AdvancedPath = aPath(Others=True, OtherTypes=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>", "&F<Mirrors>&V<Official>"])
+        self.AdvancedPath = aPath(Others=True, OtherTypes=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
         self.DownloadsTasks = list()
 
         # 线程池(ThreadPool)
         self.ThreadPool = ThreadPoolExecutor(max_workers=self.Configs["MaxThread"], thread_name_prefix="DownloadTask")
 
         # 定义全局 Requests Session
-        self.RequestsSession = Session()
-        self.RequestsSession.headers = self.Configs['Headers']
-        self.RequestsSession.trust_env = self.Configs["UseSystemProxy"]
-        if self.Configs["UseSystemProxy"] == True:
-            self.RequestsSession.proxies = self.Configs["Proxies"]
+        if self.Configs["UseGobalRequestsSession"] == True:
+            self.RequestsSession = Session()
+            self.RequestsSession.headers = self.Configs['Headers']
+            self.RequestsSession.trust_env = self.Configs["UseSystemProxy"]
+            if self.Configs["UseSystemProxy"] == True:
+                self.RequestsSession.proxies = self.Configs["Proxies"]
 
         self.Stopping = False
 
 
     # 简易下载器(Download) 的代理运行器
     def Download(self, Task: dict) -> None:
-        if self.Stopping == True: raise Ex_Download.Stopping
-
         if not "URL"            in Task: raise Ex_Download.MissingURL
         if not "OutputPath"     in Task: Task["OutputPath"]     = "$PERFIX"
-        if not "FileName"       in Task: Task["FileName"]       = self.ReCompile.search(Task["URL"]).group(1)
+        if not "FileName"       in Task: Task["FileName"]       = self.FindFileName.search(Task["URL"]).group(1)
         if not "Size"           in Task: Task["Size"]           = None
         if not "ProjectID"      in Task: Task["ProjectID"]      = None
         if not "Overwrite"      in Task: Task["Overwrite"]      = True
@@ -69,7 +67,7 @@ class DownloadManager():
         if "$" in Task["OutputPath"]: Task["OutputPath"] = self.AdvancedPath.path(Task["OutputPath"])
 
         Retry = True
-
+        
         while Retry == True:
             Retry = False
             Errored = False
@@ -84,7 +82,6 @@ class DownloadManager():
                     ConnectTimeout=Task["ConnectTimeout"],
                     ReadTimeout=Task["ReadTimeout"]
                 )
-
             # 错误处理
             except Ex_Download.Stopping:
                 Task["Retry"] = 0
@@ -140,39 +137,39 @@ class DownloadManager():
         Sha1:           str, # 使用sha1验证下载结果
         ConnectTimeout: int, # 连接超时(若为空则使用全局设置)
         ReadTimeout:    int  # 下载超时(若为空则使用全局设置)
-    ) -> None:
+        ) -> None:
 
         OutputPaths = OutputPath + "/" + FileName
 
-        if (Overwrite == False) and (dfCheck(Path=OutputPaths, Type="f")) == True: raise Ex_Download.FileExist
+        if (Overwrite == False) and (dfCheck(Path=OutputPaths, Type="f") == True): raise Ex_Download.FileExist
 
         if self.Configs["UseGobalRequestsSession"] == True:
-            Session = self.RequestsSession
+            UsedSession = self.RequestsSession
         else:
-            Session = requests.Session()
-            Session.headers = self.Configs['Headers']
+            UsedSession = Session()
+            UsedSession.headers = self.Configs['Headers']
 
         File = BytesIO()
         if self.Stopping == True: raise Ex_Download.Stopping
 
         try:
-            Request = Session.get(URL, timeout=(ConnectTimeout, ReadTimeout))
+            Request = UsedSession.get(URL, timeout=(ConnectTimeout, ReadTimeout))
             StatusCode = str(Request.status_code)
             if StatusCode[0] in ["4", "5"]: Request.raise_for_status()
             File.write(Request.content)
-        except requests.exceptions.ConnectTimeout:
+        except Ex_Requests.ConnectTimeout:
             raise Ex_Download.ConnectTimeout
-        except requests.exceptions.ReadTimeout:
+        except Ex_Requests.ReadTimeout:
             raise Ex_Download.ReadTimeout
         except (
-            requests.exceptions.MissingSchema,
-            requests.exceptions.InvalidSchema
+            Ex_Requests.MissingSchema,
+            Ex_Requests.InvalidSchema
         ): raise Ex_Download.SchemaError
         except (
-            requests.exceptions.ProxyError,
-            requests.exceptions.HTTPError,
-            requests.exceptions.SSLError,
-            requests.exceptions.ConnectionError
+            Ex_Requests.ProxyError,
+            Ex_Requests.HTTPError,
+            Ex_Requests.SSLError,
+            Ex_Requests.ConnectionError
         ): raise Ex_Download.DownloadExceptions
 
         if ((Size != None) and (len(File.getbuffer()))) != Size: raise Ex_Download.SizeError

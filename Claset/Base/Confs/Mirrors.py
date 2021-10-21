@@ -1,14 +1,14 @@
-#VERSION=0
+#VERSION=2
 #
 #Claset/Base/Configs/Mirrors.py
 #
 
 
-LastVersion = 1
+LastVersion = 2
 
 
 File = {
-    "VERSION": 1,
+    "VERSION": 2,
     "Vanilla": {
         "Launcher": "https://launcher.mojang.com",
         "LauncherMeta": "https://launchermeta.mojang.com",
@@ -41,19 +41,13 @@ File = {
         "Authlib-Injector": "https://download.mcbbs.net/mirrors/authlib-injector",
         "FabricMeta": "https://download.mcbbs.net/fabric-meta",
         "FabricMaven": "https://download.mcbbs.net/maven"
-    },
-    "Official": {
-        "OfficialLauncher": "https://launcher.mojang.com",
-        "OfficialLauncherMeta": "https://launchermeta.mojang.com",
-        "OfficialAssets": "http://resources.download.minecraft.net",
-        "OfficialLibraries": "https://libraries.minecraft.net",
-        "OfficialForge": "https://files.minecraftforge.net/maven",
-        "OfficialLiteloader": "http://dl.liteloader.com/versions/versions.json",
-        "OfficialAuthlib-Injector": "https://authlib-injector.yushi.moe",
-        "OfficialFabricMeta": "https://meta.fabricmc.net",
-        "OfficialFabricMaven": "https://maven.fabricmc.net"
     }
 }
 
 
-Difference = {}
+Difference = {
+    "1->2": [
+        "REPLACE:VERSION->2",
+        "DELETE:Official"
+    ]
+}

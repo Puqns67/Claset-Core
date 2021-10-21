@@ -31,7 +31,7 @@ def loadFile(Path: str, Type: str = "text") -> str:
 def saveFile(Path: str, FileContent: str | bytes, Type: str = "text", FileName: str | None = None) -> None:
     if FileName != None: Path += FileName
     if "$" in Path: Path = Pathmd(Path)
-    
+
     Path = abspath(Path)
     match Type:
         case "json":

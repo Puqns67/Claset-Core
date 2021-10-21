@@ -1,4 +1,4 @@
-#VERSION=8
+#VERSION=9
 #
 #Claset/Base/AdvancedPath.py
 #高级地址转换
@@ -10,14 +10,23 @@ from re import compile as reCompile
 
 from .File import loadFile
 from .Configs import Configs
+from .Logs import Logs
 
 from .Exceptions.Configs import ConfigsUnregistered
 from .Exceptions import AdvancedPath as Ex_AdvancedPath
 
 
 class path():
-    def __init__(self, Others: bool = False, OtherTypes: list = list(), DisableabsPath: bool = True):
-        self.Configs = Configs().getConfig("Paths", TargetLastVersion=0)
+    def __init__(self, Others: bool = False, OtherTypes: list = list(), DisableabsPath: bool = True, Logger: Logs | None = None, LoggerHeader: list | str | None = None):
+        # 定义全局 Logger
+        if Logger != None:
+            self.Logger = Logger
+            self.LogHeader = self.Logger.logHeaderAdder(LoggerHeader, "AdvancedPath")
+        else:
+            self.Logger = None
+            self.LogHeader = "AdvancedPath"
+
+        self.Configs = Configs(Logger=self.Logger, LoggerHeader=self.LogHeader).getConfig("Paths", TargetLastVersion=0)
         self.OthersType = Others
         self.DisableabsPath = DisableabsPath
         self.ReSearch = None
@@ -33,7 +42,7 @@ class path():
 
         try:
             File, Value = self.ReSearch.search(Objects).groups()
-            File = Configs().getConfig(File, TargetLastVersion=0)
+            File = Configs(Logger=self.Logger).getConfig(File, TargetLastVersion=0)
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
         except ConfigsUnregistered:
