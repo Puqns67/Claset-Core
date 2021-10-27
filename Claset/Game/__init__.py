@@ -5,6 +5,6 @@
 
 from . import Exceptions
 from . import Download
-from . import Loadjson
+from . import LoadJson
 from . import Launcher
 

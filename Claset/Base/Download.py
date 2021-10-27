@@ -17,7 +17,7 @@ from .Exceptions import Download as Ex_Download
 from .AdvancedPath import path as aPath
 from .Logs import Logs
 from .DFCheck import dfCheck
-from .File import saveFile
+from .File import saveFile, loadFile
 from .Configs import Configs
 
 
@@ -141,7 +141,9 @@ class DownloadManager():
 
         OutputPaths = OutputPath + "/" + FileName
 
-        if (Overwrite == False) and (dfCheck(Path=OutputPaths, Type="f") == True): raise Ex_Download.FileExist
+        if dfCheck(Path=OutputPaths, Type="f") == True:
+            if ((Sha1 != None) and (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1)):
+                if Overwrite == False: raise Ex_Download.FileExist
 
         if self.Configs["UseGobalRequestsSession"] == True:
             UsedSession = self.RequestsSession
@@ -224,7 +226,7 @@ class DownloadManager():
                 if self.Logger != None: CantCancelled += 1
             elif Task.cancel():
                 if self.Logger != None: BeingCancelled += 1
-            if Task.cancelled():
+            elif Task.cancelled():
                 if self.Logger != None: Cancelled += 1
 
         if CantCancelled != 0:
@@ -232,6 +234,8 @@ class DownloadManager():
         else:
             self.Logger.genLog(Perfixs=self.LogHeader + ["Stopping"], Text=["0 task cannot be cancelled, ", BeingCancelled, " task is being cancelled, ", Cancelled, " task cancelled"])
 
+
+    # 重载
 
     # 建立 Project 对象
     def projectCreate(self, AllTasksCount: int = 0, setProjectID: int = 0) -> int:
@@ -256,16 +260,12 @@ class DownloadManager():
 
 
     # 通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数
-    def projectJoin(self, ProjectIDs: list) -> int:
-        if type(ProjectIDs) == type(int()):
-            Temp = list()
-            Temp.append(ProjectIDs)
-            ProjectIDs = Temp
+    def projectJoin(self, ProjectIDs: int | list) -> int:
+        if type(ProjectIDs) == type(int()): ProjectIDs = [ProjectIDs]
         ErrorTasksCount = int()
         for ProjectID in ProjectIDs:
             while True:
-                if (self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) == self.Projects[ProjectID]["AllTasksCount"]:
-                    break
+                if ((self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) == self.Projects[ProjectID]["AllTasksCount"]): break
                 sleep(self.Configs["SleepTime"])
             ErrorTasksCount += self.Projects[ProjectID]["ErrorTasksCount"]
         return(ErrorTasksCount)

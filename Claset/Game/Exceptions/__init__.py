@@ -3,3 +3,4 @@
 #Claset/Game/Exceptions/__init__.py
 #
 
+from . import LoadJson

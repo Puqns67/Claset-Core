@@ -14,7 +14,8 @@ path.append(abspath("./"))
 
 import Claset
 
-def Main():# 获得当前路径
+def Main():
+    # 获得当前路径
     ThisFilePath = search(r"(.+)[\\/]+.+", __file__).groups()[0]
     LogHeader = ["Claset/Main"]
 
@@ -23,9 +24,9 @@ def Main():# 获得当前路径
     Logger.genLog(Perfixs=LogHeader, Text="Started!!!")
     Logger.genLog(Perfixs=LogHeader, Text=["Running In \"", "-".join(uname()), "\""])
     Downloader = Claset.Base.Download.DownloadManager(Logger=Logger)
-    AssetsIndex = Claset.Game.Loadjson.AssetsIndex(ThisFilePath + "/DataSource/1.17.json")
+    DL_AssetsIndex = Claset.Game.LoadJson.getDL_AssetsIndex(Claset.Base.File.loadFile(ThisFilePath + "/DataSource/1.17.json", "json"))
     try:
-        ProjectID = Downloader.addTasks(AssetsIndex)
+        ProjectID = Downloader.addTasks(DL_AssetsIndex)
         Downloader.projectJoin(ProjectID)
     except KeyboardInterrupt:
         Downloader.stop()
