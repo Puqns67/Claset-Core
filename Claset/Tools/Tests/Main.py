@@ -22,7 +22,7 @@ def Main():
     StartTime = time()
     Logger = Claset.Base.Logs.Logs(LogHeader=LogHeader)
     Logger.genLog(Perfixs=LogHeader, Text="Started!!!")
-    Logger.genLog(Perfixs=LogHeader, Text=["Running In \"", "-".join(uname()), "\""])
+    Logger.genLog(Perfixs=LogHeader, Text=["Running In \"", " ".join(uname()), "\""])
     Downloader = Claset.Base.Download.DownloadManager(Logger=Logger)
     DL_AssetsIndex = Claset.Game.LoadJson.getDL_AssetsIndex(Claset.Base.File.loadFile(ThisFilePath + "/DataSource/1.17.json", "json"))
     try:

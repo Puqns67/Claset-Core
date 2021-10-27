@@ -1,4 +1,4 @@
-#VERSION=1
+#VERSION=2
 #
 #From Claset/Game/LoadJson.py
 #Claset/Game/Exceptions/LoadJson.py
@@ -12,3 +12,6 @@ class FeaturesMissingKey(LoadGameJsonErrors): pass
 
 # 不支持的系统类型
 class UnsupportSystemHost(LoadGameJsonErrors): pass
+
+# 用于在处理 Features 时 Contiune 的内部错误
+class FeaturesContinue(LoadGameJsonErrors): pass

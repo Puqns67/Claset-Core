@@ -9,6 +9,7 @@ env:
   CACHE_NUITKA_GCC: true
   CACHE_PYPI: false
   CACHE_BUILD: false
+  NUITKA_DEVELOP: true
   PYTHON_VERSION: "3.10.0"
   PYTHON_ARCHITECTURE: x64
   RELEASES_NAME_PERFIX: Claset-AutoBuild
@@ -80,6 +81,10 @@ jobs:
         run: |
           pip install --upgrade pip setuptools wheel
           pip install -r requirements_build.txt
+
+      - name: Using Develop Version 
+        if: env.NUITKA_DEVELOP == 'true' && !cancelled()
+        run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
 
       - name: Show Environment
         if: (!cancelled())

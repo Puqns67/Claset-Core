@@ -46,10 +46,12 @@ def ResolveRules(Items: list, Features: dict = dict()) -> bool:
             if Item["os"].get("version") != None:
                 if match(Item["os"]["version"], version()) == None: continue
         if Item.get("features") != None:
-            for FeaturesKey in Item["features"].keys():
-                if FeaturesKey in Features.keys():
-                    if Features[FeaturesKey] != Item["features"][FeaturesKey]: continue
-                else: raise Ex_LoadJson.FeaturesMissingKey(FeaturesKey)
+            try:
+                for FeaturesKey in Item["features"].keys():
+                    if FeaturesKey in Features.keys():
+                        if Features[FeaturesKey] != Item["features"][FeaturesKey]: raise Ex_LoadJson.FeaturesContinue
+                    else: raise Ex_LoadJson.FeaturesMissingKey(FeaturesKey)
+            except Ex_LoadJson.FeaturesContinue: continue
         allow = {"allow": True, "disallow": False, None: None}[Item.get("action")]
         if allow == None: raise SystemError
     return(allow)
