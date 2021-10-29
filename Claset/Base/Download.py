@@ -13,12 +13,13 @@ from time import sleep
 
 from requests import Session, exceptions as Ex_Requests
 
-from .Exceptions import Download as Ex_Download
-from .AdvancedPath import path as aPath
+from .Path import path as Pathmd
 from .Logs import Logs
 from .DFCheck import dfCheck
 from .File import saveFile, loadFile
 from .Configs import Configs
+
+from .Exceptions import Download as Ex_Download
 
 
 class DownloadManager():
@@ -33,7 +34,6 @@ class DownloadManager():
         self.Configs = Configs(Logger=self.Logger, LoggerHeader=self.LogHeader).getConfig("Download", TargetLastVersion=0)
         self.FindFileName = reCompile(r"([a-zA-Z0-9_.-]+)$")
         self.Projects = dict()
-        self.AdvancedPath = aPath(Others=True, OtherTypes=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
         self.DownloadsTasks = list()
 
         # 线程池(ThreadPool)
@@ -63,8 +63,8 @@ class DownloadManager():
         if not "ReadTimeout"    in Task: Task["ReadTimeout"]    = self.Configs["Timeouts"]["Read"]
         if not "Retry"          in Task: Task["Retry"]          = self.Configs["Retry"]
 
-        if "$" in Task["URL"]: Task["URL"] = self.AdvancedPath.path(Task["URL"])
-        if "$" in Task["OutputPath"]: Task["OutputPath"] = self.AdvancedPath.path(Task["OutputPath"])
+        if "$" in Task["URL"]: Task["URL"] = Pathmd(Task["URL"])
+        if "$" in Task["OutputPath"]: Task["OutputPath"] = Pathmd(Task["OutputPath"])
 
         Retry = True
         
@@ -234,8 +234,6 @@ class DownloadManager():
         else:
             self.Logger.genLog(Perfixs=self.LogHeader + ["Stopping"], Text=["0 task cannot be cancelled, ", BeingCancelled, " task is being cancelled, ", Cancelled, " task cancelled"])
 
-
-    # 重载
 
     # 建立 Project 对象
     def projectCreate(self, AllTasksCount: int = 0, setProjectID: int = 0) -> int:

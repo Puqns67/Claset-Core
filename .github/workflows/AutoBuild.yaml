@@ -82,7 +82,7 @@ jobs:
           pip install --upgrade pip setuptools wheel
           pip install -r requirements_build.txt
 
-      - name: Using Develop Version 
+      - name: Using Develop Version Nuitka
         if: env.NUITKA_DEVELOP == 'true' && !cancelled()
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
 

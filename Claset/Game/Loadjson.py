@@ -7,25 +7,37 @@
 from re import match
 from platform import system, machine, version
 
-from Claset.Base.File import loadFile
+from Claset.Base.AdvancedPath import path as aPathmd
 
 from .Exceptions import LoadJson as Ex_LoadJson
 
 
-def getDL_AssetsIndex(InitFile: str) -> list:
+def VersionManifest_DownloadList(InitFile: str, Version: str) -> list:
+    pass
+
+
+def Version_DownloadList(InitFile: str, Type: str) -> list:
+    pass
+
+
+def Version_getRunCodeList(InitFile: str):
+    pass
+
+
+def AssetsIndex_DownloadList(InitFile: str) -> list:
     Objects = InitFile["objects"]
     Tasks = list()
+    Pather = aPathmd(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
 
     for i in Objects:
-        Tasks.append({
+        Tasks.append({ 
             "FileName": Objects[i]["hash"],
-            "URL": "$Assets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"],
+            "URL": Pather.path("$Assets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"]),
             "Size": Objects[i]["size"],
             "OutputPath": "$ASSETS/objects/" + Objects[i]["hash"][:2],
+            "Sha1": Objects[i]["hash"],
             "Overwrite": False,
             "Retry": 3,
-            "OtherURL": "$OfficialAssets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"],
-            "Sha1": Objects[i]["hash"],
             "ConnectTimeout": 3,
             "ReadTimeout": 15
         })
@@ -56,6 +68,3 @@ def ResolveRules(Items: list, Features: dict = dict()) -> bool:
         if allow == None: raise SystemError
     return(allow)
 
-
-def getDL_Version():
-    pass

@@ -33,3 +33,4 @@ class MissingURL(DownloadExceptions): pass
 
 # 已停止
 class Stopping(DownloadExceptions): pass
+

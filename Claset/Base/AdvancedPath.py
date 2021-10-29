@@ -11,13 +11,14 @@ from re import compile as reCompile
 from .File import loadFile
 from .Configs import Configs
 from .Logs import Logs
+from .Path import PathRegex
 
 from .Exceptions.Configs import ConfigsUnregistered
-from .Exceptions import AdvancedPath as Ex_AdvancedPath
+from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
 
 
 class path():
-    def __init__(self, Others: bool = False, OtherTypes: list = list(), DisableabsPath: bool = True, Logger: Logs | None = None, LoggerHeader: list | str | None = None):
+    def __init__(self, Others: list | None = None, IsPath: bool = False, Logger: Logs | None = None, LoggerHeader: list | str | None = None):
         # 定义全局 Logger
         if Logger != None:
             self.Logger = Logger
@@ -27,14 +28,14 @@ class path():
             self.LogHeader = "AdvancedPath"
 
         self.Configs = Configs(Logger=self.Logger, LoggerHeader=self.LogHeader).getConfig("Paths", TargetLastVersion=0)
-        self.OthersType = Others
-        self.DisableabsPath = DisableabsPath
+        self.IsPath = IsPath
         self.ReSearch = None
         self.CompleteConfigs = self.Configs["Prefixs"]
+        self.CompleteConfigsKeys = self.CompleteConfigs.keys()
 
-        if self.OthersType == True:
+        if Others != None:
             self.ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
-            self.getFromOthersKeys(OtherTypes)
+            self.getFromOthersKeys(Others)
 
 
     def loadOtherString(self, Objects: str) -> dict:
@@ -74,24 +75,26 @@ class path():
             CompleteConfigs[i] = self.CompleteConfigs[i]
 
         self.OthersType = True
+
+        # 刷新数据
         self.CompleteConfigs = CompleteConfigs
+        self.CompleteConfigsKeys = self.CompleteConfigs.keys()
 
 
-    def path(self, init: str, Others: bool = False, DisableabsPath: bool = True) -> str:
+    def path(self, Input: str, Others: list | None = None, IsPath: bool | None = None) -> str:
         # 如果启用了 Others 且未载过 Others 则通过 getFromOthersKeys 取得额外的 Key
-        if (Others == True) and (self.OthersType == False):             self.getFromOthersKeys()
-        if (DisableabsPath == False) and (self.DisableabsPath == True): self.DisableabsPath = False
+        if ((Others != None) and (self.OthersType == False)): self.getFromOthersKeys(Others)
+        if ((IsPath == False) and (self.IsPath == True)): self.IsPath = False
 
-        ConfigKeys = self.CompleteConfigs.keys()
+        while "$" in Input:
+            Groups = list(PathRegex.search(Input).groups())
+            if Groups[1] == None: raise Ex_Path.SearchError
+            elif Groups[1] == "PREFIX": Groups[1] = getcwd()
+            elif Groups[1] in self.CompleteConfigsKeys: Groups[1] = self.CompleteConfigs[Groups[1]]
+            else: raise Ex_Path.PerfixsMissingKey(Groups[1])
+            Input = str().join(Groups)
 
-        while "$" in init:
-            for i in ConfigKeys:
-                if "$PREFIX" in init:
-                        init = init.replace("$PREFIX", getcwd())
-                if i in init:
-                    init = init.replace("$" + i, self.CompleteConfigs[i])
+        if ((IsPath == True) or ((IsPath == None) and (self.IsPath == True))): Input = abspath(Input)
 
-        if self.DisableabsPath == False:
-            init = abspath(init)
-        return(init)
+        return(Input)
 

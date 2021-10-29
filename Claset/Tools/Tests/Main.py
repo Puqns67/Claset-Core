@@ -24,7 +24,7 @@ def Main():
     Logger.genLog(Perfixs=LogHeader, Text="Started!!!")
     Logger.genLog(Perfixs=LogHeader, Text=["Running In \"", " ".join(uname()), "\""])
     Downloader = Claset.Base.Download.DownloadManager(Logger=Logger)
-    DL_AssetsIndex = Claset.Game.LoadJson.getDL_AssetsIndex(Claset.Base.File.loadFile(ThisFilePath + "/DataSource/1.17.json", "json"))
+    DL_AssetsIndex = Claset.Game.LoadJson.AssetsIndex_DownloadList(Claset.Base.File.loadFile(ThisFilePath + "/DataSource/1.17.json", "json"))
     try:
         ProjectID = Downloader.addTasks(DL_AssetsIndex)
         Downloader.projectJoin(ProjectID)

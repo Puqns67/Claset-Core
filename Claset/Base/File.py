@@ -5,7 +5,6 @@
 #
 
 from json import load, dumps
-from platform import system
 from os.path import abspath
 
 from .Path import path as Pathmd
