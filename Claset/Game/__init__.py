@@ -1,7 +1,4 @@
-#VERSION=3
-#
-#Claset/Game/__init__.py
-#
+# -*- coding: utf-8 -*-
 
 from . import Exceptions
 from . import Download

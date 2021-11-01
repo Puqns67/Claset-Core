@@ -1,8 +1,5 @@
-#VERSION=0
-#
-#Claset/Base/Configs/Conf_def.py
-#Conf 默认格式
-#
+# -*- coding: utf-8 -*-
+"""Conf 默认格式"""
 
 
 LastVersion = int()

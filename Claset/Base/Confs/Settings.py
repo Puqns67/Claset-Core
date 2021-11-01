@@ -1,7 +1,4 @@
-#VERSION=0
-#
-#Claset/Base/Configs/Settings.py
-#
+# -*- coding: utf-8 -*-
 
 
 LastVersion = 1

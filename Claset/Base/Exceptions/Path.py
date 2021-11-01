@@ -1,8 +1,4 @@
-#VERSION=1
-#
-#From Claset/Base/Path.py & Claset/Base/AdvancedPath.py
-#Claset/Base/Exceptions/Path.py
-#
+# -*- coding: utf-8 -*-
 
 # Path 错误主类
 class Path(Exception): pass

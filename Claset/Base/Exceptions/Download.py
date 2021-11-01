@@ -1,8 +1,4 @@
-#VERSION=3
-#
-#From Claset/Base/Download.py
-#Claset/Base/Exceptions/Download.py
-#
+# -*- coding: utf-8 -*-
 
 # 下载错误主类
 class DownloadExceptions(Exception): pass

@@ -1,7 +1,4 @@
-#VERSION=2
-#
-#Claset/Base/Configs/Paths.py
-#
+# -*- coding: utf-8 -*-
 
 
 LastVersion = 3

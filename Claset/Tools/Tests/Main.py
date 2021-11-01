@@ -1,9 +1,7 @@
-#VERSION=0
-#
-#Claset/Tools/Tests/Main.py
-#测试类Claset
-#
+# -*- coding: utf-8 -*-
+"""测试"""
 
+from logging import getLogger
 from sys import path
 from os.path import abspath
 from time import time
@@ -17,21 +15,19 @@ import Claset
 def Main():
     # 获得当前路径
     ThisFilePath = search(r"(.+)[\\/]+.+", __file__).groups()[0]
-    LogHeader = ["Claset/Main"]
 
     StartTime = time()
-    Logger = Claset.Base.Logs.Logs(LogHeader=LogHeader)
-    Logger.genLog(Perfixs=LogHeader, Text="Started!!!")
-    Logger.genLog(Perfixs=LogHeader, Text=["Running In \"", " ".join(uname()), "\""])
-    Downloader = Claset.Base.Download.DownloadManager(Logger=Logger)
+    Claset.Logger.info("Started!!!")
+    Claset.Logger.info("Running In \"" + " ".join(uname()) + "\"")
+    Downloader = Claset.Base.Download.DownloadManager()
     DL_AssetsIndex = Claset.Game.LoadJson.AssetsIndex_DownloadList(Claset.Base.File.loadFile(ThisFilePath + "/DataSource/1.17.json", "json"))
     try:
         ProjectID = Downloader.addTasks(DL_AssetsIndex)
         Downloader.projectJoin(ProjectID)
     except KeyboardInterrupt:
         Downloader.stop()
-    Logger.genLog(Perfixs=LogHeader, Text="Stopped!!!")
-    Logger.genLog(Perfixs=LogHeader, Text=["Used time: ", time() - StartTime])
+    Claset.Logger.info("Stopped!!!")
+    Claset.Logger.info("Used time: " + str(time() - StartTime))
 
 
 if __name__ == "__main__":

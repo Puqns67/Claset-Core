@@ -1,7 +1,4 @@
-#VERSION=2
-#
-#Claset/Base/Configs/__init__.py
-#
+# -*- coding: utf-8 -*-
 
 from . import Paths
 from . import Download

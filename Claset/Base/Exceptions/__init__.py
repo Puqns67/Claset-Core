@@ -1,7 +1,4 @@
-#VERSION=3
-#
-#Claset/Base/Exceptions/__init__.py
-#
+# -*- coding: utf-8 -*-
 
 from . import Configs
 from . import Download

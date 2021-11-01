@@ -1,8 +1,5 @@
-#VERSION=0
-#
-#Claset/Game/Download.py
-#下载游戏
-#
+# -*- coding: utf-8 -*-
+"""下载游戏"""
 
 from os.path import abspath
 

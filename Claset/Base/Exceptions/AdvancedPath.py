@@ -1,8 +1,4 @@
-#VERSION=1
-#
-#From Claset/Base/AdvancedPath.py
-#Claset/Base/Exceptions/AdvancedPath.py
-#
+# -*- coding: utf-8 -*-
 
 from .Path import Path
 

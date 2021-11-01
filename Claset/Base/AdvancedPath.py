@@ -1,8 +1,5 @@
-#VERSION=9
-#
-#Claset/Base/AdvancedPath.py
-#高级地址转换
-#
+# -*- coding: utf-8 -*-
+"""高级地址转换"""
 
 from os import getcwd
 from os.path import abspath
@@ -10,24 +7,15 @@ from re import compile as reCompile
 
 from .File import loadFile
 from .Configs import Configs
-from .Logs import Logs
 from .Path import PathRegex
 
-from .Exceptions.Configs import ConfigsUnregistered
-from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
+from Claset.Base.Exceptions.Configs import ConfigsUnregistered
+from Claset.Base.Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
 
 
 class path():
-    def __init__(self, Others: list | None = None, IsPath: bool = False, Logger: Logs | None = None, LoggerHeader: list | str | None = None):
-        # 定义全局 Logger
-        if Logger != None:
-            self.Logger = Logger
-            self.LogHeader = self.Logger.logHeaderAdder(LoggerHeader, "AdvancedPath")
-        else:
-            self.Logger = None
-            self.LogHeader = "AdvancedPath"
-
-        self.Configs = Configs(Logger=self.Logger, LoggerHeader=self.LogHeader).getConfig("Paths", TargetLastVersion=0)
+    def __init__(self, Others: list | None = None, IsPath: bool = False):
+        self.Configs = Configs().getConfig("Paths", TargetLastVersion=0)
         self.IsPath = IsPath
         self.ReSearch = None
         self.CompleteConfigs = self.Configs["Prefixs"]
@@ -43,7 +31,7 @@ class path():
 
         try:
             File, Value = self.ReSearch.search(Objects).groups()
-            File = Configs(Logger=self.Logger).getConfig(File, TargetLastVersion=0)
+            File = Configs().getConfig(File, TargetLastVersion=0)
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
         except ConfigsUnregistered:

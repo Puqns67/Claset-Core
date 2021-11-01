@@ -1,9 +1,7 @@
-#VERSION=5
-#
-#Claset\Base\Configs.py
-#生成, 更新, 降级配置文件
-#
+# -*- coding: utf-8 -*-
+"""生成, 更新, 降级配置文件"""
 
+from logging import getLogger
 from re import compile as reCompile
 
 from . import Confs
@@ -11,7 +9,7 @@ from .Exceptions import Configs as Ex_Configs
 from .File import loadFile, saveFile
 from .DFCheck import dfCheck
 
-
+Logger = getLogger(__name__)
 ConfigIDs = {
     "Download": "Download.json",
     "Paths": "Paths.json",
@@ -21,15 +19,7 @@ ConfigIDs = {
 }
 
 class Configs():
-    def __init__(self, Logger=None, LoggerHeader: list | str | None = None):
-        # 定义全局 Logger
-        if Logger != None:
-            self.Logger = Logger
-            if LoggerHeader != None:
-                self.LogHeader = self.Logger.logHeaderAdder(LoggerHeader, ["Configs"])
-            else: self.LoggerHeader = ["Configs"]
-        else: self.Logger = None
-
+    def __init__(self):
         self.reCompiles = None
 
         # 执行初始任务
@@ -51,7 +41,7 @@ class Configs():
                 try:
                     self.updateConfig(ID, FilePath, NowVersion=NowConfigVersion, TargetVersion=TargetLastVersion)
                 except Exception as INFO:
-                    if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["getConfig"], Text=["Updating Config (", ID, ") Error! INFO: ", INFO], Type="WARN")
+                    Logger.warning("Updating Config (" + ID + ") Error! INFO: " + INFO)
 
         return(loadFile(FilePath, "json"))
 
@@ -113,7 +103,7 @@ class Configs():
             TargetVersion = self.getInfoFromClass(ID, "Version")
             if TargetVersion == NowVersion: return(None)
 
-        if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["updateConfig"], Text=["Update Config (", ID, ") From Version ", NowVersion, " to Version ", TargetVersion])
+        Logger.info("Update Config (" + ID + ") From Version " + str(NowVersion) + " to Version " + str(TargetVersion))
         if TargetVersion < NowVersion: Reverse = True
         else: Reverse = False
 
@@ -148,7 +138,7 @@ class Configs():
             else:
                 if (NowVersion >= DifferentsKey[0]) and (TargetVersion <= DifferentsKey[1]):
                     DifferenceS.extend(reversed(Differences[str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])]))
-        if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["getDifferenceS"], Text=["Config (", ID, ")'s Differents: ", DifferenceS], Type="DEBUG")
+        Logger.debug("Config (" + ID + ")'s Differents: " + DifferenceS)
         return(DifferenceS)
 
 

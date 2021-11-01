@@ -1,8 +1,5 @@
-# VERSION=5
-#
-# Claset/Game/LoadJson.py
-# 用于解析游戏Json
-#
+# -*- coding: utf-8 -*-
+"""解析游戏Json"""
 
 from re import match
 from platform import system, machine, version

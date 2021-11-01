@@ -1,9 +1,7 @@
-#VERSION=25
-#
-#Claset/Base/Download.py
-#通过url下载数据
-#
+# -*- coding: utf-8 -*-
+"""通过 URL 列表多线程下载数据"""
 
+from logging import getLogger
 from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha1
 from io import BytesIO
@@ -14,24 +12,19 @@ from time import sleep
 from requests import Session, exceptions as Ex_Requests
 
 from .Path import path as Pathmd
-from .Logs import Logs
 from .DFCheck import dfCheck
 from .File import saveFile, loadFile
 from .Configs import Configs
 
 from .Exceptions import Download as Ex_Download
 
+Logger = getLogger(__name__)
+
 
 class DownloadManager():
-    # 下载管理器
-    def __init__(self, Logger: Logs | None = None):
-        # 定义全局 Logger
-        if Logger != None:
-            self.Logger = Logger
-            self.LogHeader = ["Claset/Downloader"]
-        else: self.Logger = None
-
-        self.Configs = Configs(Logger=self.Logger, LoggerHeader=self.LogHeader).getConfig("Download", TargetLastVersion=0)
+    """下载管理器"""
+    def __init__(self):
+        self.Configs = Configs().getConfig(ID="Download", TargetLastVersion=0)
         self.FindFileName = reCompile(r"([a-zA-Z0-9_.-]+)$")
         self.Projects = dict()
         self.DownloadsTasks = list()
@@ -88,40 +81,40 @@ class DownloadManager():
             except Ex_Download.SizeError:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Task["FileName"], "\" Download failure, By SizeError, From \"", Task["URL"], "\""], Type="WARN")
+                Logger.warning("File \"" + Task["FileName"] + "\" Download failure + By SizeError + From \"" + Task["URL"] + "\"")
             except Ex_Download.FileExist:
-                if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Task["FileName"], "\" is Exist, Skipping"])
+                Logger.info("File \"" + Task["FileName"] + "\" is Exist, Skipping")
             except Ex_Download.SchemaError:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
-                if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["URL \"", Task["URL"], "\""], Type="ERROR")
+                Logger.error("URL \"" + Task["URL"] + "\" Formart Error")
             except Ex_Download.HashError:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Task["FileName"], "\" hash verification failed"], Type="WARN")
+                Logger.warning("File \"" + Task["FileName"] + "\" hash verification failed")
             except Ex_Download.ReadTimeout:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Task["FileName"], "\" Download timeout, From \"", Task["URL"], "\""], Type="WARN")
+                Logger.warning("File \"" + Task["FileName"] + "\" Download timeout,  From \"" + Task["URL"] + "\"")
             except Ex_Download.ConnectTimeout:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Task["FileName"], "\" Connect timeout, From \"", Task["URL"], "\""], Type="WARN")
+                Logger.warning("File \"" + Task["FileName"] + "\" Connect timeout, From \"" + Task["URL"] + "\"")
             except Ex_Download.DownloadExceptions:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Task["FileName"], "\" Download failure, By ConnectionError, From \"", Task["URL"], "\""], Type="WARN")
+                Logger.warning("File \"" + Task["FileName"] + "\" Download failure, By ConnectionError, From \"" + Task["URL"] + "\"")
             except Exception as exception:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["Unknown Error: ", exception], Type="WARN")
+                Logger.warning("Unknown Error: " + exception)
 
             if Errored == True:
                 if Task["Retry"] > 0:
                     Task["Retry"] -= 1
                     Retry = True
                 else:
-                    if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", Task["FileName"], "\" Retry Count Max"], Type="ERROR")
+                    Logger.error("File \"" + Task["FileName"] + "\" Retry Count Max")
                     self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
             else: self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
 
@@ -180,7 +173,7 @@ class DownloadManager():
         dfCheck(Path=OutputPath, Type="dm")
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
 
-        if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["DownloadTask"], Text=["File \"", FileName, "\" Downloaded"])
+        Logger.info("File \"" + FileName + "\" Downloaded")
 
 
     # 添加多个任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID
@@ -191,13 +184,13 @@ class DownloadManager():
             InputProjectID = False
             MainProjectID = self.projectCreate(AllTasksCount=JobTotal)
         else: InputProjectID = True
-        if self.Logger != None: self.Logger.genLog(self.LogHeader + ["AddTask"], Text=["Adding ", JobTotal, " tasks to Project ", MainProjectID])
+        Logger.info("Adding " + str(JobTotal) + " tasks to Project " + str(MainProjectID))
 
         for InputTask in InputTasks:
             InputTask["ProjectID"] = MainProjectID
             self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
-        if self.Logger != None: self.Logger.genLog(self.LogHeader + ["AddTask"], Text=["Added ", JobTotal, " tasks to Project ", MainProjectID])
+        Logger.info("Added " + str(JobTotal) + " tasks to Project " + str(MainProjectID))
         if InputProjectID == False: return(MainProjectID)
 
 
@@ -208,11 +201,11 @@ class DownloadManager():
             InputProjectID = False
             InputTask["ProjectID"] = self.projectCreate(AllTasksCount=1)
         else: InputTask["ProjectID"] = ProjectID
-        if self.Logger != None: self.Logger.genLog(self.LogHeader + ["AddTask"], Text=["Adding 1 tasks to Project ", InputTask["ProjectID"]])
+        Logger.info("Adding 1 tasks to Project " + InputTask["ProjectID"])
 
         self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
-        if self.Logger != None: self.Logger.genLog(Perfixs=self.LogHeader + ["AddTask"], Text=["Added 1 task to Project ", InputTask["ProjectID"]])
+        Logger.info("Added 1 task to Project " + InputTask["ProjectID"])
         if InputProjectID == False: return(ProjectID)
 
 
@@ -222,17 +215,14 @@ class DownloadManager():
         CantCancelled, BeingCancelled, Cancelled = int(), int(), int()
         for Task in self.DownloadsTasks:
             if Task.done(): pass
-            elif Task.running():
-                if self.Logger != None: CantCancelled += 1
-            elif Task.cancel():
-                if self.Logger != None: BeingCancelled += 1
-            elif Task.cancelled():
-                if self.Logger != None: Cancelled += 1
+            elif Task.running(): CantCancelled += 1
+            elif Task.cancel(): BeingCancelled += 1
+            elif Task.cancelled(): Cancelled += 1
 
         if CantCancelled != 0:
-            self.Logger.genLog(Perfixs=self.LogHeader + ["Stopping"], Text=[CantCancelled, " task cannot be cancelled, ", BeingCancelled, " task is being cancelled, ", Cancelled, " task cancelled"], Type="WARN")
+            Logger.warning(str(CantCancelled) + " task cannot be cancelled, " + str(BeingCancelled) + " task is being cancelled, " + str(Cancelled) + " task cancelled")
         else:
-            self.Logger.genLog(Perfixs=self.LogHeader + ["Stopping"], Text=["0 task cannot be cancelled, ", BeingCancelled, " task is being cancelled, ", Cancelled, " task cancelled"])
+            Logger.info("0 task cannot be cancelled, " + str(BeingCancelled) + " task is being cancelled, " + str(Cancelled) + " task cancelled")
 
 
     # 建立 Project 对象
@@ -244,8 +234,7 @@ class DownloadManager():
                 if not (NewProjectID in self.Projects.keys()): Temp = False
         else: NewProjectID = setProjectID
         self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0, "ErrorTasksCount":0}
-        if self.Logger != None:
-            self.Logger.genLog(Perfixs=self.LogHeader + ["CreateProject"], Text="Created New Project " + str(NewProjectID))
+        Logger.info("Created New Project " + str(NewProjectID))
         return(NewProjectID)
 
 

@@ -1,7 +1,4 @@
-#VERSION=3
-#
-#Claset/Base/Configs/Download.py
-#
+# -*- coding: utf-8 -*-
 
 
 LastVersion = 3

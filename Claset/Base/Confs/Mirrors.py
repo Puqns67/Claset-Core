@@ -1,8 +1,4 @@
-#VERSION=2
-#
-#Claset/Base/Configs/Mirrors.py
-#
-
+# -*- coding: utf-8 -*-
 
 LastVersion = 2
 
