@@ -10,16 +10,13 @@ from . import Base
 from . import Game
 from . import Tools
 
-__all__ = ["Base", "Game", "Tools"]
+__all__ = ["Base", "Game", "Tools", "Logger"]
 
 # 全局日志
 Logger = logging.getLogger(__name__)
 Logger.setLevel(logging.INFO)
 
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+StreamHandler = logging.StreamHandler()
+StreamHandler.setLevel(logging.DEBUG)
 
-Logger.addHandler(ch)
-
-def getLogger() -> Logger:
-    return(Logger)
+Logger.addHandler(StreamHandler)

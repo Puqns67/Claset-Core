@@ -43,8 +43,8 @@ class DownloadManager():
         self.Stopping = False
 
 
-    # 简易下载器(Download) 的代理运行器
     def Download(self, Task: dict) -> None:
+        """简易下载器(Download) 的代理运行器"""
         if not "URL"            in Task: raise Ex_Download.MissingURL
         if not "OutputPath"     in Task: Task["OutputPath"]     = "$PERFIX"
         if not "FileName"       in Task: Task["FileName"]       = self.FindFileName.search(Task["URL"]).group(1)
@@ -119,7 +119,6 @@ class DownloadManager():
             else: self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
 
 
-    # 简易下载器
     def download(
         self,
         URL:            str, # 链接地址
@@ -131,6 +130,7 @@ class DownloadManager():
         ConnectTimeout: int, # 连接超时(若为空则使用全局设置)
         ReadTimeout:    int  # 下载超时(若为空则使用全局设置)
         ) -> None:
+        """简易下载器"""
 
         OutputPaths = OutputPath + "/" + FileName
 
@@ -176,8 +176,8 @@ class DownloadManager():
         Logger.info("File \"" + FileName + "\" Downloaded")
 
 
-    # 添加多个任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID
     def addTasks(self, InputTasks: list, MainProjectID: int | None = None) -> int | None:
+        """添加多个任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         if self.Stopping == True: raise Ex_Download.Stopping
         JobTotal = len(InputTasks)
         if MainProjectID == None:
@@ -194,8 +194,8 @@ class DownloadManager():
         if InputProjectID == False: return(MainProjectID)
 
 
-    # 添加单个 dict 任务对象至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID
     def addTask(self, InputTask: dict, ProjectID: int | None = None) -> int | None:
+        """添加单个 dict 任务对象至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         if self.Stopping == True: raise Ex_Download.Stopping
         if ProjectID == None:
             InputProjectID = False
@@ -209,8 +209,8 @@ class DownloadManager():
         if InputProjectID == False: return(ProjectID)
 
 
-    # 停止可停止的一切 Project 对象
     def stop(self) -> None:
+        """停止可停止的一切 Project 对象"""
         self.Stopping = True
         CantCancelled, BeingCancelled, Cancelled = int(), int(), int()
         for Task in self.DownloadsTasks:
@@ -225,8 +225,8 @@ class DownloadManager():
             Logger.info("0 task cannot be cancelled, " + str(BeingCancelled) + " task is being cancelled, " + str(Cancelled) + " task cancelled")
 
 
-    # 建立 Project 对象
     def projectCreate(self, AllTasksCount: int = 0, setProjectID: int = 0) -> int:
+        """建立 Project 对象"""
         if setProjectID == 0:
             Temp = True
             while Temp:
@@ -238,16 +238,16 @@ class DownloadManager():
         return(NewProjectID)
 
 
-    # 向 Project 对象添加任务
-    def projectAddJob(self, ProjectID: int, AllTasksCount: int = None, CompletedTasksCount: int = None, FailuredTasksCount: int = None, ErrorTasksCount: int = None) -> None:
+    def projectAddJob(self, ProjectID: int, AllTasksCount: int | None = None, CompletedTasksCount: int | None = None, FailuredTasksCount: int | None = None, ErrorTasksCount: int | None = None) -> None:
+        """向 Project 对象添加任务"""
         if AllTasksCount != None:       self.Projects[ProjectID]["AllTasksCount"] += AllTasksCount
         if CompletedTasksCount != None: self.Projects[ProjectID]["CompletedTasksCount"] += CompletedTasksCount
         if FailuredTasksCount != None:  self.Projects[ProjectID]["FailuredTasksCount"] += FailuredTasksCount
         if ErrorTasksCount != None:     self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
 
 
-    # 通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数
     def projectJoin(self, ProjectIDs: int | list) -> int:
+        """通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数"""
         if type(ProjectIDs) == type(int()): ProjectIDs = [ProjectIDs]
         ErrorTasksCount = int()
         for ProjectID in ProjectIDs:

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """测试"""
 
-from logging import getLogger
 from sys import path
 from os.path import abspath
 from time import time

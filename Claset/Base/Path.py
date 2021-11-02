@@ -8,7 +8,6 @@ from os.path import abspath
 from re import compile as ReCompile
 
 from .Confs.Paths import File
-
 from .Exceptions import Path as Ex_Path
 
 PathRegex = ReCompile(r"(.*)\$([a-zA-Z]*)(.*)")

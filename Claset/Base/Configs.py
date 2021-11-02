@@ -4,34 +4,34 @@
 from logging import getLogger
 from re import compile as reCompile
 
-from . import Confs
-from .Exceptions import Configs as Ex_Configs
 from .File import loadFile, saveFile
 from .DFCheck import dfCheck
 
+from . import Confs
+from .Exceptions import Configs as Ex_Configs
+
 Logger = getLogger(__name__)
-ConfigIDs = {
-    "Download": "Download.json",
-    "Paths": "Paths.json",
-    "Logs": "Logs.json",
-    "Mirrors": "Mirrors.json",
-    "Settings": "Settings.json"
-}
+
 
 class Configs():
+    """管理\获取日志"""
     def __init__(self):
-        self.reCompiles = None
+        self.reCompiles = {
+            "FindType&Key": reCompile(r"([a-zA-Z0-9_]+):(.+)"),
+            "FindOld&New": reCompile(r"(.+)->(.*)"),
+            "IFStrList": reCompile(r"^\[.*\]")
+        }
 
         # 执行初始任务
         dfCheck(Path="$CONFIG/", Type="dm")
-        if dfCheck(Path="$CONFIG/" + ConfigIDs["Paths"], Type="f") == False:    self.genConfig("Paths", "$CONFIG/" + ConfigIDs["Paths"])
-        if dfCheck(Path="$CONFIG/" + ConfigIDs["Settings"], Type="f") == False: self.genConfig("Settings", "$CONFIG/" + ConfigIDs["Settings"])
+        if dfCheck(Path="$CONFIG/" + Confs.ConfigIDs["Paths"], Type="f") == False:    self.genConfig("Paths", "$CONFIG/" + Confs.ConfigIDs["Paths"])
+        if dfCheck(Path="$CONFIG/" + Confs.ConfigIDs["Settings"], Type="f") == False: self.genConfig("Settings", "$CONFIG/" + Confs.ConfigIDs["Settings"])
 
 
-    # 取得配置文件
     def getConfig(self, ID: str, TargetLastVersion: str | None = None) -> dict:
-        if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered(ID)
-        FilePath = "$CONFIG/" + ConfigIDs[ID]
+        """取得配置文件"""
+        if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered(ID)
+        FilePath = "$CONFIG/" + Confs.ConfigIDs[ID]
         if dfCheck(Path=FilePath, Type="f") == False: self.genConfig(ID, FilePath)
 
         # 在要求特定的版本时检查配置文件版本，如异常则尝试更新配置文件
@@ -46,61 +46,24 @@ class Configs():
         return(loadFile(FilePath, "json"))
 
 
-    # 生成配置文件
     def genConfig(self, ID: str, Path: str, OverWrite: bool = True) -> None:
-        if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
+        """生成配置文件"""
+        if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
         if dfCheck(Path=Path, Type="f") and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
 
-        saveFile(Path=Path, FileContent=self.getInfoFromClass(ID, "File"), Type="json")
+        Logger.info("Created Config: ", ID)
+        saveFile(Path=Path, FileContent=Confs.ConfigInfos["File"][ID], Type="json")
 
 
-    # 从 Confs 类获得相关数据
-    def getInfoFromClass(self, ID: str, Type: str):
-        match Type:
-            case "Version":
-                match ID:
-                    case "Paths":    return(Confs.Paths.LastVersion)
-                    case "Download": return(Confs.Download.LastVersion)
-                    case "Settings": return(Confs.Settings.LastVersion)
-                    case "Logs":     return(Confs.Logs.LastVersion)
-                    case "Mirrors":  return(Confs.Mirrors.LastVersion)
-            case "File":
-                match ID:
-                    case "Paths":    return(Confs.Paths.File)
-                    case "Download": return(Confs.Download.File)
-                    case "Settings": return(Confs.Settings.File)
-                    case "Logs":     return(Confs.Logs.File)
-                    case "Mirrors":  return(Confs.Mirrors.File)
-            case "Difference":
-                match ID:
-                    case "Paths":    return(Confs.Paths.Difference)
-                    case "Download": return(Confs.Download.Difference)
-                    case "Settings": return(Confs.Settings.Difference)
-                    case "Logs":     return(Confs.Logs.Difference)
-                    case "Mirrors":  return(Confs.Mirrors.Difference)
-
-
-    # 生成所有的正则对象
-    def genReCompiles(self):
-        if self.reCompiles == None:
-            self.reCompiles = {
-                "FindType&Key": reCompile(r"([a-zA-Z0-9_]+):(.+)"),
-                "FindOld&New": reCompile(r"(.+)->(.*)"),
-                "IFStrList": reCompile(r"^\[.*\]")
-            }
-
-
-    # 更新或降级配置文件版本(NowVersion)至目标版本(TargetVersion)
     def updateConfig(self, ID: str, Path: str, TargetVersion: int, NowVersion: int = None, OverWrite: bool = True) -> None:
-        if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
+        """更新或降级配置文件版本(NowVersion)至目标版本(TargetVersion)"""
+        if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
         if dfCheck(Path=Path, Type="f") and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
-
-        self.genReCompiles()
 
         OldConfig = self.getConfig(ID=ID, TargetLastVersion=None)
         if NowVersion == None: NowVersion = OldConfig["VERSION"]
         if TargetVersion == 0:
-            TargetVersion = self.getInfoFromClass(ID, "Version")
+            TargetVersion = Confs.ConfigInfos["Version"][ID]
             if TargetVersion == NowVersion: return(None)
 
         Logger.info("Update Config (" + ID + ") From Version " + str(NowVersion) + " to Version " + str(TargetVersion))
@@ -118,11 +81,10 @@ class Configs():
         saveFile(Path=Path, FileContent=NewConfig, Type="json")
 
 
-    # 取得版本之间的所有差异
     def getDifferenceS(self, ID: str, NowVersion: int, TargetVersion: int, Reverse: bool = False) -> list:
-        if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
-        self.genReCompiles()
-        Differences = self.getInfoFromClass(ID, Type="Difference")
+        """取得版本之间的所有差异"""
+        if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
+        Differences = Confs.ConfigInfos["Difference"][ID]
         ChangeList = list()
         DifferenceS = list()
 
@@ -142,9 +104,8 @@ class Configs():
         return(DifferenceS)
 
 
-    # 对配置文件的各种操作
     def processConfig(self, OldConfig: dict, Key: str, Type: str) -> dict:
-        self.genReCompiles()
+        """对配置文件的各种操作"""
         if Type == "DELETE":
             Old = Key
             New = None
@@ -155,13 +116,13 @@ class Configs():
         return(self.__SetToDict(Keys=Old, Dict=OldConfig, Type=Type, Do=New))
 
 
-    # 转化 String 格式的 List 至 List 格式
     def __StrList2List(self, Key: str) -> list:
+        """转化 String 格式的 List 至 List 格式"""
         return(Key.replace("[", "").replace("]", "").replace(",", " ").split())
 
 
-    # 将设置写入 Dict
     def __SetToDict(self, Keys: list, Dict: dict, Type: str, Do: str | None = None) -> dict:
+        """将设置写入 Dict"""
         if len(Keys) > 1:
             if Dict.get(Keys[0]) == None: Dict[Keys[0]] = dict()
             Dict[Keys[0]] = self.__SetToDict(Keys=Keys[1:], Dict=Dict[Keys[0]], Type=Type, Do=Do)
