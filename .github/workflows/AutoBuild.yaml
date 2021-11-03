@@ -1,95 +1,96 @@
-name: AutoBuild
+name: AutoBuild/自动编译
 on:
   workflow_dispatch:
+    inputs:
+      use_nuitka_develop_version:
+        description: 'use Nuitka develop version / 使用Nuitka 开发版编译.'
+        required: true
+        default: 'false'
 
 env:
-  UPLOAD_TO_RELEASE: true
+  UPLOAD_TO_RELEASE: false
   UPLOAD_TO_ACTIONS: true
-  REMOVE_OLD_RELEASES: true
-  CACHE_NUITKA_GCC: true
-  CACHE_PYPI: false
-  CACHE_BUILD: false
-  NUITKA_DEVELOP: true
+  REMOVE_OLD_RELEASES: false
   PYTHON_VERSION: "3.10.0"
-  PYTHON_ARCHITECTURE: x64
   RELEASES_NAME_PERFIX: Claset-AutoBuild
 
 jobs:
   Build_MS_Windows:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - cache_Nuitka_gcc: true
+            cache_PyPi: true
+            cache_Build: false
+            Python_architecture: x64
+          - cache_Nuitka_gcc: true
+            cache_PyPi: true
+            cache_Build: false
+            Python_architecture: x86
     steps:
       - name: Checkout
-        if: (!cancelled())
         uses: actions/checkout@v2
 
       - name: Generate Times
-        if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
+        if: env.UPLOAD_TO_RELEASE == true
         id: genReleaseTimes
         run: |
           echo "::set-output name=tag::$(date +'%Y/%m/%d_%H/%M/%S')"
           echo "::set-output name=filename::$(date +'%Y-%m-%d_%H-%M-%S')"
 
       - name: Generate release name
-        if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
+        if: env.UPLOAD_TO_RELEASE == true
         id: genReleaseNameAndFileName
         run: |
           echo "::set-output name=tag::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.tag }}"
           echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.filename }}.exe"
 
       - name: PyPI Cache
-        if: env.CACHE_PYPI == 'true' && !cancelled()
+        if: ${{ matrix.cache_PyPi }} == true
         uses: actions/cache@v2
-        env:
-          cache-name: python-pip
         with:
           path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-cache-${{ env.cache-name }}-${{ hashFiles('**/requirements_build.txt') }}
-          restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}-
+          key: ${{ runner.os }}-cache-python-pip-${{ hashFiles('**/requirements_build.txt') }}
+          restore-keys: ${{ runner.os }}-cache-python-pip-
 
-      - name: Nuitka Cache
-        if:  env.CACHE_NUITKA_GCC == 'true' && !cancelled()
+      - name: Nuitka Gcc Cache
+        if: ${{ matrix.cache_Nuitka_gcc }} == true
         uses: actions/cache@v2
-        env:
-          cache-name: nuitka-gcc
         with:
           path: ~\AppData\Local\Nuitka\Nuitka
-          key: ${{ runner.os }}-cache-${{ env.cache-name }}
-          restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}-
+          key: ${{ runner.os }}-cache-nuitka-gcc
+          restore-keys: ${{ runner.os }}-cache-nuitka-gcc-
 
       - name: Build Cache
-        if: env.CACHE_BUILD == 'true' && !cancelled()
+        if: ${{ matrix.cache_Build }} == true
         uses: actions/cache@v2
-        env:
-          cache-name: nuitka-build
         with:
           path: |
             ${{ github.workspace }}\Claset_Test.build
             ${{ github.workspace }}\Claset_Test.dist
             ${{ github.workspace }}\Claset_Test.onefile-build
-          key: ${{ runner.os }}-cache-${{ env.cache-name }}-${{ steps.genReleaseNameAndFileName.outputs.tag }}
-          restore-keys: ${{ runner.os }}-cache-${{ env.cache-name }}-
+          key: ${{ runner.os }}-cache-nuitka-build-${{ steps.genReleaseNameAndFileName.outputs.tag }}
+          restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
       - name: Setting Python Environment
-        if: (!cancelled())
         uses: actions/setup-python@v2
         with:
-          architecture: ${{ env.PYTHON_ARCHITECTURE }}
           python-version: ${{ env.PYTHON_VERSION }}
+          architecture: ${{ matrix.Python_architecture }}
 
       - name: Setting PyPI Environment
-        if: (!cancelled())
         run: |
           pip install --upgrade pip setuptools wheel
           pip install -r requirements_build.txt
 
       - name: Using Develop Version Nuitka
-        if: env.NUITKA_DEVELOP == 'true' && !cancelled()
+        if: github.event.inputs.use_nuitka_develop_version  == 'true'
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
 
       - name: Show Environment
-        if: (!cancelled())
         run: |
-          python --version
+          python -c "from sys import version; print('Python', version)"
           echo "PyPI packages list - All" ===========================
           pip list
           echo =========================== "" "PyPI packages list - Outdate" ===========================
@@ -97,11 +98,10 @@ jobs:
           echo ===========================
 
       - name: Build
-        if: (!cancelled())
         run: nuitka --standalone --follow-imports --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Tools\Tests\Main.py"
 
       - name: Upload Build Artifact to Release
-        if: env.UPLOAD_TO_RELEASE == 'true' && !cancelled()
+        if: env.UPLOAD_TO_RELEASE == true
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.genReleaseTimes.outputs.tag }}
@@ -109,7 +109,7 @@ jobs:
           files: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
 
       - name: Upload Build Artifact to Actions
-        if: env.UPLOAD_TO_ACTIONS == 'true' && !cancelled()
+        if: env.UPLOAD_TO_ACTIONS == true
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.genReleaseNameAndFileName.outputs.filename }}
@@ -117,7 +117,7 @@ jobs:
           retention-days: 30
 
       - name: Remove old Releases
-        if: env.REMOVE_OLD_RELEASES == 'true' && !cancelled()
+        if: env.REMOVE_OLD_RELEASES == true
         uses: dev-drprasad/delete-older-releases@v0.2.0
         with:
           keep_latest: 3
