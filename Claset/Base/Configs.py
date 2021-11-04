@@ -41,7 +41,7 @@ class Configs():
                 try:
                     self.updateConfig(ID, FilePath, NowVersion=NowConfigVersion, TargetVersion=TargetLastVersion)
                 except Exception as INFO:
-                    Logger.warning("Updating Config (" + ID + ") Error! INFO: " + INFO)
+                    Logger.warning("Updating Config (%s) Error! INFO: %s", ID, INFO)
 
         return(loadFile(FilePath, "json"))
 
@@ -51,7 +51,7 @@ class Configs():
         if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
         if dfCheck(Path=Path, Type="f") and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
 
-        Logger.info("Created Config: ", ID)
+        Logger.info("Created Config: %s", ID)
         saveFile(Path=Path, FileContent=Confs.ConfigInfos["File"][ID], Type="json")
 
 
@@ -66,7 +66,7 @@ class Configs():
             TargetVersion = Confs.ConfigInfos["Version"][ID]
             if TargetVersion == NowVersion: return(None)
 
-        Logger.info("Update Config (" + ID + ") From Version " + str(NowVersion) + " to Version " + str(TargetVersion))
+        Logger.info("Update Config (%s) From Version %s to Version %s", ID, NowVersion, TargetVersion)
         if TargetVersion < NowVersion: Reverse = True
         else: Reverse = False
 
@@ -100,7 +100,7 @@ class Configs():
             else:
                 if (NowVersion >= DifferentsKey[0]) and (TargetVersion <= DifferentsKey[1]):
                     DifferenceS.extend(reversed(Differences[str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])]))
-        Logger.debug("Config (" + ID + ")'s Differents: " + DifferenceS)
+        Logger.debug("Config (%s)'s Differents: %s", ID, DifferenceS)
         return(DifferenceS)
 
 

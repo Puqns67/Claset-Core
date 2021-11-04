@@ -5,6 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Poetry 虚拟环境",
+            "type": "python",
+            "request": "launch",
+            "module": "poetry", 
+            "cwd": "${workspaceFolder}",
+            "args": ["run", "python", "${workspaceFolder}/Claset/Tools/Tests/Main.py"],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Claset",
             "type": "python",
             "request": "launch",

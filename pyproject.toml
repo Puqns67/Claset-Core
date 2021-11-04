@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "Claset"
+version = "0.0.1"
+description = "基于 Python 的 Minecraft 启动管理器"
+authors = ["Puqns67 <puqns67@yeah.net>"]
+license = "GPLv3"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.26.0"
+urllib3 = "1.25.11"
+
+[tool.poetry.dev-dependencies]
+Nuitka = "^0.6.17"
+zstandard = "^0.16.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -77,44 +77,44 @@ class DownloadManager():
                 )
             # 错误处理
             except Ex_Download.Stopping:
-                Task["Retry"] = 0
+                pass
             except Ex_Download.SizeError:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"" + Task["FileName"] + "\" Download failure + By SizeError + From \"" + Task["URL"] + "\"")
+                Logger.warning("File \"%s\" Download failure + By SizeError + From \"%s\"", Task["FileName"], Task["URL"])
             except Ex_Download.FileExist:
-                Logger.info("File \"" + Task["FileName"] + "\" is Exist, Skipping")
+                Logger.info("File \"%s\" is Exist, Skipping", Task["FileName"])
             except Ex_Download.SchemaError:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
-                Logger.error("URL \"" + Task["URL"] + "\" Formart Error")
+                Logger.error("URL \"%s\" Formart Error", Task["URL"])
             except Ex_Download.HashError:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"" + Task["FileName"] + "\" hash verification failed")
+                Logger.warning("File \"%s\" hash verification failed", Task["FileName"])
             except Ex_Download.ReadTimeout:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"" + Task["FileName"] + "\" Download timeout,  From \"" + Task["URL"] + "\"")
+                Logger.warning("File \"%s\" Download timeout,  From \"%s\"", Task["FileName"], Task["URL"])
             except Ex_Download.ConnectTimeout:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"" + Task["FileName"] + "\" Connect timeout, From \"" + Task["URL"] + "\"")
+                Logger.warning("File \"%s\" Connect timeout, From \"%s\"", Task["FileName"], Task["URL"])
             except Ex_Download.DownloadExceptions:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"" + Task["FileName"] + "\" Download failure, By ConnectionError, From \"" + Task["URL"] + "\"")
+                Logger.warning("File \"%s\" Download failure, By ConnectionError, From \"%s\"", Task["FileName"], Task["URL"])
             except Exception as exception:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("Unknown Error: " + exception)
+                Logger.warning("Unknown Error: %s", exception)
 
             if Errored == True:
                 if Task["Retry"] > 0:
                     Task["Retry"] -= 1
                     Retry = True
                 else:
-                    Logger.error("File \"" + Task["FileName"] + "\" Retry Count Max")
+                    Logger.error("File \"%s\" Retry Count Max", Task["FileName"])
                     self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
             else: self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
 
@@ -173,7 +173,7 @@ class DownloadManager():
         dfCheck(Path=OutputPath, Type="dm")
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
 
-        Logger.info("File \"" + FileName + "\" Downloaded")
+        Logger.info("File \"%s\" Downloaded", FileName)
 
 
     def addTasks(self, InputTasks: list, MainProjectID: int | None = None) -> int | None:
@@ -184,13 +184,13 @@ class DownloadManager():
             InputProjectID = False
             MainProjectID = self.projectCreate(AllTasksCount=JobTotal)
         else: InputProjectID = True
-        Logger.info("Adding " + str(JobTotal) + " tasks to Project " + str(MainProjectID))
+        Logger.info("Adding %s tasks to Project %s", JobTotal, MainProjectID)
 
         for InputTask in InputTasks:
             InputTask["ProjectID"] = MainProjectID
             self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
-        Logger.info("Added " + str(JobTotal) + " tasks to Project " + str(MainProjectID))
+        Logger.info("Added %s tasks to Project %s", JobTotal, MainProjectID)
         if InputProjectID == False: return(MainProjectID)
 
 
@@ -201,11 +201,11 @@ class DownloadManager():
             InputProjectID = False
             InputTask["ProjectID"] = self.projectCreate(AllTasksCount=1)
         else: InputTask["ProjectID"] = ProjectID
-        Logger.info("Adding 1 tasks to Project " + InputTask["ProjectID"])
+        Logger.info("Adding 1 tasks to Project %s", InputTask["ProjectID"])
 
         self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
-        Logger.info("Added 1 task to Project " + InputTask["ProjectID"])
+        Logger.info("Added 1 task to Project %s", InputTask["ProjectID"])
         if InputProjectID == False: return(ProjectID)
 
 
@@ -220,9 +220,9 @@ class DownloadManager():
             elif Task.cancelled(): Cancelled += 1
 
         if CantCancelled != 0:
-            Logger.warning(str(CantCancelled) + " task cannot be cancelled, " + str(BeingCancelled) + " task is being cancelled, " + str(Cancelled) + " task cancelled")
+            Logger.warning("%s task cannot be cancelled, %s task is being cancelled, %s task cancelled", CantCancelled, BeingCancelled, Cancelled)
         else:
-            Logger.info("0 task cannot be cancelled, " + str(BeingCancelled) + " task is being cancelled, " + str(Cancelled) + " task cancelled")
+            Logger.info("0 task cannot be cancelled, %s task is being cancelled, %s task cancelled", BeingCancelled, Cancelled)
 
 
     def projectCreate(self, AllTasksCount: int = 0, setProjectID: int = 0) -> int:
@@ -234,7 +234,7 @@ class DownloadManager():
                 if not (NewProjectID in self.Projects.keys()): Temp = False
         else: NewProjectID = setProjectID
         self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0, "ErrorTasksCount":0}
-        Logger.info("Created New Project " + str(NewProjectID))
+        Logger.info("Created New Project %s", NewProjectID)
         return(NewProjectID)
 
 

@@ -17,7 +17,7 @@ def Main():
 
     StartTime = time()
     Claset.Logger.info("Started!!!")
-    Claset.Logger.info("Running In \"" + " ".join(uname()) + "\"")
+    Claset.Logger.info("Running In \"%s\"", " ".join(uname()))
     Downloader = Claset.Base.Download.DownloadManager()
     DL_AssetsIndex = Claset.Game.LoadJson.AssetsIndex_DownloadList(Claset.Base.File.loadFile(ThisFilePath + "/DataSource/1.17.json", "json"))
     try:
@@ -26,7 +26,7 @@ def Main():
     except KeyboardInterrupt:
         Downloader.stop()
     Claset.Logger.info("Stopped!!!")
-    Claset.Logger.info("Used time: " + str(time() - StartTime))
+    Claset.Logger.info("Used time: %s", str(time() - StartTime))
 
 
 if __name__ == "__main__":

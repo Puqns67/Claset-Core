@@ -15,9 +15,11 @@ out/
 Main.build/
 Main.dist/
 Main.onefile-build/
-Main.exe
+Claset-AutoBuild*
+Claset-Build*
 
 # Other
 .vscode/
 !.vscode/launch.json
-!Claset/Tools/Tests/DataSource/1.17.json
+!Claset/Tools/Tests/DataSource/1.17.
+poetry.lock
