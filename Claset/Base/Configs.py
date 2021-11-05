@@ -28,18 +28,18 @@ class Configs():
         if dfCheck(Path="$CONFIG/" + Confs.ConfigIDs["Settings"], Type="f") == False: self.genConfig("Settings", "$CONFIG/" + Confs.ConfigIDs["Settings"])
 
 
-    def getConfig(self, ID: str, TargetLastVersion: str | None = None) -> dict:
+    def getConfig(self, ID: str, TargetVersion: str | None = None) -> dict:
         """取得配置文件"""
         if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered(ID)
         FilePath = "$CONFIG/" + Confs.ConfigIDs[ID]
         if dfCheck(Path=FilePath, Type="f") == False: self.genConfig(ID, FilePath)
 
         # 在要求特定的版本时检查配置文件版本，如异常则尝试更新配置文件
-        if TargetLastVersion != None:
+        if TargetVersion != None:
             NowConfigVersion = loadFile(FilePath, "json")["VERSION"]
-            if NowConfigVersion != TargetLastVersion:
+            if NowConfigVersion != TargetVersion:
                 try:
-                    self.updateConfig(ID, FilePath, NowVersion=NowConfigVersion, TargetVersion=TargetLastVersion)
+                    self.updateConfig(ID, FilePath, NowVersion=NowConfigVersion, TargetVersion=TargetVersion)
                 except Exception as INFO:
                     Logger.warning("Updating Config (%s) Error! INFO: %s", ID, INFO)
 
@@ -60,7 +60,7 @@ class Configs():
         if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
         if dfCheck(Path=Path, Type="f") and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
 
-        OldConfig = self.getConfig(ID=ID, TargetLastVersion=None)
+        OldConfig = self.getConfig(ID=ID, TargetVersion=None)
         if NowVersion == None: NowVersion = OldConfig["VERSION"]
         if TargetVersion == 0:
             TargetVersion = Confs.ConfigInfos["Version"][ID]
@@ -131,12 +131,13 @@ class Configs():
             if Type == "REPLACE":
                 # 尝试修正输入类型
                 if Do in ["True", "False", "Null", "None"]:
-                    if   Do == "True":  Do = True
-                    elif Do == "False": Do = False
-                    elif Do in ["Null", "None"]:  Do = None
+                    if    Do == "True":  Do = True
+                    elif  Do == "False": Do = False
+                    else: Do = None
                 elif Do[-1] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
                     try: Do = int(Do)
                     except ValueError:
+                        # 若使用整型格式化失败则尝试浮点
                         try: Do = float(Do)
                         except ValueError: pass
                 Dict[Keys[0]] = Do

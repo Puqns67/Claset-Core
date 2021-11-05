@@ -2,6 +2,8 @@
 
 [![Build By Actions](https://github.com/Puqns67/Claset/actions/workflows/AutoBuild.yaml/badge.svg)](https://github.com/Puqns67/Claset/actions/workflows/AutoBuild.yaml) [![Releases Downloads](https://img.shields.io/github/downloads/Puqns67/Claset/total?label=Total%20Download)](https://github.com/Puqns67/Claset/releases) ![License](https://img.shields.io/github/license/Puqns67/Claset?label=License)
 
+基于 Python 的 Minecraft 启动管理器, 未完成
+
 使用 Python 3.10.0 64bit 的环境编写, 不支持低于 3.10 的版本.
 
 已测试于 Archlinux 和 Windows 11.

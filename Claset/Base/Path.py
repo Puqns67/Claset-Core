@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""地址转换"""
+"""格式化路径"""
 
 
 from json import load
@@ -14,6 +14,7 @@ PathRegex = ReCompile(r"(.*)\$([a-zA-Z]*)(.*)")
 
 
 def path(Input: str, IsPath: bool = False) -> str:
+    """格式化路径"""
     try:
         with open(getcwd() + "/Claset/Paths.json") as ConfigFile:
             Config = load(ConfigFile)["Prefixs"]

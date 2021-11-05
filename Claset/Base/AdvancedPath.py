@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""高级地址转换"""
+"""高级格式化路径"""
 
 from os import getcwd
 from os.path import abspath
@@ -15,7 +15,7 @@ from Claset.Base.Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedP
 
 class path():
     def __init__(self, Others: list | None = None, IsPath: bool = False):
-        self.Configs = Configs().getConfig("Paths", TargetLastVersion=0)
+        self.Configs = Configs().getConfig("Paths", TargetVersion=0)
         self.IsPath = IsPath
         self.ReSearch = None
         self.CompleteConfigs = self.Configs["Prefixs"]
@@ -31,7 +31,7 @@ class path():
 
         try:
             File, Value = self.ReSearch.search(Objects).groups()
-            File = Configs().getConfig(File, TargetLastVersion=0)
+            File = Configs().getConfig(File, TargetVersion=0)
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
         except ConfigsUnregistered:
@@ -70,6 +70,7 @@ class path():
 
 
     def path(self, Input: str, Others: list | None = None, IsPath: bool | None = None) -> str:
+        """高级格式化路径"""
         # 如果启用了 Others 且未载过 Others 则通过 getFromOthersKeys 取得额外的 Key
         if ((Others != None) and (self.OthersType == False)): self.getFromOthersKeys(Others)
         if ((IsPath == False) and (self.IsPath == True)): self.IsPath = False

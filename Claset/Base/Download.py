@@ -6,10 +6,11 @@ from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha1
 from io import BytesIO
 from random import randint
-from re import compile as reCompile
+from re import S, compile as reCompile
 from time import sleep
 
-from requests import Session, exceptions as Ex_Requests
+from urllib3 import __version__ as Urllib3Version
+from requests import Session, exceptions as Ex_Requests, __version__ as RequestsVersion
 
 from .Path import path as Pathmd
 from .DFCheck import dfCheck
@@ -24,7 +25,7 @@ Logger = getLogger(__name__)
 class DownloadManager():
     """下载管理器"""
     def __init__(self):
-        self.Configs = Configs().getConfig(ID="Download", TargetLastVersion=0)
+        self.Configs = Configs().getConfig(ID="Download", TargetVersion=0)
         self.FindFileName = reCompile(r"([a-zA-Z0-9_.-]+)$")
         self.Projects = dict()
         self.DownloadsTasks = list()
@@ -34,13 +35,27 @@ class DownloadManager():
 
         # 定义全局 Requests Session
         if self.Configs["UseGobalRequestsSession"] == True:
-            self.RequestsSession = Session()
-            self.RequestsSession.headers = self.Configs['Headers']
-            self.RequestsSession.trust_env = self.Configs["UseSystemProxy"]
-            if self.Configs["UseSystemProxy"] == True:
-                self.RequestsSession.proxies = self.Configs["Proxies"]
+            self.RequestsSession = self.setSession()
 
         self.Stopping = False
+
+        Logger.debug("urllib3 Version: %s", Urllib3Version)
+        Logger.debug("requests Version: %s", RequestsVersion)
+
+
+    def setSession(self, TheSession: Session | None = None) -> Session:
+        """设置/获取 Session"""
+        if TheSession == None: TheSession = Session()
+
+        TheSession.headers = self.Configs['Headers']
+
+        if self.Configs["UseSystemProxy"] == True: TheSession.trust_env = True
+
+        Proxies = dict()
+        if self.Configs["Proxies"]["http"] != None: Proxies["http"] = self.Configs["Proxies"]["http"]
+        if self.Configs["Proxies"]["https"] != None: Proxies["https"] = self.Configs["Proxies"]["https"]
+        TheSession.proxies = Proxies
+        return(TheSession)
 
 
     def Download(self, Task: dict) -> None:
@@ -81,7 +96,7 @@ class DownloadManager():
             except Ex_Download.SizeError:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"%s\" Download failure + By SizeError + From \"%s\"", Task["FileName"], Task["URL"])
+                Logger.warning("File \"%s\" Download failure, By SizeError, From \"%s\"", Task["FileName"], Task["URL"])
             except Ex_Download.FileExist:
                 Logger.info("File \"%s\" is Exist, Skipping", Task["FileName"])
             except Ex_Download.SchemaError:
@@ -141,8 +156,7 @@ class DownloadManager():
         if self.Configs["UseGobalRequestsSession"] == True:
             UsedSession = self.RequestsSession
         else:
-            UsedSession = Session()
-            UsedSession.headers = self.Configs['Headers']
+            UsedSession = self.setSession()
 
         File = BytesIO()
         if self.Stopping == True: raise Ex_Download.Stopping
@@ -167,7 +181,7 @@ class DownloadManager():
             Ex_Requests.ConnectionError
         ): raise Ex_Download.DownloadExceptions
 
-        if ((Size != None) and (len(File.getbuffer()))) != Size: raise Ex_Download.SizeError
+        if ((Size != None) and (len(File.getbuffer())) != Size): raise Ex_Download.SizeError
         if ((Sha1 != None) and (sha1(File.getbuffer()).hexdigest() != Sha1)): raise Ex_Download.HashError
 
         dfCheck(Path=OutputPath, Type="dm")

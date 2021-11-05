@@ -14,7 +14,7 @@ __all__ = ["Base", "Game", "Tools", "Logger"]
 
 # 全局日志
 Logger = logging.getLogger(__name__)
-Logger.setLevel(logging.INFO)
+Logger.setLevel(logging.DEBUG)
 
 # Handlers
 LoggerFormatter = logging.Formatter(fmt="[%(asctime)s][%(module)s][%(funcName)s][%(levelname)s]: %(message)s", datefmt="%Y/%m/%d|%H:%M:%S")

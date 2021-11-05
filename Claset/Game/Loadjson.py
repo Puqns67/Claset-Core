@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""解析游戏Json"""
+"""解析游戏 Json"""
 
-from re import match
+from re import I, match
 from platform import system, machine, version
 
 from Claset.Base.AdvancedPath import path as aPathmd
@@ -9,19 +9,35 @@ from Claset.Base.AdvancedPath import path as aPathmd
 from .Exceptions import LoadJson as Ex_LoadJson
 
 
-def VersionManifest_DownloadList(InitFile: str, Version: str) -> list:
+def VersionManifest_DownloadList(InitFile: dict, TargetVersion: str) -> list[dict]:
+    for Version in InitFile["versions"]:
+        if Version["id"] == TargetVersion:
+            return([{
+                "URL": Version["url"],
+                "OutputPath": "$MCVersion",
+                "Sha1": Version["sha1"],
+                "Overwrite": False,
+            }])
+    raise Ex_LoadJson.TargetVersionNotFound(TargetVersion)
+
+
+def Version_DownloadList_WIP(InitFile: dict, Types: dict = dict()) -> list[dict]:
+    # 暂不支持 natives classifiers
+    Tasks = list()
+    for Libraries in InitFile["libraries"]:
+        LibrariesKeys = Libraries.keys()
+        if "rules" in LibrariesKeys:
+            if ResolveRules(Items=Libraries["rules"], Features=Types) == False: continue
+        Tasks.append(Libraries["name"])
+
+    return(Tasks)
+
+
+def Version_getRunCodeList(InitFile: dict):
     pass
 
 
-def Version_DownloadList(InitFile: str, Type: str) -> list:
-    pass
-
-
-def Version_getRunCodeList(InitFile: str):
-    pass
-
-
-def AssetsIndex_DownloadList(InitFile: str) -> list:
+def AssetsIndex_DownloadList(InitFile: dict) -> list[dict]:
     Objects = InitFile["objects"]
     Tasks = list()
     Pather = aPathmd(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
@@ -42,7 +58,8 @@ def AssetsIndex_DownloadList(InitFile: str) -> list:
     return(Tasks)
 
 
-def ResolveRules(Items: list, Features: dict = dict()) -> bool:
+def ResolveRules(Items: list[dict], Features: dict = dict()) -> bool:
+    """匹配规则"""
     allow = False
     for Item in Items:
         if Item.get("os") != None:
