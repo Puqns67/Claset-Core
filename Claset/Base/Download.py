@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha1
 from io import BytesIO
 from random import randint
-from re import S, compile as reCompile
+from re import compile as reCompile
 from time import sleep
 
 from urllib3 import __version__ as Urllib3Version
@@ -61,7 +61,7 @@ class DownloadManager():
     def Download(self, Task: dict) -> None:
         """简易下载器(Download) 的代理运行器"""
         if not "URL"            in Task: raise Ex_Download.MissingURL
-        if not "OutputPath"     in Task: Task["OutputPath"]     = "$PERFIX"
+        if not "OutputPath"     in Task: Task["OutputPath"]     = "$PREFIX"
         if not "FileName"       in Task: Task["FileName"]       = self.FindFileName.search(Task["URL"]).group(1)
         if not "Size"           in Task: Task["Size"]           = None
         if not "ProjectID"      in Task: Task["ProjectID"]      = None
@@ -70,11 +70,13 @@ class DownloadManager():
         if not "ConnectTimeout" in Task: Task["ConnectTimeout"] = self.Configs["Timeouts"]["Connect"]
         if not "ReadTimeout"    in Task: Task["ReadTimeout"]    = self.Configs["Timeouts"]["Read"]
         if not "Retry"          in Task: Task["Retry"]          = self.Configs["Retry"]
+        if not "Next"           in Task: Task["Next"]           = None
 
         if "$" in Task["URL"]: Task["URL"] = Pathmd(Task["URL"])
         if "$" in Task["OutputPath"]: Task["OutputPath"] = Pathmd(Task["OutputPath"])
 
         Retry = True
+        
         
         while Retry == True:
             Retry = False
@@ -131,7 +133,11 @@ class DownloadManager():
                 else:
                     Logger.error("File \"%s\" Retry Count Max", Task["FileName"])
                     self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
+                    raise Ex_Download.DownloadExceptions
             else: self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
+
+        # 没有出现下载错误之后尝试执行 Task["Next"]
+        if Task["Next"] != None: Task["Next"](Task)
 
 
     def download(

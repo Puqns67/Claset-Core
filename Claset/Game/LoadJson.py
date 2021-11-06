@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """解析游戏 Json"""
 
-from re import I, match
+from re import match
 from platform import system, machine, version
 
 from Claset.Base.AdvancedPath import path as aPathmd
@@ -21,14 +21,37 @@ def VersionManifest_DownloadList(InitFile: dict, TargetVersion: str) -> list[dic
     raise Ex_LoadJson.TargetVersionNotFound(TargetVersion)
 
 
-def Version_DownloadList_WIP(InitFile: dict, Types: dict = dict()) -> list[dict]:
-    # 暂不支持 natives classifiers
+def Version_DownloadList(InitFile: dict, Types: dict = dict()) -> list[dict]:
     Tasks = list()
     for Libraries in InitFile["libraries"]:
         LibrariesKeys = Libraries.keys()
+
         if "rules" in LibrariesKeys:
             if ResolveRules(Items=Libraries["rules"], Features=Types) == False: continue
-        Tasks.append(Libraries["name"])
+
+        if "natives" in LibrariesKeys:
+            try:
+                SystemHost = {"Windows": "windows", "Darwin": "osx", "Linux": "linux", "Java": "java", "": None}[system()]
+                if SystemHost in ("java", None): raise Ex_LoadJson.UnsupportSystemHost(SystemHost)
+                Classifiers = Libraries["downloads"]["classifiers"][Libraries["natives"][SystemHost]]
+                Tasks.append({
+                    "URL": Classifiers["url"],
+                    "Size": Classifiers["size"],
+                    "Sha1": Classifiers["sha1"],
+                    "OutputPath": "$LIBRERIES/" + Classifiers["path"],
+                    "Next": ProcessClassifiers
+                })
+            except KeyError: pass
+
+        try:
+            Artifact = Libraries["downloads"]["artifact"]
+            Tasks.append({
+                "URL": Artifact["url"],
+                "Size": Artifact["size"],
+                "Sha1": Artifact["sha1"],
+                "OutputPath": "$LIBRERIES/" + Artifact["path"]
+            })
+        except KeyError: pass
 
     return(Tasks)
 
@@ -43,7 +66,7 @@ def AssetsIndex_DownloadList(InitFile: dict) -> list[dict]:
     Pather = aPathmd(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
 
     for i in Objects:
-        Tasks.append({ 
+        Tasks.append({
             "FileName": Objects[i]["hash"],
             "URL": Pather.path("$Assets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"]),
             "Size": Objects[i]["size"],
@@ -81,4 +104,9 @@ def ResolveRules(Items: list[dict], Features: dict = dict()) -> bool:
         allow = {"allow": True, "disallow": False, None: None}[Item.get("action")]
         if allow == None: raise SystemError
     return(allow)
+
+
+def ProcessClassifiers(Task: dict):
+    """处理 Classifiers (WIP)"""
+    print(Task)
 

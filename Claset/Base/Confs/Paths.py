@@ -26,13 +26,13 @@ File = {
 Difference = {
     "2->3": [
         "REPLACE:VERSION->3",
-        "REPLACE:[Perfixs, ASSETS]->$MINECRFT/assets",
-        "REPLACE:[Perfixs, VERSION]->$MINECRFT/version",
-        "REPLACE:[Perfixs, LIBRERIES]->$MINECRFT/libraries",
-        "REPLACE:[Perfixs, MCAssetIndex]->$ASSETS/indexes"
+        "REPLACE:[Prefixs, ASSETS]->$MINECRFT/assets",
+        "REPLACE:[Prefixs, VERSION]->$MINECRFT/version",
+        "REPLACE:[Prefixs, LIBRERIES]->$MINECRFT/libraries",
+        "REPLACE:[Prefixs, MCAssetIndex]->$ASSETS/indexes"
     ],
     "1->2": [
         "REPLACE:VERSION->2",
-        "REPLACE:[Perfixs, CONFIG]->$PREFIX/Claset"
+        "REPLACE:[Prefixs, CONFIG]->$PREFIX/Claset"
     ]
 }

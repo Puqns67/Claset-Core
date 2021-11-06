@@ -51,7 +51,7 @@ class path():
         else:
             OthersKeys = self.Configs["Others"] + OtherTypes
 
-        # 顺序获取之后再放入 Perfixs
+        # 顺序获取之后再放入 Prefixs
         for i in OthersKeys:
             loaded = self.loadOtherString(i)
             for ii in loaded.keys():
@@ -80,7 +80,7 @@ class path():
             if Groups[1] == None: raise Ex_Path.SearchError
             elif Groups[1] == "PREFIX": Groups[1] = getcwd()
             elif Groups[1] in self.CompleteConfigsKeys: Groups[1] = self.CompleteConfigs[Groups[1]]
-            else: raise Ex_Path.PerfixsMissingKey(Groups[1])
+            else: raise Ex_Path.PrefixsMissingKey(Groups[1])
             Input = str().join(Groups)
 
         if ((IsPath == True) or ((IsPath == None) and (self.IsPath == True))): Input = abspath(Input)

@@ -4,7 +4,7 @@
 class Path(Exception): pass
 
 # Prefixs 中无需要的 Key
-class PerfixsMissingKey(Path): pass
+class PrefixsMissingKey(Path): pass
 
 # 搜素错误
 class SearchError(Path): pass

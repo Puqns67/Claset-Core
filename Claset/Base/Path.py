@@ -30,7 +30,7 @@ def path(Input: str, IsPath: bool = False) -> str:
         if Groups[1] == None: raise Ex_Path.SearchError
         elif Groups[1] == "PREFIX": Groups[1] = getcwd()
         elif Groups[1] in ConfigKeys: Groups[1] = Config[Groups[1]]
-        else: raise Ex_Path.PerfixsMissingKey(Groups[1])
+        else: raise Ex_Path.PrefixsMissingKey(Groups[1])
         Input = str().join(Groups)
 
     if IsPath == True:
