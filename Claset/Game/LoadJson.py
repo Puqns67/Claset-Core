@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """解析游戏 Json"""
 
+from logging import getLogger
 from re import match
 from platform import system, machine, version
+from zipfile import ZipFile, is_zipfile
 
 from Claset.Base.AdvancedPath import path as aPathmd
 
 from .Exceptions import LoadJson as Ex_LoadJson
 
+Logger = getLogger(__name__)
 
 def VersionManifest_DownloadList(InitFile: dict, TargetVersion: str) -> list[dict]:
     for Version in InitFile["versions"]:
@@ -21,7 +24,7 @@ def VersionManifest_DownloadList(InitFile: dict, TargetVersion: str) -> list[dic
     raise Ex_LoadJson.TargetVersionNotFound(TargetVersion)
 
 
-def Version_DownloadList(InitFile: dict, Types: dict = dict()) -> list[dict]:
+def Version_DownloadList(InitFile: dict, Name: str, Types: dict = dict()) -> list[dict]:
     Tasks = list()
     for Libraries in InitFile["libraries"]:
         LibrariesKeys = Libraries.keys()
@@ -39,7 +42,12 @@ def Version_DownloadList(InitFile: dict, Types: dict = dict()) -> list[dict]:
                     "Size": Classifiers["size"],
                     "Sha1": Classifiers["sha1"],
                     "OutputPath": "$LIBRERIES/" + Classifiers["path"],
-                    "Next": ProcessClassifiers
+                    "Overwrite": False,
+                    "FileName": None,
+                    "Next": ProcessClassifiers,
+                    "NextArgs": {
+                        "ExtractTo": aPathmd().path("$VERSION/" + Name + "/natives", IsPath=True)
+                    }
                 })
             except KeyError: pass
 
@@ -49,7 +57,9 @@ def Version_DownloadList(InitFile: dict, Types: dict = dict()) -> list[dict]:
                 "URL": Artifact["url"],
                 "Size": Artifact["size"],
                 "Sha1": Artifact["sha1"],
-                "OutputPath": "$LIBRERIES/" + Artifact["path"]
+                "OutputPath": "$LIBRERIES/" + Artifact["path"],
+                "Overwrite": False,
+                "FileName": None
             })
         except KeyError: pass
 
@@ -107,6 +117,13 @@ def ResolveRules(Items: list[dict], Features: dict = dict()) -> bool:
 
 
 def ProcessClassifiers(Task: dict):
-    """处理 Classifiers (WIP)"""
-    print(Task)
+    """处理 Classifiers"""
+    if not(is_zipfile(Task["OutputPaths"])): raise Ex_LoadJson.ClassifiersFileError
+
+    File = ZipFile(file=Task["OutputPaths"], mode="r")
+    FileList = File.namelist()
+    for FilePathInZip in FileList:
+        if "META-INF" in FilePathInZip: continue
+        Logger.info("Extract Classifiers...")
+        File.extract(FilePathInZip, Task["NextArgs"]["ExtractTo"])
 

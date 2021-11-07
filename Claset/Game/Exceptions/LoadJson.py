@@ -15,3 +15,6 @@ class FeaturesContinue(LoadGameJsonErrors): pass
 # 未找到指定的游戏版本
 class TargetVersionNotFound(LoadGameJsonErrors): pass
 
+# Classifiers 文件错误
+class ClassifiersFileError(LoadGameJsonErrors): pass
+

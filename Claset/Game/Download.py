@@ -18,5 +18,5 @@ def getVersionManifestURL(Ver: int = 1):
     APath = aPathmd(Others=True, OtherTypes=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
     URL = APath.path(URL)
     Path = APath.path("$MCVersionManifest/")
-    return({"URL": URL, "FileName": FileName, "OutputPath": abspath(Path), "Retry": 3})
+    return({"URL": URL, "FileName": FileName, "OutputPath": abspath(Path)})
 

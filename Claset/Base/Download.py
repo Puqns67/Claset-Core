@@ -54,15 +54,14 @@ class DownloadManager():
         Proxies = dict()
         if self.Configs["Proxies"]["http"] != None: Proxies["http"] = self.Configs["Proxies"]["http"]
         if self.Configs["Proxies"]["https"] != None: Proxies["https"] = self.Configs["Proxies"]["https"]
-        TheSession.proxies = Proxies
+        if Proxies != dict(): TheSession.proxies = Proxies
         return(TheSession)
 
 
     def Download(self, Task: dict) -> None:
-        """简易下载器(Download) 的代理运行器"""
+        """简易下载器 (Download) 的代理运行器"""
+        # 处理缺失的项目
         if not "URL"            in Task: raise Ex_Download.MissingURL
-        if not "OutputPath"     in Task: Task["OutputPath"]     = "$PREFIX"
-        if not "FileName"       in Task: Task["FileName"]       = self.FindFileName.search(Task["URL"]).group(1)
         if not "Size"           in Task: Task["Size"]           = None
         if not "ProjectID"      in Task: Task["ProjectID"]      = None
         if not "Overwrite"      in Task: Task["Overwrite"]      = True
@@ -72,20 +71,35 @@ class DownloadManager():
         if not "Retry"          in Task: Task["Retry"]          = self.Configs["Retry"]
         if not "Next"           in Task: Task["Next"]           = None
 
+        if not "OutputPath" in Task:
+            Task["OutputPath"] = "$PREFIX"
+
+        if not "FileName" in Task:
+            Task["FileName"] = self.FindFileName.search(Task["URL"]).groups()[0]
+            if Task["FileName"] == None:
+                Task["FileName"] = self.FindFileName.search(Task["OutputPath"]).groups()[0]
+        elif Task["FileName"] == None:
+            Task["FileName"] = self.FindFileName.search(Task["OutputPath"]).groups()[0]
+            if Task["FileName"] == None:
+                Task["FileName"] = self.FindFileName.search(Task["URL"]).groups()[0]
+        
+        Task["OutputPath"] = Task["OutputPath"].replace(Task["FileName"], "")
+        if Task["FileName"] == None: Task["FileName"] = "NullFileName"
+
+        if ((not "OutputPaths" in Task) or (Task["OutputPaths"] == None)):
+            Task["OutputPaths"] = Task["OutputPath"] + "/" + Task["FileName"]
+
         if "$" in Task["URL"]: Task["URL"] = Pathmd(Task["URL"])
-        if "$" in Task["OutputPath"]: Task["OutputPath"] = Pathmd(Task["OutputPath"])
+        if "$" in Task["OutputPaths"]: Task["OutputPaths"] = Pathmd(Task["OutputPaths"], IsPath=True)
 
         Retry = True
-        
-        
         while Retry == True:
             Retry = False
             Errored = False
             try:
                 self.download(
                     URL=Task["URL"],
-                    OutputPath=Task["OutputPath"],
-                    FileName=Task["FileName"],
+                    OutputPaths=Task["OutputPaths"],
                     Size=Task["Size"],
                     Overwrite=Task["Overwrite"],
                     Sha1=Task["Sha1"],
@@ -130,21 +144,22 @@ class DownloadManager():
                 if Task["Retry"] > 0:
                     Task["Retry"] -= 1
                     Retry = True
+                    continue
                 else:
                     Logger.error("File \"%s\" Retry Count Max", Task["FileName"])
                     self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
                     raise Ex_Download.DownloadExceptions
-            else: self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
-
-        # 没有出现下载错误之后尝试执行 Task["Next"]
-        if Task["Next"] != None: Task["Next"](Task)
+            else:
+                self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
+                # 没有出现下载错误之后尝试执行 Task["Next"]
+                if Task["Next"] != None: Task["Next"](Task)
+                Logger.info("File \"%s\" Downloaded", Task["FileName"])
 
 
     def download(
         self,
         URL:            str, # 链接地址
-        OutputPath:     str, # 输出位置
-        FileName:       str, # 文件名
+        OutputPaths:    str, # 输出路径
         Size:           int, # 文件大小(字节)
         Overwrite:     bool, # 覆盖已有的文件
         Sha1:           str, # 使用sha1验证下载结果
@@ -152,9 +167,6 @@ class DownloadManager():
         ReadTimeout:    int  # 下载超时(若为空则使用全局设置)
         ) -> None:
         """简易下载器"""
-
-        OutputPaths = OutputPath + "/" + FileName
-
         if dfCheck(Path=OutputPaths, Type="f") == True:
             if ((Sha1 != None) and (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1)):
                 if Overwrite == False: raise Ex_Download.FileExist
@@ -190,10 +202,8 @@ class DownloadManager():
         if ((Size != None) and (len(File.getbuffer())) != Size): raise Ex_Download.SizeError
         if ((Sha1 != None) and (sha1(File.getbuffer()).hexdigest() != Sha1)): raise Ex_Download.HashError
 
-        dfCheck(Path=OutputPath, Type="dm")
+        dfCheck(Path=OutputPaths, Type="fm")
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
-
-        Logger.info("File \"%s\" Downloaded", FileName)
 
 
     def addTasks(self, InputTasks: list, MainProjectID: int | None = None) -> int | None:
