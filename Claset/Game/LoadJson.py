@@ -119,11 +119,10 @@ def ResolveRules(Items: list[dict], Features: dict = dict()) -> bool:
 def ProcessClassifiers(Task: dict):
     """处理 Classifiers"""
     if not(is_zipfile(Task["OutputPaths"])): raise Ex_LoadJson.ClassifiersFileError
-
+    Logger.info("Extract Classifiers：%s", Task["FileName"])
     File = ZipFile(file=Task["OutputPaths"], mode="r")
     FileList = File.namelist()
     for FilePathInZip in FileList:
         if "META-INF" in FilePathInZip: continue
-        Logger.info("Extract Classifiers...")
         File.extract(FilePathInZip, Task["NextArgs"]["ExtractTo"])
 
