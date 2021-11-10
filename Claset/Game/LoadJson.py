@@ -12,6 +12,14 @@ from .Exceptions import LoadJson as Ex_LoadJson
 
 Logger = getLogger(__name__)
 
+
+def Versionmanifest_VersionList(InitFile: dict, Recommend: str | None = None) -> list[str]:
+    if Recommend != None: return(InitFile["Latest"][Recommend])
+    OutputList = list()
+    for Version in InitFile["versions"]: OutputList.append(Version["id"])
+    return(OutputList)
+
+
 def VersionManifest_DownloadList(InitFile: dict, TargetVersion: str) -> list[dict]:
     for Version in InitFile["versions"]:
         if Version["id"] == TargetVersion:

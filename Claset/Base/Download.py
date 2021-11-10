@@ -96,6 +96,7 @@ class DownloadManager():
         while Retry == True:
             Retry = False
             Errored = False
+            StopType = "Downloaded"
             try:
                 self.download(
                     URL=Task["URL"],
@@ -108,13 +109,13 @@ class DownloadManager():
                 )
             # 错误处理
             except Ex_Download.Stopping:
-                pass
+                StopType = "Stopping"
             except Ex_Download.SizeError:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
                 Logger.warning("File \"%s\" Download failure, By SizeError, From \"%s\"", Task["FileName"], Task["URL"])
             except Ex_Download.FileExist:
-                Logger.info("File \"%s\" is Exist, Skipping", Task["FileName"])
+                StopType = "FileExist"
             except Ex_Download.SchemaError:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
@@ -138,7 +139,7 @@ class DownloadManager():
             except Exception as exception:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("Unknown Error: %s", exception)
+                Logger.warning("Unknown Error:", exc_info=True)
 
             if Errored == True:
                 if Task["Retry"] > 0:
@@ -153,7 +154,11 @@ class DownloadManager():
                 self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
                 # 没有出现下载错误之后尝试执行 Task["Next"]
                 if Task["Next"] != None: Task["Next"](Task)
-                Logger.info("File \"%s\" Downloaded", Task["FileName"])
+
+                match StopType:
+                    case "Downloaded": Logger.info("File \"%s\" Downloaded", Task["FileName"])
+                    case "Stopping": pass
+                    case "FileExist": Logger.info("File \"%s\" is Exist, Skipping", Task["FileName"])
 
 
     def download(
@@ -206,14 +211,16 @@ class DownloadManager():
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
 
 
-    def addTasks(self, InputTasks: list, MainProjectID: int | None = None) -> int | None:
+    def addTasks(self, InputTasks: list[dict], MainProjectID: int | None = None) -> int | None:
         """添加多个任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         if self.Stopping == True: raise Ex_Download.Stopping
         JobTotal = len(InputTasks)
         if MainProjectID == None:
             InputProjectID = False
             MainProjectID = self.projectCreate(AllTasksCount=JobTotal)
-        else: InputProjectID = True
+        else:
+            InputProjectID = True
+            self.projectAddJob(ProjectID=MainProjectID, AllTasksCount=JobTotal)
         Logger.info("Adding %s tasks to Project %s", JobTotal, MainProjectID)
 
         for InputTask in InputTasks:
@@ -230,7 +237,9 @@ class DownloadManager():
         if ProjectID == None:
             InputProjectID = False
             InputTask["ProjectID"] = self.projectCreate(AllTasksCount=1)
-        else: InputTask["ProjectID"] = ProjectID
+        else:
+            InputTask["ProjectID"] = ProjectID
+            self.projectAddJob(ProjectID=ProjectID, AllTasksCount=1)
         Logger.info("Adding 1 tasks to Project %s", InputTask["ProjectID"])
 
         self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
@@ -281,8 +290,7 @@ class DownloadManager():
         if type(ProjectIDs) == type(int()): ProjectIDs = [ProjectIDs]
         ErrorTasksCount = int()
         for ProjectID in ProjectIDs:
-            while True:
-                if ((self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) == self.Projects[ProjectID]["AllTasksCount"]): break
+            while ((self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) != self.Projects[ProjectID]["AllTasksCount"]):
                 sleep(self.Configs["SleepTime"])
             ErrorTasksCount += self.Projects[ProjectID]["ErrorTasksCount"]
         return(ErrorTasksCount)

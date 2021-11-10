@@ -21,9 +21,12 @@ LoggerFormatter = logging.Formatter(fmt="[%(asctime)s][%(module)s][%(funcName)s]
 StreamHandler = logging.StreamHandler()
 StreamHandler.setLevel(logging.DEBUG)
 StreamHandler.setFormatter(LoggerFormatter)
-# FileHandler = logging.FileHandler(filename="s.log")
-# FileHandler.setLevel(logging.DEBUG)
-# FileHandler.setFormatter(LoggerFormatter)
+
+
+
+FileHandler = logging.FileHandler(filename="s.log")
+FileHandler.setLevel(logging.DEBUG)
+FileHandler.setFormatter(LoggerFormatter)
 
 Logger.addHandler(StreamHandler)
-# Logger.addHandler(FileHandler)
+Logger.addHandler(FileHandler)
