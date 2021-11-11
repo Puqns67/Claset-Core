@@ -5,12 +5,14 @@ from . import Paths
 from . import Download
 from . import Mirrors
 from . import Settings
+from . import Logs
 
 ConfigIDs = {
     "Download": "Download.json",
     "Paths": "Paths.json",
     "Mirrors": "Mirrors.json",
-    "Settings": "Settings.json"
+    "Settings": "Settings.json",
+    "Logs": "Logs.json"
 }
 
 ConfigInfos = {
@@ -18,19 +20,22 @@ ConfigInfos = {
         "Download": Download.LastVersion,
         "Paths": Paths.LastVersion,
         "Mirrors": Mirrors.LastVersion,
-        "Settings": Settings.LastVersion
+        "Settings": Settings.LastVersion,
+        "Logs": Logs.LastVersion
     },
     "File": {
         "Download": Download.File,
         "Paths": Paths.File,
         "Mirrors": Mirrors.File,
-        "Settings": Settings.File
+        "Settings": Settings.File,
+        "Logs": Logs.File
     },
     "Difference": {
         "Download": Download.Difference,
         "Paths": Paths.Difference,
         "Mirrors": Mirrors.Difference,
-        "Settings": Settings.Difference
+        "Settings": Settings.Difference,
+        "Logs": Logs.Difference
     }
 }
 

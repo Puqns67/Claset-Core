@@ -6,9 +6,7 @@
 
 import logging
 
-from . import Base
-from . import Game
-from . import Tools
+from . import Base, Game, Tools
 
 __all__ = ["Base", "Game", "Tools", "Logger"]
 
@@ -17,16 +15,8 @@ Logger = logging.getLogger(__name__)
 Logger.setLevel(logging.DEBUG)
 
 # Handlers
-LoggerFormatter = logging.Formatter(fmt="[%(asctime)s][%(module)s][%(funcName)s][%(levelname)s]: %(message)s", datefmt="%Y/%m/%d|%H:%M:%S")
 StreamHandler = logging.StreamHandler()
 StreamHandler.setLevel(logging.DEBUG)
-StreamHandler.setFormatter(LoggerFormatter)
-
-
-
-FileHandler = logging.FileHandler(filename="s.log")
-FileHandler.setLevel(logging.DEBUG)
-FileHandler.setFormatter(LoggerFormatter)
+StreamHandler.setFormatter(Base.Logs.Formatter)
 
 Logger.addHandler(StreamHandler)
-Logger.addHandler(FileHandler)

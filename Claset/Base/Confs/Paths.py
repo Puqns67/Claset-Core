@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 3
+LastVersion = 4
 
 
 File = {
-    "VERSION": 3,
+    "VERSION": 4,
     "Prefixs": {
         "PREFIX": "$PREFIX",
+        "LOG": "$EXEC/Logs",
         "EXEC": "$PREFIX/Claset",
-        "CACHE": "$PREFIX/Claset/Cache",
-        "CONFIG": "$PREFIX/Claset",
+        "CACHE": "$EXEC/Cache",
+        "CONFIG": "$EXEC",
         "MINECRFT": "$PREFIX/.minecraft",
         "ASSETS": "$MINECRFT/assets",
         "VERSION": "$MINECRFT/version",
@@ -24,6 +25,12 @@ File = {
 
 
 Difference = {
+    "3->4": [
+        "REPLACE:VERSION->4",
+        "REPLACE:[Prefixs, CACHE]->$EXEC/Cache",
+        "REPLACE:[Prefixs, CONFIG]->$EXEC"
+        "REPLACE:[Prefixs, LOG]->$EXEC/Logs"
+    ],
     "2->3": [
         "REPLACE:VERSION->3",
         "REPLACE:[Prefixs, ASSETS]->$MINECRFT/assets",

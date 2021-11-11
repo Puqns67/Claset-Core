@@ -28,7 +28,7 @@ class Configs():
         if dfCheck(Path="$CONFIG/" + Confs.ConfigIDs["Settings"], Type="f") == False: self.genConfig("Settings", "$CONFIG/" + Confs.ConfigIDs["Settings"])
 
 
-    def getConfig(self, ID: str, TargetVersion: str | None = None) -> dict:
+    def getConfig(self, ID: str, TargetVersion: int = 0) -> dict:
         """取得配置文件"""
         if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered(ID)
         FilePath = "$CONFIG/" + Confs.ConfigIDs[ID]
