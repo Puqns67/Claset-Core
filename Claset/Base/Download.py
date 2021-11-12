@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha1
 from io import BytesIO
 from random import randint
-from re import compile as reCompile
+from re import compile as reCompile, search
 from time import sleep
 
 from urllib3 import __version__ as Urllib3Version
@@ -71,23 +71,31 @@ class DownloadManager():
         if not "Retry"          in Task: Task["Retry"]          = self.Configs["Retry"]
         if not "Next"           in Task: Task["Next"]           = None
 
-        if not "OutputPath" in Task:
-            Task["OutputPath"] = "$PREFIX"
-
-        if not "FileName" in Task:
-            Task["FileName"] = self.FindFileName.search(Task["URL"]).groups()[0]
-            if Task["FileName"] == None:
-                Task["FileName"] = self.FindFileName.search(Task["OutputPath"]).groups()[0]
-        elif Task["FileName"] == None:
-            Task["FileName"] = self.FindFileName.search(Task["OutputPath"]).groups()[0]
-            if Task["FileName"] == None:
-                Task["FileName"] = self.FindFileName.search(Task["URL"]).groups()[0]
-        
-        Task["OutputPath"] = Task["OutputPath"].replace(Task["FileName"], "")
-        if Task["FileName"] == None: Task["FileName"] = "NullFileName"
-
         if ((not "OutputPaths" in Task) or (Task["OutputPaths"] == None)):
+            # 如不存在 OutputPath 或 OutputPath 为空, 则使用当前位置
+            if ((not "OutputPath" in Task) or ("OutputPath" == None)):
+                Task["OutputPath"] = "$PREFIX"
+
+            # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
+            try:
+                if not "FileName" in Task: Task["FileName"] = self.FindFileName.search(Task["URL"]).groups()[0]
+                elif Task["FileName"] == None: Task["FileName"] = self.FindFileName.search(Task["OutputPath"]).groups()[0]
+            except AttributeError:
+                try:
+                    if not "FileName" in Task: Task["FileName"] = self.FindFileName.search(Task["OutputPath"]).groups()[0]
+                    elif Task["FileName"] == None: Task["FileName"] = self.FindFileName.search(Task["URL"]).groups()[0]
+                except AttributeError:
+                    Task["FileName"] = "NoName"
+
+            # 从 OutputPath 中去除重复的文件名
+            if ((Task["FileName"] in Task["OutputPath"]) and ((search(Task["FileName"] + "$", Task["OutputPath"])) != None)):
+                Task["OutputPath"] = search("^(.*)" + Task["FileName"] + "$", Task["OutputPath"]).groups()[0]
+
             Task["OutputPaths"] = Task["OutputPath"] + "/" + Task["FileName"]
+
+        else:
+            """WIP"""
+
 
         if "$" in Task["URL"]: Task["URL"] = Pathmd(Task["URL"])
         if "$" in Task["OutputPaths"]: Task["OutputPaths"] = Pathmd(Task["OutputPaths"], IsPath=True)

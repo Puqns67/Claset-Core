@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from . import Exceptions
-from . import Download
+from . import Install
 from . import LoadJson
 from . import Launcher
 
 __all__ = [
-    "Exceptions", "Download", "LoadJson", "Launcher"
+    "Exceptions", "Install", "LoadJson", "Launcher"
 ]
 

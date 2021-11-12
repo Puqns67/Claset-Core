@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""为日志添加文件记录/存档"""
+"""日志相关的处理方案"""
 
 import logging
 from os import listdir, remove
@@ -13,6 +13,7 @@ from .Path import path as Pathmd
 
 
 class Logs():
+    """日志相关的处理方案"""
     def __init__(self, TheLogger: logging.Logger):
         self.Configs = Configs().getConfig("Logs")
         self.LogPath = Pathmd(self.Configs["FilePath"], IsPath=True)
@@ -20,14 +21,14 @@ class Logs():
         self.Formatter = logging.Formatter(fmt=self.Configs["LogFormats"]["Format"], datefmt=self.Configs["LogFormats"]["Date"])
 
 
-    # 设置 Handler
     def SettingHandler(self):
+        """设置 Handler"""
         if self.Configs["Handlers"]["Stream"] == True: self.SettingStreamHandler()
         if self.Configs["Handlers"]["File"] == True:   self.SettingFileHandler()
 
 
-    # 设置日志输出至流
     def SettingStreamHandler(self):
+        """设置日志输出至流"""
         # 建立 Handler
         StreamHandler = logging.StreamHandler()
         StreamHandler.setLevel(logging.DEBUG)
@@ -36,8 +37,8 @@ class Logs():
         self.TheLogger.addHandler(StreamHandler)
 
 
-    # 设置日志输出至文件
     def SettingFileHandler(self):
+        """设置日志输出至文件"""
         dfCheck(Path=self.LogPath, Type="dm")
         LogFullPath = Pathmd(self.LogPath + "/" + self.genFileName(), IsPath=True)
         # 建立 Handler
@@ -49,16 +50,16 @@ class Logs():
         self.TheLogger.info("Logging to file: \"%s\"", LogFullPath)
 
 
-    # 生成日志文件文件名
     def genFileName(self, LogName: str = "Claset-log-{TIME}.log") -> str:
+        """生成日志文件文件名"""
         if r"{TIME}" in LogName:
             Time = strftime("%Y-%m-%d_%H-%M-%S", localtime())
             LogName = LogName.replace(r"{TIME}", Time)
         return(LogName)
 
 
-    # 处理老日志
     def processOldLog(self) -> None:
+        """处理老日志"""
         # 让日志文件名以时间排序
         FilelistForTime = dict()
         LogFileFormat = reCompile(r"(Claset-log-([0-9-_]*)\.log)")

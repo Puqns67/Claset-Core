@@ -20,7 +20,7 @@ def Versionmanifest_VersionList(InitFile: dict, Recommend: str | None = None) ->
     return(OutputList)
 
 
-def VersionManifest_DownloadList(InitFile: dict, TargetVersion: str) -> list[dict]:
+def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> list[dict]:
     for Version in InitFile["versions"]:
         if Version["id"] == TargetVersion:
             return([{
@@ -34,6 +34,18 @@ def VersionManifest_DownloadList(InitFile: dict, TargetVersion: str) -> list[dic
 
 def Version_DownloadList(InitFile: dict, Name: str, Types: dict = dict()) -> list[dict]:
     Tasks = list()
+
+    # Client
+    Client = InitFile["downloads"]["client"]
+    Tasks.append({
+        "URL": Client["url"],
+        "Sha1": Client["sha1"],
+        "Size": Client["size"],
+        "OutputPath": aPathmd().path("$VERSION/" + Name + "/" + Name + ".jar"),
+        "Overwrite": False
+    })
+
+    # Libraries
     for Libraries in InitFile["libraries"]:
         LibrariesKeys = Libraries.keys()
 
@@ -74,11 +86,34 @@ def Version_DownloadList(InitFile: dict, Name: str, Types: dict = dict()) -> lis
     return(Tasks)
 
 
-def Version_getRunCodeList(InitFile: dict):
+def Version_Server_DownloadList(InitFile: dict, SaveTo: str) -> list[dict]:
+    """从 Version 获取对应的 Server jar 下载列表"""
+    Server = InitFile["downloads"]["server"]
+    return([{
+        "URL": Server["url"],
+        "Sha1": Server["sha1"],
+        "Size": Server["size"],
+        "OutputPath": aPathmd().path(SaveTo),
+        "Overwrite": False
+    }])
+
+
+def Version_RunCodeList(InitFile: dict) -> list[str]:
     pass
 
 
-def AssetsIndex_DownloadList(InitFile: dict) -> list[dict]:
+def Version_To_AssetIndex(InitFile: dict) -> list[dict]:
+    assetIndex = InitFile["assetIndex"]
+    return([{
+        "URL": assetIndex["url"],
+        "Sha1": assetIndex["sha1"],
+        "Size": assetIndex["size"],
+        "OutputPath": "$MCAssetIndex",
+        "Overwrite": False
+    }])
+
+
+def AssetIndex_DownloadList(InitFile: dict) -> list[dict]:
     Objects = InitFile["objects"]
     Tasks = list()
     Pather = aPathmd(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
