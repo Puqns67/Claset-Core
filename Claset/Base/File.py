@@ -18,13 +18,13 @@ def loadFile(Path: str, Type: str = "text") -> str:
 
     match Type:
         case "json":
-            with open(Path) as openedfile:
+            with open(Path, encoding="UTF-8") as openedfile:
                 return(load(openedfile))
         case "bytes":
             with open(Path, "rb") as openedfile:
                 return(openedfile.read())
         case "text":
-            with open(Path) as openedfile:
+            with open(Path, encoding="UTF-8") as openedfile:
                 return(openedfile)
         case _:
             raise TypeError("loadFile: Unknown Type")
@@ -44,16 +44,16 @@ def saveFile(Path: str, FileContent: str | bytes, Type: str = "text") -> None:
     Path = abspath(Path)
     match Type:
         case "json":
-            with open(Path, mode="w+") as thefile:
+            with open(Path, mode="w+", encoding="UTF-8") as thefile:
                 thefile.write(dumps(FileContent, indent=4, ensure_ascii=False))
         case "bytes":
             with open(Path, mode="wb+") as thefile:
                 thefile.write(FileContent)
         case "log":
-            with open(Path, mode="a+") as thefile:
+            with open(Path, mode="a+", encoding="UTF-8") as thefile:
                 thefile.write(FileContent)
         case "text":
-            with open(Path, mode="w+") as thefile:
+            with open(Path, mode="w+", encoding="UTF-8") as thefile:
                 thefile.write(FileContent)
         case _:
             raise TypeError("saveFile(): Unknown Type")

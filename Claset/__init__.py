@@ -14,9 +14,7 @@ __all__ = ["Base", "Game", "Tools", "Logger"]
 Logger = logging.getLogger(__name__)
 Logger.setLevel(logging.DEBUG)
 
-# Handlers
-StreamHandler = logging.StreamHandler()
-StreamHandler.setLevel(logging.DEBUG)
-StreamHandler.setFormatter(Base.Logs.Formatter)
+Logs = Base.Logs.Logs(Logger)
+Logs.SettingHandler()
+Logs.processOldLog()
 
-Logger.addHandler(StreamHandler)

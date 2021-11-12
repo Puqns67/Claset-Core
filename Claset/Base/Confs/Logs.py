@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 0
+LastVersion = 1
 
 
 File = {
-    "VERSION": 0,
-    "FilePath": "$CONFIG/",
+    "VERSION": 1,
+    "FilePath": "$LOG/",
+    "LogFormats": {
+        "Format": "[%(asctime)s][%(module)s][%(funcName)s][%(levelname)s]: %(message)s",
+        "Date": "%Y/%m/%d|%H:%M:%S"
+    },
+    "Handlers": {
+        "Stream": True,
+        "File": True
+    },
     "ProcessOldLog": {
         "Type": "Archive",
         "TypeSettings": {
