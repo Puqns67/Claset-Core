@@ -32,7 +32,7 @@ def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> list[dict]
     raise Ex_LoadJson.TargetVersionNotFound(TargetVersion)
 
 
-def Version_DownloadList(InitFile: dict, Name: str, Types: dict = dict()) -> list[dict]:
+def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict()) -> list[dict]:
     Tasks = list()
 
     # Client

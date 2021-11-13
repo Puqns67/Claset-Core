@@ -19,7 +19,7 @@ def Main():
     Claset.Logger.info("Started!!!")
     Claset.Logger.info("Running In \"%s\"", " ".join(uname()))
     Downloader = Claset.Base.Download.DownloadManager()
-    DL_AssetsIndex = Claset.Game.LoadJson.AssetsIndex_DownloadList(Claset.Base.File.loadFile(ThisFilePath + "/DataSource/1.17.json", "json"))
+    DL_AssetsIndex = Claset.Game.LoadJson.AssetIndex_DownloadList(Claset.Base.File.loadFile(ThisFilePath + "/DataSource/1.17.json", "json"))
     DL_Version = Claset.Game.LoadJson.Version_DownloadList(InitFile=Claset.Base.File.loadFile(ThisFilePath + "/DataSource/1.12.2.json", "json"), Name="Test")
     try:
         ProjectID = Downloader.addTasks(DL_AssetsIndex)

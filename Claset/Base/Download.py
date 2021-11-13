@@ -94,8 +94,10 @@ class DownloadManager():
             Task["OutputPaths"] = Task["OutputPath"] + "/" + Task["FileName"]
 
         else:
-            """WIP"""
-
+            try:
+                Task["OutputPath"], Task["FileName"] = search(r"^(.*)[\\/](.*)$").groups()
+            except TypeError:
+                raise Ex_Download.UnpackOutputPathsError
 
         if "$" in Task["URL"]: Task["URL"] = Pathmd(Task["URL"])
         if "$" in Task["OutputPaths"]: Task["OutputPaths"] = Pathmd(Task["OutputPaths"], IsPath=True)
@@ -144,7 +146,7 @@ class DownloadManager():
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
                 Logger.warning("File \"%s\" Download failure, By ConnectionError, From \"%s\"", Task["FileName"], Task["URL"])
-            except Exception as exception:
+            except Exception:
                 Errored = True
                 self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
                 Logger.warning("Unknown Error:", exc_info=True)

@@ -30,3 +30,6 @@ class MissingURL(DownloadExceptions): pass
 # 已停止
 class Stopping(DownloadExceptions): pass
 
+# 解完整 OutputPaths 时出现的错误
+class UnpackOutputPathsError(DownloadExceptions): pass
+
