@@ -5,7 +5,6 @@ LastVersion = 1
 
 
 File = {
-    "VERSION": 1,
     "FilePath": "$LOG/",
     "LogFormats": {
         "Format": "[%(asctime)s][%(module)s][%(funcName)s][%(levelname)s]: %(message)s",

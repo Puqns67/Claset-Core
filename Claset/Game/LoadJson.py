@@ -41,7 +41,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
         "URL": Client["url"],
         "Sha1": Client["sha1"],
         "Size": Client["size"],
-        "OutputPath": aPathmd().path("$VERSION/" + Name + "/" + Name + ".jar"),
+        "OutputPaths": aPathmd().path("$VERSION/" + Name + "/" + Name + ".jar"),
         "Overwrite": False
     })
 

@@ -95,7 +95,7 @@ class DownloadManager():
 
         else:
             try:
-                Task["OutputPath"], Task["FileName"] = search(r"^(.*)[\\/](.*)$").groups()
+                Task["OutputPath"], Task["FileName"] = search(r"^(.*)[\\/](.*)$", Task["OutputPaths"]).groups()
             except TypeError:
                 raise Ex_Download.UnpackOutputPathsError
 

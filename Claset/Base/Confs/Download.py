@@ -5,7 +5,6 @@ LastVersion = 3
 
 
 File = {
-    "VERSION": 3,
     "MaxThread": 32,
     "SleepTime": 0.1,
     "Retry": 5,
@@ -27,12 +26,10 @@ File = {
 
 Difference = {
     "2->3": [
-        "REPLACE:VERSION->3",
         "DELETE:ReadFileNameReString",
         "REPLACE:[Headers, user-agent]->Claset/0.2.0"
     ],
     "1->2": [
-        "REPLACE:VERSION->2",
         "REPLACE:UseSystemProxy->True",
         "REPLACE:[Proxies, http]->Null",
         "REPLACE:[Proxies, https]->Null",

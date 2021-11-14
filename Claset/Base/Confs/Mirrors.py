@@ -5,7 +5,6 @@ LastVersion = 2
 
 
 File = {
-    "VERSION": 2,
     "Vanilla": {
         "Launcher": "https://launcher.mojang.com",
         "LauncherMeta": "https://launchermeta.mojang.com",
@@ -44,7 +43,6 @@ File = {
 
 Difference = {
     "1->2": [
-        "REPLACE:VERSION->2",
         "DELETE:Official"
     ]
 }

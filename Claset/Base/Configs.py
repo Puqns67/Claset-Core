@@ -51,8 +51,9 @@ class Configs():
         if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigsUnregistered
         if dfCheck(Path=Path, Type="f") and (OverWrite == False): raise Ex_Configs.ConfigsExist(ID)
 
+        FileContent = self.setVersion(Config=Confs.ConfigInfos["File"][ID], Version=Confs.ConfigInfos["Version"][ID])
         Logger.info("Created Config: %s", ID)
-        saveFile(Path=Path, FileContent=Confs.ConfigInfos["File"][ID], Type="json")
+        saveFile(Path=Path, FileContent=FileContent, Type="json")
 
 
     def updateConfig(self, ID: str, Path: str, TargetVersion: int, NowVersion: int = None, OverWrite: bool = True) -> None:
@@ -77,6 +78,7 @@ class Configs():
             if Type in ["REPLACE", "DELETE"]:
                 NewConfig = self.processConfig(OldConfig=OldConfig, Key=Key, Type=Type)
             else: raise Ex_Configs.UnknownDifferenceType
+        NewConfig = self.setVersion(Config=NewConfig, Version=TargetVersion)
 
         saveFile(Path=Path, FileContent=NewConfig, Type="json")
 
@@ -104,12 +106,19 @@ class Configs():
         return(DifferenceS)
 
 
+    def setVersion(self, Config: dict, Version: int | str) -> dict:
+        """设置版本"""
+        return(self.__SetToDict(Keys=["VERSION"], Dict=Config, Type="REPLACE", Do=int(Version)))
+
+
     def processConfig(self, OldConfig: dict, Key: str, Type: str) -> dict:
         """对配置文件的各种操作"""
-        if Type == "DELETE":
-            Old = Key
-            New = None
-        else: Old, New = self.reCompiles["FindOld&New"].search(Key).groups()
+        match Type:
+            case "REPLACE":
+                Old, New = self.reCompiles["FindOld&New"].search(Key).groups()
+            case "DELETE":
+                Old = Key
+                New = None
 
         if self.reCompiles["IFStrList"].search(Old.strip()) != None: Old = self.__StrList2List(Old)
         else: Old = [Old]
@@ -121,8 +130,14 @@ class Configs():
         return(Key.replace("[", "").replace("]", "").replace(",", " ").split())
 
 
-    def __SetToDict(self, Keys: list, Dict: dict, Type: str, Do: str | None = None) -> dict:
-        """将设置写入 Dict"""
+    def __SetToDict(self, Keys: list, Dict: dict, Type: str, Do: str | bool | float | int | None = None) -> dict:
+        """
+        将设置写入 Dict
+        * Keys: 字典键的列表
+        * Dict: 输入
+        * Type: 操作类型
+        * Do: 替换为
+        """
         if len(Keys) > 1:
             if Dict.get(Keys[0]) == None: Dict[Keys[0]] = dict()
             Dict[Keys[0]] = self.__SetToDict(Keys=Keys[1:], Dict=Dict[Keys[0]], Type=Type, Do=Do)
@@ -130,16 +145,17 @@ class Configs():
         elif len(Keys) == 1:
             if Type == "REPLACE":
                 # 尝试修正输入类型
-                if Do in ["True", "False", "Null", "None"]:
-                    if    Do == "True":  Do = True
-                    elif  Do == "False": Do = False
-                    else: Do = None
-                elif Do[-1] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-                    try: Do = int(Do)
-                    except ValueError:
-                        # 若使用整型格式化失败则尝试浮点
-                        try: Do = float(Do)
-                        except ValueError: pass
+                if type(Do) == type(str()):
+                    if Do in ["True", "False", "Null", "None"]:
+                        if    Do == "True":  Do = True
+                        elif  Do == "False": Do = False
+                        else: Do = None
+                    elif Do[-1] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+                        try: Do = int(Do)
+                        except ValueError:
+                            # 若使用整型格式化失败则尝试浮点
+                            try: Do = float(Do)
+                            except ValueError: pass
                 Dict[Keys[0]] = Do
                 return(Dict)
             elif Type == "DELETE":
