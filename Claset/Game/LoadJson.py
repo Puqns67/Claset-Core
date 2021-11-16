@@ -5,6 +5,7 @@ from logging import getLogger
 from re import match
 from platform import system, machine, version
 from zipfile import ZipFile, is_zipfile
+from re import search
 
 from Claset.Base.AdvancedPath import path as aPathmd
 
@@ -20,15 +21,16 @@ def Versionmanifest_VersionList(InitFile: dict, Recommend: str | None = None) ->
     return(OutputList)
 
 
-def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> list[dict]:
+def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> dict:
     for Version in InitFile["versions"]:
         if Version["id"] == TargetVersion:
-            return([{
+            return({
                 "URL": Version["url"],
                 "OutputPath": "$MCVersion",
+                "FileName": search(r"([a-zA-Z0-9_.-]+)$", Version["url"]).groups()[0],
                 "Sha1": Version["sha1"],
                 "Overwrite": False,
-            }])
+            })
     raise Ex_LoadJson.TargetVersionNotFound(TargetVersion)
 
 
@@ -102,15 +104,20 @@ def Version_RunCodeList(InitFile: dict) -> list[str]:
     pass
 
 
-def Version_To_AssetIndex(InitFile: dict) -> list[dict]:
+def Version_Classifiers_List():
+    pass
+
+
+def Version_To_AssetIndex(InitFile: dict) -> dict:
     assetIndex = InitFile["assetIndex"]
-    return([{
+    return({
         "URL": assetIndex["url"],
         "Sha1": assetIndex["sha1"],
         "Size": assetIndex["size"],
         "OutputPath": "$MCAssetIndex",
+        "FIleName": search(r"([a-zA-Z0-9_.-]+)$", assetIndex["url"]).groups()[0],
         "Overwrite": False
-    }])
+    })
 
 
 def AssetIndex_DownloadList(InitFile: dict) -> list[dict]:

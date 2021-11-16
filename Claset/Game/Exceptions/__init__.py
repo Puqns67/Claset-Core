@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from . import LoadJson
+from . import LoadJson, Install
 
 __all__ = [
-    "LoadJson"
+    "LoadJson", "Install"
 ]
 

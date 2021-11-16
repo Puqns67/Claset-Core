@@ -8,7 +8,7 @@ import logging
 
 from . import Base, Game, Tools
 
-__all__ = ["Base", "Game", "Tools", "Logger"]
+__all__ = ["Base", "Game", "Tools", "Logger", "Downloader"]
 
 # 全局日志
 Logger = logging.getLogger(__name__)
@@ -17,4 +17,6 @@ Logger.setLevel(logging.DEBUG)
 Logs = Base.Logs.Logs(Logger)
 Logs.SettingHandler()
 Logs.processOldLog()
+
+Downloader = Base.Download.DownloadManager()
 

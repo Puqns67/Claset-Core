@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 
-# 解析游戏 Json 错误主类
-class LoadGameJsonErrors(Exception): pass
+class LoadGameJsonErrors(Exception):
+    """解析游戏 Json 错误主类"""
 
-# Features 中缺少对应的键
-class FeaturesMissingKey(LoadGameJsonErrors): pass
 
-# 不支持的系统类型
-class UnsupportSystemHost(LoadGameJsonErrors): pass
+class FeaturesMissingKey(LoadGameJsonErrors):
+    """Features 中缺少对应的键"""
 
-# 用于在处理 Features 时 Contiune 的内部错误
-class FeaturesContinue(LoadGameJsonErrors): pass
 
-# 未找到指定的游戏版本
-class TargetVersionNotFound(LoadGameJsonErrors): pass
+class UnsupportSystemHost(LoadGameJsonErrors):
+    """不支持的系统类型"""
 
-# Classifiers 文件错误
-class ClassifiersFileError(LoadGameJsonErrors): pass
+
+class FeaturesContinue(LoadGameJsonErrors):
+    """用于在处理 Features 时 Contiune 的内部错误"""
+
+
+class TargetVersionNotFound(LoadGameJsonErrors):
+    """未找到指定的游戏版本"""
+
+
+class ClassifiersFileError(LoadGameJsonErrors):
+    """Classifiers 文件错误"""
 
