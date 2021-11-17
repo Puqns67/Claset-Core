@@ -28,7 +28,6 @@ def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> dict:
                 "URL": Version["url"],
                 "OutputPath": "$MCVersion",
                 "FileName": search(r"([a-zA-Z0-9_.-]+)$", Version["url"]).groups()[0],
-                "Sha1": Version["sha1"],
                 "Overwrite": False,
             })
     raise Ex_LoadJson.TargetVersionNotFound(TargetVersion)
@@ -43,7 +42,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
         "URL": Client["url"],
         "Sha1": Client["sha1"],
         "Size": Client["size"],
-        "OutputPaths": aPathmd().path("$VERSION/" + Name + "/" + Name + ".jar"),
+        "OutputPaths": aPathmd().path("$VERSION/" + Name + "/" + Name + ".jar", IsPath=True),
         "Overwrite": False
     })
 
@@ -95,7 +94,7 @@ def Version_Server_DownloadList(InitFile: dict, SaveTo: str) -> list[dict]:
         "URL": Server["url"],
         "Sha1": Server["sha1"],
         "Size": Server["size"],
-        "OutputPath": aPathmd().path(SaveTo),
+        "OutputPath": aPathmd().path(SaveTo, IsPath=True),
         "Overwrite": False
     }])
 
@@ -115,7 +114,7 @@ def Version_To_AssetIndex(InitFile: dict) -> dict:
         "Sha1": assetIndex["sha1"],
         "Size": assetIndex["size"],
         "OutputPath": "$MCAssetIndex",
-        "FIleName": search(r"([a-zA-Z0-9_.-]+)$", assetIndex["url"]).groups()[0],
+        "FileName": search(r"([a-zA-Z0-9_.-]+)$", assetIndex["url"]).groups()[0],
         "Overwrite": False
     })
 

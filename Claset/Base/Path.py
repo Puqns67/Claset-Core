@@ -38,3 +38,16 @@ def path(Input: str, IsPath: bool = False) -> str:
 
     return(Input)
 
+
+def pathAdder(*paths: list | tuple | str) -> str:
+    """拼接路径片段"""
+    PathList = list()
+    for i in paths:
+        if type(i) == type(str()):
+            PathList.append(i)
+        elif (type(i) == type(list()) or type(i) == type(tuple())):
+            PathList.extend(i)
+        elif (type(i) == type(int()) or type(i) == type(float())):
+            PathList.append(str(i))
+    return(abspath("/".join(PathList)))
+

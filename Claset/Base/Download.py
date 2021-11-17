@@ -12,7 +12,7 @@ from time import sleep
 from urllib3 import __version__ as Urllib3Version
 from requests import Session, exceptions as Ex_Requests, __version__ as RequestsVersion
 
-from .Path import path as Pathmd
+from .Path import path as Pathmd, pathAdder
 from .DFCheck import dfCheck
 from .File import saveFile, loadFile
 from .Configs import Configs
@@ -91,7 +91,7 @@ class DownloadManager():
             if ((Task["FileName"] in Task["OutputPath"]) and ((search(Task["FileName"] + "$", Task["OutputPath"])) != None)):
                 Task["OutputPath"] = search("^(.*)" + Task["FileName"] + "$", Task["OutputPath"]).groups()[0]
 
-            Task["OutputPaths"] = Task["OutputPath"] + "/" + Task["FileName"]
+            Task["OutputPaths"] = pathAdder(Task["OutputPath"], Task["FileName"])
 
         else:
             try:
@@ -245,17 +245,18 @@ class DownloadManager():
         """添加单个 dict 任务对象至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         if self.Stopping == True: raise Ex_Download.Stopping
         if ProjectID == None:
-            InputProjectID = False
-            InputTask["ProjectID"] = self.projectCreate(AllTasksCount=1)
+            InputedProjectID = False
+            ProjectID = self.projectCreate(AllTasksCount=1)
         else:
-            InputTask["ProjectID"] = ProjectID
+            InputedProjectID = True
             self.projectAddJob(ProjectID=ProjectID, AllTasksCount=1)
-        Logger.info("Adding 1 tasks to Project %s", InputTask["ProjectID"])
+        Logger.info("Adding 1 tasks to Project %s", ProjectID)
 
+        InputTask["ProjectID"] = ProjectID
         self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
-        Logger.info("Added 1 task to Project %s", InputTask["ProjectID"])
-        if InputProjectID == False: return(ProjectID)
+        Logger.info("Added 1 task to Project %s", ProjectID)
+        if InputedProjectID == False: return(ProjectID)
 
 
     def stop(self) -> None:
