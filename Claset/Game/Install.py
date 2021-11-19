@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """下载游戏"""
 
-from . import LoadJson
-
 from Claset import Downloader as GlobalDownloader
 from Claset.Base.Download import DownloadManager
 from Claset.Base.AdvancedPath import path as aPathmd, pathAdder
 from Claset.Base.File import loadFile
+
+from . import LoadJson
 
 from .Exceptions import Install as Ex_Install, LoadJson as Ex_LoadJson
 
@@ -23,7 +23,7 @@ class Installer():
         """通过游戏版本下载游戏"""
         VersionManifest_Info = getVersionManifestURL()
         MainDownloadProject = self.Downloader.addTask(InputTask=VersionManifest_Info)
-        
+
         if (self.Downloader.projectJoin(MainDownloadProject) > 0): raise Ex_Install.DownloadError
 
         # 获取对应版本的 Version json
@@ -31,7 +31,6 @@ class Installer():
             VersionJsonTask = LoadJson.VersionManifest_To_Version(InitFile=loadFile(pathAdder(VersionManifest_Info["OutputPath"], VersionManifest_Info["FileName"]), Type="json"), TargetVersion=Version)
         except Ex_LoadJson.TargetVersionNotFound:
             raise Ex_Install.UnknownVersion
-        print(VersionJsonTask["OutputPath"], VersionJsonTask["FileName"])
         VersionJsonPath = pathAdder(VersionJsonTask["OutputPath"], VersionJsonTask["FileName"])
         self.Downloader.addTask(InputTask=VersionJsonTask, ProjectID=MainDownloadProject)
 
@@ -54,7 +53,7 @@ class Installer():
 
         # 解析下载项
         DownloadList = LoadJson.Version_Client_DownloadList(InitFile=VersionJson, Name=Name)
-        DownloadList.extend(LoadJson.AssetIndex_DownloadList(initFile=AssetIndexJson))
+        DownloadList.extend(LoadJson.AssetIndex_DownloadList(InitFile=AssetIndexJson))
 
         # 下载
         self.Downloader.addTasks(InputTasks=DownloadList, MainProjectID=MainDownloadProject)

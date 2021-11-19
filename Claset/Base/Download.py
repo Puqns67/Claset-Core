@@ -6,8 +6,9 @@ from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha1
 from io import BytesIO
 from random import randint
-from re import compile as reCompile, search
+from re import search
 from time import sleep
+from os.path import split as splitPath, basename as baseName
 
 from urllib3 import __version__ as Urllib3Version
 from requests import Session, exceptions as Ex_Requests, __version__ as RequestsVersion
@@ -26,7 +27,6 @@ class DownloadManager():
     """下载管理器"""
     def __init__(self):
         self.Configs = Configs().getConfig(ID="Download", TargetVersion=0)
-        self.FindFileName = reCompile(r"([a-zA-Z0-9_.-]+)$")
         self.Projects = dict()
         self.DownloadsTasks = list()
 
@@ -77,15 +77,9 @@ class DownloadManager():
                 Task["OutputPath"] = "$PREFIX"
 
             # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
-            try:
-                if not "FileName" in Task: Task["FileName"] = self.FindFileName.search(Task["URL"]).groups()[0]
-                elif Task["FileName"] == None: Task["FileName"] = self.FindFileName.search(Task["OutputPath"]).groups()[0]
-            except AttributeError:
-                try:
-                    if not "FileName" in Task: Task["FileName"] = self.FindFileName.search(Task["OutputPath"]).groups()[0]
-                    elif Task["FileName"] == None: Task["FileName"] = self.FindFileName.search(Task["URL"]).groups()[0]
-                except AttributeError:
-                    Task["FileName"] = "NoName"
+            if not "FileName" in Task: Task["FileName"] = baseName(Task["URL"])
+            if Task["FileName"] == None: Task["FileName"] = baseName(Task["OutputPath"])
+            if Task["FileName"] == None: Task["FileName"] = "NoName"
 
             # 从 OutputPath 中去除重复的文件名
             if ((Task["FileName"] in Task["OutputPath"]) and ((search(Task["FileName"] + "$", Task["OutputPath"])) != None)):
@@ -94,10 +88,7 @@ class DownloadManager():
             Task["OutputPaths"] = pathAdder(Task["OutputPath"], Task["FileName"])
 
         else:
-            try:
-                Task["OutputPath"], Task["FileName"] = search(r"^(.*)[\\/](.*)$", Task["OutputPaths"]).groups()
-            except TypeError:
-                raise Ex_Download.UnpackOutputPathsError
+            Task["OutputPath"], Task["FileName"] = splitPath(Task["OutputPaths"])
 
         if "$" in Task["URL"]: Task["URL"] = Pathmd(Task["URL"])
         if "$" in Task["OutputPaths"]: Task["OutputPaths"] = Pathmd(Task["OutputPaths"], IsPath=True)

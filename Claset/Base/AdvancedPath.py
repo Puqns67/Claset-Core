@@ -9,8 +9,8 @@ from .File import loadFile
 from .Configs import Configs
 from .Path import PathRegex, pathAdder
 
-from Claset.Base.Exceptions.Configs import ConfigsUnregistered
-from Claset.Base.Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
+from .Exceptions.Configs import ConfigsUnregistered
+from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
 
 __all__ = ["pathAdder", "path"]
 

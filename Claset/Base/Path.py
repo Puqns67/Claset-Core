@@ -49,5 +49,7 @@ def pathAdder(*paths: list | tuple | str) -> str:
             PathList.extend(i)
         elif (type(i) == type(int()) or type(i) == type(float())):
             PathList.append(str(i))
-    return(abspath("/".join(PathList)))
+    Path = "/".join(PathList)
+    if "$" in Path: Path = path(Path)
+    return(abspath(Path))
 

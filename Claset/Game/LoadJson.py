@@ -4,8 +4,8 @@
 from logging import getLogger
 from re import match
 from platform import system, machine, version
-from zipfile import ZipFile, is_zipfile
-from re import search
+from zipfile import ZipFile, is_zipfile as isZipFile
+from os.path import basename as baseName
 
 from Claset.Base.AdvancedPath import path as aPathmd
 
@@ -27,7 +27,7 @@ def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> dict:
             return({
                 "URL": Version["url"],
                 "OutputPath": "$MCVersion",
-                "FileName": search(r"([a-zA-Z0-9_.-]+)$", Version["url"]).groups()[0],
+                "FileName": baseName(Version["url"]),
                 "Overwrite": False,
             })
     raise Ex_LoadJson.TargetVersionNotFound(TargetVersion)
@@ -114,7 +114,7 @@ def Version_To_AssetIndex(InitFile: dict) -> dict:
         "Sha1": assetIndex["sha1"],
         "Size": assetIndex["size"],
         "OutputPath": "$MCAssetIndex",
-        "FileName": search(r"([a-zA-Z0-9_.-]+)$", assetIndex["url"]).groups()[0],
+        "FileName": baseName(assetIndex["url"]),
         "Overwrite": False
     })
 
@@ -167,7 +167,7 @@ def ResolveRules(Items: list[dict], Features: dict = dict()) -> bool:
 
 def ProcessClassifiers(Task: dict):
     """处理 Classifiers"""
-    if not(is_zipfile(Task["OutputPaths"])): raise Ex_LoadJson.ClassifiersFileError
+    if not(isZipFile(Task["OutputPaths"])): raise Ex_LoadJson.ClassifiersFileError
     Logger.info("Extract Classifiers: %s", Task["FileName"])
     File = ZipFile(file=Task["OutputPaths"], mode="r")
     FileList = File.namelist()
