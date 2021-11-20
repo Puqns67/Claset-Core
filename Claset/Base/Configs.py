@@ -4,6 +4,7 @@
 from logging import getLogger
 from re import compile as reCompile
 
+from .Path import pathAdder
 from .File import loadFile, saveFile
 from .DFCheck import dfCheck
 
@@ -24,8 +25,11 @@ class Configs():
 
         # 执行初始任务
         dfCheck(Path="$CONFIG/", Type="dm")
-        if dfCheck(Path="$CONFIG/" + Confs.ConfigIDs["Paths"], Type="f") == False:    self.genConfig("Paths", "$CONFIG/" + Confs.ConfigIDs["Paths"])
-        if dfCheck(Path="$CONFIG/" + Confs.ConfigIDs["Settings"], Type="f") == False: self.genConfig("Settings", "$CONFIG/" + Confs.ConfigIDs["Settings"])
+        PathsPath = pathAdder("$CONFIG/", Confs.ConfigIDs["Paths"])
+        if dfCheck(Path=PathsPath, Type="f") == False: self.genConfig(ID="Paths", Path=PathsPath)
+
+        SettingsPath = pathAdder("$CONFIG/", Confs.ConfigIDs["Settings"])
+        if dfCheck(Path=SettingsPath, Type="f") == False: self.genConfig(ID="Settings", Path=SettingsPath)
 
 
     def getConfig(self, ID: str, TargetVersion: int | None = None) -> dict:

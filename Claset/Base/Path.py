@@ -40,7 +40,7 @@ def path(Input: str, IsPath: bool = False) -> str:
 
 
 def pathAdder(*paths: list | tuple | str) -> str:
-    """拼接路径片段"""
+    """拼接路径片段并格式化"""
     PathList = list()
     for i in paths:
         if type(i) == type(str()):

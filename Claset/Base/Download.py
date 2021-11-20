@@ -77,9 +77,13 @@ class DownloadManager():
                 Task["OutputPath"] = "$PREFIX"
 
             # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
-            if not "FileName" in Task: Task["FileName"] = baseName(Task["URL"])
-            if Task["FileName"] == None: Task["FileName"] = baseName(Task["OutputPath"])
-            if Task["FileName"] == None: Task["FileName"] = "NoName"
+            if not "FileName" in Task:
+                Task["FileName"] = baseName(Task["URL"])
+                if Task["FileName"] == str(): Task["FileName"] = baseName(Task["OutputPath"])
+            if Task["FileName"] == None:
+                Task["FileName"] = baseName(Task["OutputPath"])
+                if Task["FileName"] == str(): Task["FileName"] = baseName(Task["URL"])
+            if Task["FileName"] == str(): Task["FileName"] = "NoName"
 
             # 从 OutputPath 中去除重复的文件名
             if ((Task["FileName"] in Task["OutputPath"]) and ((search(Task["FileName"] + "$", Task["OutputPath"])) != None)):
@@ -173,9 +177,8 @@ class DownloadManager():
         ReadTimeout:    int  # 下载超时(若为空则使用全局设置)
         ) -> None:
         """简易下载器"""
-        if dfCheck(Path=OutputPaths, Type="f") == True:
-            if ((Sha1 != None) and (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1)):
-                if Overwrite == False: raise Ex_Download.FileExist
+        if ((Overwrite == False) and (Sha1 != None) and (dfCheck(Path=OutputPaths, Type="f") == True) and (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1)):
+            raise Ex_Download.FileExist
 
         if self.Configs["UseGobalRequestsSession"] == True:
             UsedSession = self.RequestsSession

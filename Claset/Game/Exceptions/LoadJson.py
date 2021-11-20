@@ -23,3 +23,5 @@ class TargetVersionNotFound(LoadGameJsonErrors):
 class ClassifiersFileError(LoadGameJsonErrors):
     """Classifiers 文件错误"""
 
+class ClassifiersContinue(LoadGameJsonErrors):
+    """用于在处理 Classifiers 时 Contiune 的内部错误"""

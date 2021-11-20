@@ -7,12 +7,10 @@ from re import compile as reCompile
 
 from .File import loadFile
 from .Configs import Configs
-from .Path import PathRegex, pathAdder
+from .Path import PathRegex
 
 from .Exceptions.Configs import ConfigsUnregistered
 from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
-
-__all__ = ["pathAdder", "path"]
 
 
 class path():
@@ -88,4 +86,19 @@ class path():
         if ((IsPath == True) or ((IsPath == None) and (self.IsPath == True))): Input = abspath(Input)
 
         return(Input)
+
+
+    def pathAdder(self, *paths: list | tuple | str) -> str:
+        """拼接路径片段并格式化"""
+        PathList = list()
+        for i in paths:
+            if type(i) == type(str()):
+                PathList.append(i)
+            elif (type(i) == type(list()) or type(i) == type(tuple())):
+                PathList.extend(i)
+            elif (type(i) == type(int()) or type(i) == type(float())):
+                PathList.append(str(i))
+        Path = "/".join(PathList)
+        if "$" in Path: Path = self.path(Path)
+        return(abspath(Path))
 

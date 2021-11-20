@@ -5,7 +5,7 @@ from logging import getLogger
 from re import match
 from platform import system, machine, version
 from zipfile import ZipFile, is_zipfile as isZipFile
-from os.path import basename as baseName
+from os.path import basename as baseName, splitext as splitExt
 
 from Claset.Base.AdvancedPath import path as aPathmd
 
@@ -22,6 +22,7 @@ def Versionmanifest_VersionList(InitFile: dict, Recommend: str | None = None) ->
 
 
 def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> dict:
+    """从 VersionManifest Json 提取 Version Json 的相关信息并转化为 DownloadManager Task"""
     for Version in InitFile["versions"]:
         if Version["id"] == TargetVersion:
             return({
@@ -58,16 +59,19 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
                 SystemHost = {"Windows": "windows", "Darwin": "osx", "Linux": "linux", "Java": "java", "": None}[system()]
                 if SystemHost in ("java", None): raise Ex_LoadJson.UnsupportSystemHost(SystemHost)
                 Classifiers = Libraries["downloads"]["classifiers"][Libraries["natives"][SystemHost]]
+                if "extract" in LibrariesKeys: Extract = Libraries["extract"]
+                else: Extract = None
                 Tasks.append({
                     "URL": Classifiers["url"],
                     "Size": Classifiers["size"],
                     "Sha1": Classifiers["sha1"],
-                    "OutputPath": "$LIBRERIES/" + Classifiers["path"],
+                    "OutputPath": "$LIBRERIES/" + Classifiers["path"],   
                     "Overwrite": False,
                     "FileName": None,
                     "Next": ProcessClassifiers,
                     "NextArgs": {
-                        "ExtractTo": aPathmd().path("$VERSION/" + Name + "/natives", IsPath=True)
+                        "ExtractTo": aPathmd().pathAdder("$VERSION/", Name, "/natives"),
+                        "Extract": Extract
                     }
                 })
             except KeyError: pass
@@ -103,11 +107,8 @@ def Version_RunCodeList(InitFile: dict) -> list[str]:
     pass
 
 
-def Version_Classifiers_List():
-    pass
-
-
 def Version_To_AssetIndex(InitFile: dict) -> dict:
+    """从 Version Json 提取 AssetIndex Json 的相关信息并转化为 DownloadManager Task"""
     assetIndex = InitFile["assetIndex"]
     return({
         "URL": assetIndex["url"],
@@ -165,13 +166,29 @@ def ResolveRules(Items: list[dict], Features: dict = dict()) -> bool:
     return(allow)
 
 
-def ProcessClassifiers(Task: dict):
+def ProcessClassifiers(Task: dict): # 需要对其中的 sha1 文件处理
     """处理 Classifiers"""
     if not(isZipFile(Task["OutputPaths"])): raise Ex_LoadJson.ClassifiersFileError
     Logger.info("Extract Classifiers: %s", Task["FileName"])
     File = ZipFile(file=Task["OutputPaths"], mode="r")
     FileList = File.namelist()
     for FilePathInZip in FileList:
-        if "META-INF" in FilePathInZip: continue
-        File.extract(FilePathInZip, Task["NextArgs"]["ExtractTo"])
+        if Task["NextArgs"].get("Extract") != None:
+            if "exclude" in Task["NextArgs"]["Extract"].keys():
+                try:
+                    for Exclude in Task["NextArgs"]["Extract"]["exclude"]:
+                        if Exclude in FilePathInZip:
+                            Logger.debug("Excluded: \"%s\" From \"%s\" By Extract", FilePathInZip, baseName(Task["OutputPaths"]))
+                            raise Ex_LoadJson.ClassifiersContinue
+                except Ex_LoadJson.ClassifiersContinue: continue
+        match splitExt(FilePathInZip)[1]:
+            case ".sha1":
+                pass # Todo: 需完善
+            case ".git":
+                Logger.debug("Excluded: \"%s\" From \"%s\" By file extension name", FilePathInZip, baseName(Task["OutputPaths"]))
+                continue
+        try:
+            File.extract(FilePathInZip, Task["NextArgs"]["ExtractTo"])
+        except FileExistsError:
+            Logger.warning("Classifiers file Exist: \"%s\" From \"%s\"", FilePathInZip, baseName(Task["OutputPaths"]))
 

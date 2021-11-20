@@ -2,7 +2,6 @@
 """用于读取/写入文件"""
 
 from json import load, dumps
-from os.path import abspath
 
 from .Path import path as Pathmd
 
@@ -39,9 +38,8 @@ def saveFile(Path: str, FileContent: str | bytes, Type: str = "text") -> None:
     * FileName: 文件名
     """
 
-    if "$" in Path: Path = Pathmd(Path)
+    if "$" in Path: Path = Pathmd(Path, IsPath=True)
 
-    Path = abspath(Path)
     match Type:
         case "json":
             with open(Path, mode="w+", encoding="UTF-8") as thefile:
