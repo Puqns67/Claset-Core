@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-# 配置文件错误主类
-class ConfigsErrors(Exception): pass
+class ConfigsErrors(Exception):
+    """配置文件错误主类"""
 
-# 配置文件未注册
-class ConfigsUnregistered(ConfigsErrors): pass
+class ConfigsUnregistered(ConfigsErrors):
+    """配置文件未注册"""
 
-# 配置文件已存在
-class ConfigsExist(ConfigsErrors, FileExistsError): pass
+class ConfigsExist(ConfigsErrors, FileExistsError):
+    """配置文件已存在"""
 
-# 不存在的差异类型
-class UnknownDifferenceType(ConfigsErrors): pass
+class UnknownDifferenceType(ConfigsErrors):
+    """不存在的差异类型"""

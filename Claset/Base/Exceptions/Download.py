@@ -1,35 +1,35 @@
 # -*- coding: utf-8 -*-
 
-# 下载错误主类
-class DownloadExceptions(Exception): pass
+class DownloadExceptions(Exception):
+    """下载错误主类"""
 
-# 文件已存在
-class FileExist(DownloadExceptions): pass
+class FileExist(DownloadExceptions):
+    """文件已存在"""
 
-# 下载超时
-class Timeout(DownloadExceptions): pass
+class Timeout(DownloadExceptions):
+    """下载超时"""
 
-# 链接超时
-class ConnectTimeout(Timeout): pass
+class ConnectTimeout(Timeout):
+    """链接超时"""
 
-# 读取超时
-class ReadTimeout(Timeout): pass
+class ReadTimeout(Timeout):
+    """读取超时"""
 
-# 哈希验证异常
-class HashError(DownloadExceptions): pass
+class HashError(DownloadExceptions):
+    """哈希验证异常"""
 
-# 大小异常
-class SizeError(DownloadExceptions): pass
+class SizeError(DownloadExceptions):
+    """大小异常"""
 
-# 格式错误
-class SchemaError(DownloadExceptions): pass
+class SchemaError(DownloadExceptions):
+    """格式错误"""
 
-# 缺少链接
-class MissingURL(DownloadExceptions): pass
+class MissingURL(DownloadExceptions):
+    """缺少链接"""
 
-# 已停止
-class Stopping(DownloadExceptions): pass
+class Stopping(DownloadExceptions):
+    """停止 Flag 已经立起"""
 
-# 解完整 OutputPaths 时出现的错误
-class UnpackOutputPathsError(DownloadExceptions): pass
+class UnpackOutputPathsError(DownloadExceptions):
+    """解完整 OutputPaths 时出现的错误"""
 

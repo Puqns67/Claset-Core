@@ -4,11 +4,14 @@
 from logging import getLogger
 from re import match
 from platform import system, machine, version
-from zipfile import ZipFile, is_zipfile as isZipFile
+from zipfile import ZipFile, Path as ZipPath, is_zipfile as isZipFile
 from os.path import basename as baseName, splitext as splitExt
+from hashlib import sha1
+from copy import deepcopy as deepCopy
 
-from Claset.Base.File import loadFile
+from Claset.Base.File import saveFile
 from Claset.Base.AdvancedPath import path as aPathmd
+from Claset.Base.Path import pathAdder
 
 from .Exceptions import LoadJson as Ex_LoadJson
 
@@ -61,7 +64,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
                 if SystemHost in ("java", None): raise Ex_LoadJson.UnsupportSystemHost(SystemHost)
                 Classifiers = Libraries["downloads"]["classifiers"][Libraries["natives"][SystemHost]]
                 if "extract" in LibrariesKeys: Extract = Libraries["extract"]
-                else: Extract = None
+                else: Extract = list()
                 Tasks.append({
                     "URL": Classifiers["url"],
                     "Size": Classifiers["size"],
@@ -174,40 +177,38 @@ def ProcessClassifiers(Task: dict): # 需要对其中的 sha1 文件处理
     File = ZipFile(file=Task["OutputPaths"], mode="r")
     FileList = File.namelist()
 
-    # 分离 sha1 文件, 并生成 File Sha1 的对应关系, 存入 FileSha1. 生成文件名列表
+    # 分离 sha1 文件, 并生成 File Sha1 的对应关系, 存入 FileSha1
     FileSha1 = dict()
-    FileNameList = list()
-
-    for FilePathInZip in FileList:
-        FileNameList.append(baseName(FilePathInZip))
-
+    FileListBackUp = deepCopy(FileList)
+    for FilePathInZip in FileListBackUp:
         Name, Ext = splitExt(FilePathInZip)
-        print(Name, Ext)
-        if Ext == ".sha1":
+        TheZipPath = ZipPath(File, at=FilePathInZip)
+        if Ext == ".git":
+            FileList.remove(FilePathInZip)
             Logger.debug("Excluded: \"%s\" From \"%s\" By file extension name", FilePathInZip, baseName(Task["OutputPaths"]))
+        elif Ext == ".sha1":
             FileList.remove(FilePathInZip)
-
-        elif ((Ext == ".sha1") and (Name in FileList)):
-            FileList.remove(FilePathInZip)
-
             # 读取对应的 sha1 值
-            Sha1 = loadFile(Path=File.read(FilePathInZip), Type="text")
+            Sha1 = File.read(FilePathInZip).decode("utf-8")
             if Sha1[-1] == "\n": Sha1 = Sha1.rstrip()
-
+            # 存入 FileSha1
             FileSha1[Name] = Sha1
+        elif TheZipPath.is_dir():
+            FileList.remove(FilePathInZip)
+        elif (Task["NextArgs"].get("Extract") != None) and ("exclude" in Task["NextArgs"]["Extract"]):
+            for Exclude in Task["NextArgs"]["Extract"]["exclude"]:
+                if Exclude in FilePathInZip:
+                    FileList.remove(FilePathInZip)
+                    Logger.debug("Excluded: \"%s\" From \"%s\" By Extract", FilePathInZip, baseName(Task["OutputPaths"]))
+                    break
+
+    FileSha1Keys = FileSha1.keys()
 
     for FilePathInZip in FileList:
-        if Task["NextArgs"].get("Extract") != None:
-            if "exclude" in Task["NextArgs"]["Extract"].keys():
-                try:
-                    for Exclude in Task["NextArgs"]["Extract"]["exclude"]:
-                        if Exclude in FilePathInZip:
-                            Logger.debug("Excluded: \"%s\" From \"%s\" By Extract", FilePathInZip, baseName(Task["OutputPaths"]))
-                            raise Ex_LoadJson.ClassifiersContinue
-                except Ex_LoadJson.ClassifiersContinue: continue
+        TheFile = File.read(FilePathInZip)
+        if (FilePathInZip in FileSha1Keys):
+            if not (sha1(TheFile).hexdigest() == FileSha1[FilePathInZip]):
+                raise Ex_LoadJson.Sha1VerificationError
 
-        try:
-            File.extract(FilePathInZip, Task["NextArgs"]["ExtractTo"])
-        except FileExistsError:
-            Logger.warning("Classifiers file Exist: \"%s\" From \"%s\"", FilePathInZip, baseName(Task["OutputPaths"]))
+        saveFile(Path=pathAdder(Task["NextArgs"]["ExtractTo"], FilePathInZip), FileContent=TheFile, Type="bytes")
 

@@ -2,8 +2,12 @@
 """用于读取/写入文件"""
 
 from json import load, dumps
+from logging import getLogger
 
 from .Path import path as Pathmd
+from .DFCheck import dfCheck
+
+Logger = getLogger(__name__)
 
 
 def loadFile(Path: str, Type: str = "text") -> str:
@@ -38,7 +42,10 @@ def saveFile(Path: str, FileContent: str | bytes, Type: str = "text") -> None:
     * FileName: 文件名
     """
 
+    Logger.debug("Path: \"%s\", Type: \"%s\", FileContent Type: %s", Path, Type, type(FileContent))
+
     if "$" in Path: Path = Pathmd(Path, IsPath=True)
+    dfCheck(Path=Path, Type="fm")
 
     match Type:
         case "json":

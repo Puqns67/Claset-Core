@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-# Path 错误主类
-class Path(Exception): pass
+class Path(Exception):
+    """Path 错误主类"""
 
-# Prefixs 中无需要的 Key
-class PrefixsMissingKey(Path): pass
+class PrefixsMissingKey(Path):
+    """Prefixs 中无需要的 Key"""
 
-# 搜素错误
-class SearchError(Path): pass
+class SearchError(Path):
+    """搜素错误"""
 
