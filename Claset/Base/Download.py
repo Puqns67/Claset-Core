@@ -158,7 +158,11 @@ class DownloadManager():
             else:
                 self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
                 # 没有出现下载错误之后尝试执行 Task["Next"]
-                if Task["Next"] != None: Task["Next"](Task)
+                if Task["Next"] != None:
+                    try:
+                        Task["Next"](Task)
+                    except Exception:
+                        Logger.warning("Next Error: ",exc_info=True)
 
                 match StopType:
                     case "Downloaded": Logger.info("File \"%s\" Downloaded", Task["FileName"])

@@ -7,6 +7,7 @@ from platform import system, machine, version
 from zipfile import ZipFile, is_zipfile as isZipFile
 from os.path import basename as baseName, splitext as splitExt
 
+from Claset.Base.File import loadFile
 from Claset.Base.AdvancedPath import path as aPathmd
 
 from .Exceptions import LoadJson as Ex_LoadJson
@@ -172,6 +173,29 @@ def ProcessClassifiers(Task: dict): # 需要对其中的 sha1 文件处理
     Logger.info("Extract Classifiers: %s", Task["FileName"])
     File = ZipFile(file=Task["OutputPaths"], mode="r")
     FileList = File.namelist()
+
+    # 分离 sha1 文件, 并生成 File Sha1 的对应关系, 存入 FileSha1. 生成文件名列表
+    FileSha1 = dict()
+    FileNameList = list()
+
+    for FilePathInZip in FileList:
+        FileNameList.append(baseName(FilePathInZip))
+
+        Name, Ext = splitExt(FilePathInZip)
+        print(Name, Ext)
+        if Ext == ".sha1":
+            Logger.debug("Excluded: \"%s\" From \"%s\" By file extension name", FilePathInZip, baseName(Task["OutputPaths"]))
+            FileList.remove(FilePathInZip)
+
+        elif ((Ext == ".sha1") and (Name in FileList)):
+            FileList.remove(FilePathInZip)
+
+            # 读取对应的 sha1 值
+            Sha1 = loadFile(Path=File.read(FilePathInZip), Type="text")
+            if Sha1[-1] == "\n": Sha1 = Sha1.rstrip()
+
+            FileSha1[Name] = Sha1
+
     for FilePathInZip in FileList:
         if Task["NextArgs"].get("Extract") != None:
             if "exclude" in Task["NextArgs"]["Extract"].keys():
@@ -181,12 +205,7 @@ def ProcessClassifiers(Task: dict): # 需要对其中的 sha1 文件处理
                             Logger.debug("Excluded: \"%s\" From \"%s\" By Extract", FilePathInZip, baseName(Task["OutputPaths"]))
                             raise Ex_LoadJson.ClassifiersContinue
                 except Ex_LoadJson.ClassifiersContinue: continue
-        match splitExt(FilePathInZip)[1]:
-            case ".sha1":
-                pass # Todo: 需完善
-            case ".git":
-                Logger.debug("Excluded: \"%s\" From \"%s\" By file extension name", FilePathInZip, baseName(Task["OutputPaths"]))
-                continue
+
         try:
             File.extract(FilePathInZip, Task["NextArgs"]["ExtractTo"])
         except FileExistsError:

@@ -17,14 +17,14 @@ def loadFile(Path: str, Type: str = "text") -> str:
 
     match Type:
         case "json":
-            with open(Path, encoding="UTF-8") as openedfile:
+            with open(file=Path, mode="r", encoding="UTF-8") as openedfile:
                 return(load(openedfile))
         case "bytes":
-            with open(Path, "rb") as openedfile:
+            with open(file=Path, mode="rb") as openedfile:
                 return(openedfile.read())
         case "text":
-            with open(Path, encoding="UTF-8") as openedfile:
-                return(openedfile)
+            with open(file=Path, mode="r", encoding="UTF-8") as openedfile:
+                return(openedfile.read())
         case _:
             raise TypeError("loadFile: Unknown Type")
 
