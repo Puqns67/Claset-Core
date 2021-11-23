@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 3
+LastVersion = 4
 
 
 File = {
@@ -11,7 +11,7 @@ File = {
     "UseGobalRequestsSession": True,
     "UseSystemProxy": True,
     "Headers": {
-        "user-agent": "Claset/0.2.0"
+        "user-agent": "Claset/0.2.1"
     },
     "Timeouts": {
         "Connect": 5,
@@ -25,6 +25,9 @@ File = {
 
 
 Difference = {
+    "3->4": [
+        "REPLACE:[Headers, user-agent]->Claset/0.2.1"
+    ],
     "2->3": [
         "DELETE:ReadFileNameReString",
         "REPLACE:[Headers, user-agent]->Claset/0.2.0"

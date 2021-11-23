@@ -195,7 +195,7 @@ def ProcessClassifiers(Task: dict): # 需要对其中的 sha1 文件处理
             FileSha1[Name] = Sha1
         elif TheZipPath.is_dir():
             FileList.remove(FilePathInZip)
-        elif (Task["NextArgs"].get("Extract") != None) and ("exclude" in Task["NextArgs"]["Extract"]):
+        elif ((Task["NextArgs"].get("Extract") != None) and ("exclude" in Task["NextArgs"]["Extract"])):
             for Exclude in Task["NextArgs"]["Extract"]["exclude"]:
                 if Exclude in FilePathInZip:
                     FileList.remove(FilePathInZip)

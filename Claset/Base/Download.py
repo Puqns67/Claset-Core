@@ -29,6 +29,7 @@ class DownloadManager():
         self.Configs = Configs().getConfig(ID="Download", TargetVersion=0)
         self.Projects = dict()
         self.DownloadsTasks = list()
+        self.Adding = False
 
         # 线程池(ThreadPool)
         self.ThreadPool = ThreadPoolExecutor(max_workers=self.Configs["MaxThread"], thread_name_prefix="DownloadTask")
@@ -49,7 +50,7 @@ class DownloadManager():
 
         TheSession.headers = self.Configs['Headers']
 
-        if self.Configs["UseSystemProxy"] == True: TheSession.trust_env = True
+        TheSession.trust_env = self.Configs["UseSystemProxy"]
 
         Proxies = dict()
         if self.Configs["Proxies"]["http"] != None: Proxies["http"] = self.Configs["Proxies"]["http"]
@@ -58,7 +59,7 @@ class DownloadManager():
         return(TheSession)
 
 
-    def Download(self, Task: dict) -> None:
+    def Download(self, Task: dict) -> dict:
         """简易下载器 (Download) 的代理运行器"""
         # 处理缺失的项目
         if not "URL"            in Task: raise Ex_Download.MissingURL
@@ -169,6 +170,8 @@ class DownloadManager():
                     case "Stopping": pass
                     case "FileExist": Logger.info("File \"%s\" is Exist, Skipping", Task["FileName"])
 
+                return(Task)
+
 
     def download(
         self,
@@ -221,6 +224,11 @@ class DownloadManager():
 
     def addTasks(self, InputTasks: list[dict], MainProjectID: int | None = None) -> int | None:
         """添加多个任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
+        # 如果正在添加任务则不等待添加完成
+        while self.Adding:
+            sleep(Configs["SleepTime"])
+        self.Adding = True
+
         if self.Stopping == True: raise Ex_Download.Stopping
         JobTotal = len(InputTasks)
         if MainProjectID == None:
@@ -229,18 +237,25 @@ class DownloadManager():
         else:
             InputProjectID = True
             self.projectAddJob(ProjectID=MainProjectID, AllTasksCount=JobTotal)
-        Logger.info("Adding %s tasks to Project %s", JobTotal, MainProjectID)
+        Logger.debug("Adding %s tasks to Project %s", JobTotal, MainProjectID)
 
         for InputTask in InputTasks:
             InputTask["ProjectID"] = MainProjectID
+            InputTask["ListID"] = len(self.DownloadsTasks)
             self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
+        self.Adding = False
         Logger.info("Added %s tasks to Project %s", JobTotal, MainProjectID)
         if InputProjectID == False: return(MainProjectID)
 
 
     def addTask(self, InputTask: dict, ProjectID: int | None = None) -> int | None:
         """添加单个 dict 任务对象至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
+        # 如果正在添加任务则不等待添加完成
+        while self.Adding:
+            sleep(Configs["SleepTime"])
+        self.Adding = True
+
         if self.Stopping == True: raise Ex_Download.Stopping
         if ProjectID == None:
             InputedProjectID = False
@@ -248,11 +263,13 @@ class DownloadManager():
         else:
             InputedProjectID = True
             self.projectAddJob(ProjectID=ProjectID, AllTasksCount=1)
-        Logger.info("Adding 1 tasks to Project %s", ProjectID)
+        Logger.debug("Adding 1 tasks to Project %s", ProjectID)
 
         InputTask["ProjectID"] = ProjectID
+        InputTask["ListID"] = len(self.DownloadsTasks)
         self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
+        self.Adding = False
         Logger.info("Added 1 task to Project %s", ProjectID)
         if InputedProjectID == False: return(ProjectID)
 
@@ -271,6 +288,8 @@ class DownloadManager():
             Logger.warning("%s task cannot be cancelled, %s task is being cancelled, %s task cancelled", CantCancelled, BeingCancelled, Cancelled)
         else:
             Logger.info("0 task cannot be cancelled, %s task is being cancelled, %s task cancelled", BeingCancelled, Cancelled)
+
+        self.ThreadPool.shutdown(wait=False)
 
 
     def projectCreate(self, AllTasksCount: int = 0, setProjectID: int = 0) -> int:

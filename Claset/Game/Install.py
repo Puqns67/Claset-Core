@@ -14,6 +14,8 @@ from . import LoadJson
 
 from .Exceptions import Install as Ex_Install, LoadJson as Ex_LoadJson
 
+__all__ = ["GameInstaller", "getVersionManifestURL"]
+
 
 class GameInstaller():
     """
@@ -22,13 +24,14 @@ class GameInstaller():
     * Version: 游戏版本号
     * Downloader: 下载器，不定义则使用全局下载器
     """
-    def __init__(self, Name: str, Version: str, Downloader: DownloadManager | None = None, **Others: dict[str: str]):
+    def __init__(self, Name: str, Version: str, WaitDownloader: bool = True, Downloader: DownloadManager | None = None, **Others: dict[str: str]):
         if Downloader != None:
             self.Downloader = Downloader
         else: self.Downloader = GlobalDownloader
 
         self.Name = Name
         self.Version = Version
+        self.WaitDownloader = WaitDownloader
 
         self.InstallVanilla()
 
@@ -49,7 +52,7 @@ class GameInstaller():
 
         # 下载
         self.Downloader.addTasks(InputTasks=DownloadList, MainProjectID=self.MainDownloadProject)
-        if (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise Ex_Install.DownloadError
+        if (self.WaitDownloader == True) and (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise Ex_Install.DownloadError
 
         self.UpdateVersionJson()
 
@@ -66,7 +69,7 @@ class GameInstaller():
 
         if (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise Ex_Install.DownloadError
 
-        self.VersionJsonPath = aPathmd().path(pathAdder("$VERSION", self.Name, self.Name + ".json"))
+        self.VersionJsonPath = aPathmd().pathAdder("$VERSION", self.Name, self.Name + ".json")
 
         dfCheck(self.VersionJsonPath, "fm")
         moveFile(OldVersionJsonPath, self.VersionJsonPath)
