@@ -56,7 +56,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
         LibrariesKeys = Libraries.keys()
 
         if "rules" in LibrariesKeys:
-            if ResolveRules(Items=Libraries["rules"], Features=Types) == False: continue
+            if ResolveRule(Items=Libraries["rules"], Features=Types) == False: continue
 
         if "natives" in LibrariesKeys:
             try:
@@ -107,8 +107,32 @@ def Version_Server_DownloadList(InitFile: dict, SaveTo: str) -> list[dict]:
     }])
 
 
-def Version_RunCodeList(InitFile: dict) -> list[str]:
-    pass
+def Version_RunCodeList(InitFile: dict, Type: str | None = None, Features: dict | None = None) -> list[str]:
+    Arguments = list()
+    if Type == "JVM":
+        Arguments.extend(InitFile["arguments"]["jvm"])
+    elif Type == "Game":
+        Arguments.extend(InitFile["arguments"]["game"])
+    elif Type == None:
+        Arguments.extend(InitFile["arguments"]["jvm"])
+        Arguments.extend(InitFile["arguments"]["game"])
+    else: ValueError
+
+    Output = list()
+    for Argument in Arguments:
+        if (type(Argument) == type(dict())):
+            if (ResolveRule(Items=Argument["rules"], Features=Features)):
+                if (type(Argument["value"]) == type(str())):
+                    Output.append(Argument["value"])
+                elif (type(Argument["value"]) == type(list())):
+                    Output.extend(Argument["value"])
+                else:
+                    raise(ValueError("Argument[\"value\"] type error"))
+        elif (type(Argument) == type(str())):
+            Output.append(Argument)
+        else:
+            raise(ValueError("Argument type error"))
+    return(Output)
 
 
 def Version_To_AssetIndex(InitFile: dict) -> dict:
@@ -145,9 +169,10 @@ def AssetIndex_DownloadList(InitFile: dict) -> list[dict]:
     return(Tasks)
 
 
-def ResolveRules(Items: list[dict], Features: dict = dict()) -> bool:
-    """匹配规则"""
+def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
+    """规则匹配"""
     allow = False
+    if Features == None: Features = dict()
     for Item in Items:
         if Item.get("os") != None:
             if Item["os"].get("name") != None:
