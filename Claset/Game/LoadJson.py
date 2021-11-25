@@ -9,9 +9,9 @@ from os.path import basename as baseName, splitext as splitExt
 from hashlib import sha1
 from copy import deepcopy as deepCopy
 
-from Claset.Base.File import saveFile
-from Claset.Base.AdvancedPath import path as aPathmd
-from Claset.Base.Path import pathAdder
+from Claset.Utils.File import saveFile
+from Claset.Utils.AdvancedPath import path as aPathmd
+from Claset.Utils.Path import pathAdder
 
 from .Exceptions import LoadJson as Ex_LoadJson
 

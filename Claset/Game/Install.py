@@ -3,12 +3,11 @@
 
 from shutil import move as moveFile
 
-from Claset import Downloader as GlobalDownloader
-from Claset.Base.Download import DownloadManager
-from Claset.Base.Path import pathAdder
-from Claset.Base.AdvancedPath import path as aPathmd
-from Claset.Base.File import loadFile, saveFile
-from Claset.Base.DFCheck import dfCheck
+from Claset.Utils.Download import DownloadManager
+from Claset.Utils.Path import pathAdder
+from Claset.Utils.AdvancedPath import path as aPathmd
+from Claset.Utils.File import loadFile, saveFile
+from Claset.Utils.DFCheck import dfCheck
 
 from . import LoadJson
 
@@ -27,7 +26,9 @@ class GameInstaller():
     def __init__(self, Name: str, Version: str, WaitDownloader: bool = True, Downloader: DownloadManager | None = None, **Others: dict[str: str]):
         if Downloader != None:
             self.Downloader = Downloader
-        else: self.Downloader = GlobalDownloader
+        else:
+            from Claset import getDownloader
+            self.Downloader = getDownloader()
 
         self.Name = Name
         self.Version = Version

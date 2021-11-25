@@ -6,21 +6,24 @@
 
 import logging
 
-from . import Base
+from . import Game, Tools, Utils
 
 # 初始化全局日志
-Logger = logging.getLogger(__name__)
-Logger.setLevel(logging.DEBUG)
+_Logger = logging.getLogger(__name__)
+_Logger.setLevel(logging.DEBUG)
 
-Logs = Base.Logs.Logs(Logger)
+Logs = Utils.Logs.Logs(_Logger)
 Logs.SettingHandler()
 Logs.processOldLog()
 
 # 初始化 Downloader
-Downloader = Base.Download.DownloadManager()
+_Downloader = Utils.Download.DownloadManager()
 
-from . import Game
-from . import Tools
+def getLogger():
+    return(_Logger)
 
-__all__ = ["Base", "Game", "Tools", "Logger", "Downloader"]
+def getDownloader():
+    return(_Downloader)
+
+__all__ = ["Utils", "Game", "Tools", "getLogger", "getDownloader"]
 

@@ -12,16 +12,17 @@ import Claset
 
 def Main():
     StartTime = time()
-    Claset.Logger.info("Started!!!")
-    Claset.Logger.info("Running In \"%s\"", " ".join(uname()))
+    Logger = Claset.getLogger()
+    Logger.info("Started!!!")
+    Logger.info("Running In \"%s\"", " ".join(uname()))
 
     try:
         Claset.Game.Install.GameInstaller(Name="Test", Version="1.17.1")
     except KeyboardInterrupt:
         Claset.Downloader.stop()
 
-    Claset.Logger.info("Stopped!!!")
-    Claset.Logger.info("Used time: %s", str(time() - StartTime))
+    Logger.info("Stopped!!!")
+    Logger.info("Used time: %s", str(time() - StartTime))
 
 
 if __name__ == "__main__":
