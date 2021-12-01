@@ -5,7 +5,7 @@ from os import getenv
 from subprocess import run
 from re import search
 
-from .Path import path as Pathmd, pathAdder
+from .Path import path as Pathmd
 from .DFCheck import dfCheck
 
 
@@ -25,3 +25,4 @@ def getJavaVersionInfo(Path) -> tuple:
     Path = Path + " -version"
     Return = run(args=Path, capture_output=True)
     return(search(pattern=r"^(.+)\s+version\s+\"(.+)\"", string=Return.stderr.decode("utf-8")).groups())
+
