@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from . import Configs
-from . import Download
-from . import AdvancedPath
-from . import Path
+from . import AdvancedPath, Configs, Download, Path, JavaHelper
 
 __all__ = [
-    "Configs", "Download", "AdvancedPath", "Path"
+    "Configs", "Download", "AdvancedPath", "Path", "JavaHelper"
 ]
 
