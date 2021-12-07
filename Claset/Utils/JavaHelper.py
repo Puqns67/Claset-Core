@@ -26,12 +26,12 @@ def getJavaPath() -> list[str]:
     return(Output)
 
 
-def getJavaInfoList(PathList: list | None = None) -> dict[str, tuple]:
+def getJavaInfoList(PathList: list[str] | None = None) -> dict[str, tuple]:
     """
     通过版本列表获取字典形式的 Java 信息，如输入为空则通过 Claset.Utils.JavaHelper.getJavaPath() 获取\n
     如获取过程中出现 JavaHelper.MatchStringError 将不在输出中附上出错的信息
     """
-    if PathList == None: PathList = getJavaPath()
+    if PathList == None: PathList: list[str] = getJavaPath()
     Output = dict()
     for Path in PathList:
         try:

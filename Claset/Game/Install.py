@@ -3,6 +3,7 @@
 
 from shutil import move as moveFile
 
+from Claset import getDownloader
 from Claset.Utils.Download import DownloadManager
 from Claset.Utils.Path import pathAdder
 from Claset.Utils.AdvancedPath import path as aPathmd
@@ -27,7 +28,6 @@ class GameInstaller():
         if Downloader != None:
             self.Downloader = Downloader
         else:
-            from Claset import getDownloader
             self.Downloader = getDownloader()
 
         self.Name = Name

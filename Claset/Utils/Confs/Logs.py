@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 1
+LastVersion = 2
 
 
 File = {
     "FilePath": "$LOG/",
+    "LoggingLevel": "DEBUG",
     "LogFormats": {
         "Format": "[%(asctime)s][%(module)s][%(funcName)s][%(levelname)s]: %(message)s",
         "Date": "%Y/%m/%d|%H:%M:%S"
@@ -22,7 +23,8 @@ File = {
             },
             "Archive": {
                 "MaxKeepFile": 3,
-                "ArchiveFileName": "Claset-Log-Archive.tar"
+                "ArchiveFileName": "Claset-Log-Archive",
+                "TempDirName": "ArchivedLog"
             }
         }
     }
@@ -30,4 +32,9 @@ File = {
 
 
 Difference = {
+    "1->2": [
+        "REPLACE:[ProcessOldLog, TypeSettings, Archive, ArchiveFileName]->Claset-Log-Archive",
+        "REPLACE:[ProcessOldLog, TypeSettings, Archive, TempDirName]->ArchivedLog",
+        "REPLACE:LoggingLevel->DEBUG"
+    ]
 }

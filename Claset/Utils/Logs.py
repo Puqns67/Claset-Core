@@ -4,18 +4,18 @@
 import logging
 from os import listdir, remove
 from re import compile as reCompile
-from tarfile import open as openTar, ReadError
+from shutil import make_archive, unpack_archive, move, rmtree
 from time import localtime, strftime
 
 from .DFCheck import dfCheck
 from .Configs import Configs
-from .Path import path as Pathmd
+from .Path import path as Pathmd, pathAdder
 
 
 class Logs():
     """日志相关的处理方案"""
     def __init__(self, TheLogger: logging.Logger):
-        self.Configs = Configs().getConfig("Logs")
+        self.Configs = Configs().getConfig("Logs", TargetVersion=0)
         self.LogPath = Pathmd(self.Configs["FilePath"], IsPath=True)
         self.TheLogger = TheLogger
         self.Formatter = logging.Formatter(fmt=self.Configs["LogFormats"]["Format"], datefmt=self.Configs["LogFormats"]["Date"])
@@ -40,7 +40,7 @@ class Logs():
     def SettingFileHandler(self):
         """设置日志输出至文件"""
         dfCheck(Path=self.LogPath, Type="dm")
-        LogFullPath = Pathmd(self.LogPath + "/" + self.genFileName(), IsPath=True)
+        LogFullPath = pathAdder(self.LogPath, self.genFileName())
         # 建立 Handler
         NewFileHandler = logging.FileHandler(filename=LogFullPath)
         NewFileHandler.setLevel(logging.DEBUG)
@@ -48,6 +48,13 @@ class Logs():
 
         self.TheLogger.addHandler(NewFileHandler)
         self.TheLogger.info("Logging to file: \"%s\"", LogFullPath)
+
+
+    def SettingLevel(self, LevelName: str | None = None):
+        if LevelName == None: LevelName = self.Configs["LoggingLevel"]
+        Level: int = logging.getLevelName(LevelName.upper())
+        self.TheLogger.info("Setting logging level to: %s", logging.getLevelName(Level))
+        self.TheLogger.setLevel(Level)
 
 
     def genFileName(self, LogName: str = "Claset-log-{TIME}.log") -> str:
@@ -58,7 +65,7 @@ class Logs():
         return(LogName)
 
 
-    def processOldLog(self) -> None:
+    def processOldLog(self, Retry: bool = False) -> None:
         """处理老日志"""
         # 让日志文件名以时间排序
         FilelistForTime = dict()
@@ -77,31 +84,41 @@ class Logs():
         # 直接删除 
         match self.Configs["ProcessOldLog"]["Type"]:
             case "Delete":
+                TypeConfigs = self.Configs["ProcessOldLog"]["TypeSettings"]["Delete"]
                 # 若不满足情况则直接返回
-                if (len(FileList) <= self.Configs["ProcessOldLog"]["TypeSettings"]["Delete"]["MaxKeepFile"]): return(None)
+                if (len(FileList) <= TypeConfigs["MaxKeepFile"]): return(None)
                 for FileName in FileList:
                     remove(self.LogPath + "/" + FileName)
                     self.TheLogger.info("Deleted old log file: \"%s\"", FileName)
                     FileList.remove(FileName)
-                    if (len(FileList) <= self.Configs["ProcessOldLog"]["TypeSettings"]["Delete"]["MaxKeepFile"]): break
+                    if (len(FileList) <= TypeConfigs["MaxKeepFile"]): break
 
             # 进行存档
             case "Archive":
+                TypeConfigs = self.Configs["ProcessOldLog"]["TypeSettings"]["Archive"]
+
                 # 若不满足情况则直接返回
-                if (len(FileList) <= self.Configs["ProcessOldLog"]["TypeSettings"]["Archive"]["MaxKeepFile"]): return(None)
-                TarFilePath = Pathmd(self.LogPath + "/" + self.Configs["ProcessOldLog"]["TypeSettings"]["Archive"]["ArchiveFileName"], IsPath=True)
+                if (len(FileList) <= TypeConfigs["MaxKeepFile"]): return(None)
+
+                TarFilePath = pathAdder(self.LogPath, TypeConfigs["ArchiveFileName"])
+                TempDir = pathAdder("$CACHE", TypeConfigs["TempDirName"])
+                dfCheck(Path=TempDir, Type="dm")
+                
+                if (dfCheck(Path=TarFilePath + ".tar.xz", Type="f")):
+                    unpack_archive(filename=TarFilePath + ".tar.xz", extract_dir=TempDir, format="xztar")
+
+                for FileName in FileList:
+                    FilePath = pathAdder(self.LogPath, FileName)
+                    move(src=FilePath, dst=TempDir)
+                    self.TheLogger.info("Archived old log file: \"%s\"", FileName)
+                    FileList.remove(FileName)
+                    if (len(FileList) <= TypeConfigs["MaxKeepFile"]): break
+                
                 try:
-                    with openTar(TarFilePath, "a") as Archive:
-                        for FileName in FileList:
-                            FilePath = self.LogPath + "/" + FileName
-                            Archive.add(name=FilePath, arcname=FileName)
-                            remove(FilePath)
-                            self.TheLogger.info("Archived old log file: \"%s\"", FileName)
-                            FileList.remove(FileName)
-                            if (len(FileList) <= self.Configs["ProcessOldLog"]["TypeSettings"]["Archive"]["MaxKeepFile"]): break
-                except ReadError:
-                    remove(TarFilePath)
-                    self.processOldLog()
+                    make_archive(base_name=TarFilePath, format="xztar", root_dir=TempDir)
+                except PermissionError:
+                    self.TheLogger.error("Make archive error")
+                rmtree(path=TempDir)
 
             case _: self.TheLogger.warning("Unsupport Type: %s", self.Configs["ProcessOldLog"]["Type"])
 
