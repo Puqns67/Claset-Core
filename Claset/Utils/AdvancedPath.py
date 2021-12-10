@@ -9,7 +9,7 @@ from .File import loadFile
 from .Configs import Configs
 from .Path import PathRegex
 
-from .Exceptions.Configs import ConfigsUnregistered
+from .Exceptions.Configs import ConfigUnregistered
 from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
 
 
@@ -34,7 +34,7 @@ class path():
             File = Configs().getConfig(File, TargetVersion=0)
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
-        except ConfigsUnregistered:
+        except ConfigUnregistered:
             File = loadFile(Path=File, Type="json")
 
         try:

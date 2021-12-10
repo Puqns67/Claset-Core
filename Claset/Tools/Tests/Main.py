@@ -17,9 +17,9 @@ def Main():
     Logger.info("Running In \"%s\"", " ".join(uname()))
 
     try:
-        Claset.Game.Install.GameInstaller(Name="Test", Version="1.17.1")
+        Claset.Game.Install.GameInstaller(Name="Test", Version="1.18")
     except KeyboardInterrupt:
-        Claset.Downloader.stop()
+        Claset._Downloader.stop()
 
     Logger.info("Stopped!!!")
     Logger.info("Used time: %s", str(time() - StartTime))

@@ -1,6 +1,7 @@
 # Requirements for Build
 # python >=3.10.0
-requests >=2.25.0,<=2.26.0
-urllib3  >=1.25.0,<=1.25.11
-nuitka   >=0.6.17.5
+requests >=2.26.0
+urllib3  >=1.26.7
+nuitka   >=0.6.18.2
 zstandard>=0.16.0
+

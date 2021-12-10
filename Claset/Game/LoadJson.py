@@ -191,7 +191,7 @@ def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
                     else: raise Ex_LoadJson.FeaturesMissingKey(FeaturesKey)
             except Ex_LoadJson.FeaturesContinue: continue
         allow = {"allow": True, "disallow": False, None: None}[Item.get("action")]
-        if allow == None: raise SystemError
+        if allow == None: raise Ex_LoadJson.UnsupportSystemHost
     return(allow)
 
 

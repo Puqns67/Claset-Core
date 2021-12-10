@@ -6,13 +6,15 @@ from . import Download
 from . import Mirrors
 from . import Settings
 from . import Logs
+from . import Game
 
 ConfigIDs = {
-    "Download": "Download.json",
     "Paths": "Paths.json",
+    "Download": "Download.json",
     "Mirrors": "Mirrors.json",
     "Settings": "Settings.json",
-    "Logs": "Logs.json"
+    "Logs": "Logs.json",
+    "Game": "$NONGLOBAL"
 }
 
 ConfigInfos = {

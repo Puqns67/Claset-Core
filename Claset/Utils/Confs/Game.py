@@ -5,9 +5,11 @@ LastVersion = 0
 
 
 File = {
+    "UseGlobalConfig": True,
     "JavaPath": None,
-    "RelativePath": False,
-    "NativesDir": None
+    "NativesDir": None,
+    "NotCheckGame": False,
+    "NotCheckJvm": False
 }
 
 

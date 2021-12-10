@@ -7,7 +7,7 @@ from re import compile as reCompile
 from shutil import make_archive, unpack_archive, move, rmtree
 from time import localtime, strftime
 
-from .DFCheck import dfCheck
+from .File import dfCheck
 from .Configs import Configs
 from .Path import path as Pathmd, pathAdder
 
@@ -51,6 +51,7 @@ class Logs():
 
 
     def SettingLevel(self, LevelName: str | None = None):
+        """设置日志级别, 若为空则使用默认配置"""
         if LevelName == None: LevelName = self.Configs["LoggingLevel"]
         Level: int = logging.getLevelName(LevelName.upper())
         self.TheLogger.info("Setting logging level to: %s", logging.getLevelName(Level))
@@ -65,7 +66,7 @@ class Logs():
         return(LogName)
 
 
-    def processOldLog(self, Retry: bool = False) -> None:
+    def processOldLog(self) -> None:
         """处理老日志"""
         # 让日志文件名以时间排序
         FilelistForTime = dict()

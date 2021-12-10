@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 
-class ConfigsErrors(Exception):
+class ConfigErrors(Exception):
     """配置文件错误主类"""
 
-class ConfigsUnregistered(ConfigsErrors):
+class ConfigUnregistered(ConfigErrors):
     """配置文件未注册"""
 
-class ConfigsExist(ConfigsErrors, FileExistsError):
+class ConfigExist(ConfigErrors, FileExistsError):
     """配置文件已存在"""
 
-class UnknownDifferenceType(ConfigsErrors):
+class UnknownDifferenceType(ConfigErrors):
     """不存在的差异类型"""
+
+class ConfigTypeError(ConfigErrors):
+    """配置文件类型错误"""
+

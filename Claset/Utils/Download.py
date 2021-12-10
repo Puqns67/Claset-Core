@@ -14,8 +14,7 @@ from urllib3 import __version__ as Urllib3Version
 from requests import Session, exceptions as Ex_Requests, __version__ as RequestsVersion
 
 from .Path import path as Pathmd, pathAdder
-from .DFCheck import dfCheck
-from .File import saveFile, loadFile
+from .File import saveFile, loadFile, dfCheck
 from .Configs import Configs
 
 from .Exceptions import Download as Ex_Download

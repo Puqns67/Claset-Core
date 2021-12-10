@@ -10,10 +10,10 @@
 
 | 库/Libraries | 版本/Version |
 |--------------|-------------|
-|Python        |3.10.0       |
+|Python        |3.10.1       |
 |requests      |2.26.0       |
-|urllib3       |1.25.11      |
-|Nuitka        |0.6.16.4     |
+|urllib3       |1.26.7       |
+|Nuitka        |0.6.18.2     |
 |zstandard     |0.15.2       |
 
 ## Git 仓库/Git Repositories

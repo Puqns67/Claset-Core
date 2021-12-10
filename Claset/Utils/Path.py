@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """格式化路径"""
 
-
 from json import load
 from os import getcwd
 from os.path import abspath

@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 """下载游戏"""
 
-from shutil import move as moveFile
-
 from Claset import getDownloader
 from Claset.Utils.Download import DownloadManager
 from Claset.Utils.Path import pathAdder
 from Claset.Utils.AdvancedPath import path as aPathmd
-from Claset.Utils.File import loadFile, saveFile
-from Claset.Utils.DFCheck import dfCheck
+from Claset.Utils.File import loadFile, saveFile, dfCheck, moveFile
 
 from . import LoadJson
 
