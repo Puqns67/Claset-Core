@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """下载游戏"""
 
-from Claset import getDownloader
 from Claset.Utils.Download import DownloadManager
 from Claset.Utils.Path import pathAdder
 from Claset.Utils.AdvancedPath import path as aPathmd
@@ -21,14 +20,12 @@ class GameInstaller():
     * Version: 游戏版本号
     * Downloader: 下载器，不定义则使用全局下载器
     """
-    def __init__(self, Name: str, Version: str, WaitDownloader: bool = True, Downloader: DownloadManager | None = None, **Others: dict[str: str]):
-        if Downloader != None:
-            self.Downloader = Downloader
-        else:
-            self.Downloader = getDownloader()
+    def __init__(self, Downloader: DownloadManager, Name: str, Version: str, WaitDownloader: bool = True, **Others: dict[str, str]):
+        self.Downloader = Downloader
 
         self.Name = Name
         self.Version = Version
+
         self.WaitDownloader = WaitDownloader
 
         self.InstallVanilla()
@@ -55,7 +52,7 @@ class GameInstaller():
         self.UpdateVersionJson()
 
 
-    def getVersionJson(self, VersionManifest_Info):
+    def getVersionJson(self, VersionManifest_Info: dict):
         """获取对应版本的 Version json"""
         try:
             VersionJsonTask = LoadJson.VersionManifest_To_Version(InitFile=loadFile(pathAdder(VersionManifest_Info["OutputPath"], VersionManifest_Info["FileName"]), Type="json"), TargetVersion=self.Version)

@@ -59,11 +59,13 @@ class Configs():
         """
         # 获取当前版本号
         NowConfigVersion = loadFile(FilePath, "json")["VERSION"]
+
         # 判断是否需要更新
         if ((Type == "!=") and (NowConfigVersion != TargetVersion)): pass
         elif ((Type == ">=") and (NowConfigVersion >= TargetVersion)): pass
         elif ((Type == "<=") and (NowConfigVersion <= TargetVersion)): pass
         else: return(False)
+
         # 尝试进行更新
         try:
             self.updateConfig(ID=ID, Path=FilePath, NowVersion=NowConfigVersion, TargetVersion=TargetVersion)

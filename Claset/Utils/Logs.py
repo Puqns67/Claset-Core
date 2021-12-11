@@ -4,10 +4,10 @@
 import logging
 from os import listdir, remove
 from re import compile as reCompile
-from shutil import make_archive, unpack_archive, move, rmtree
+from shutil import make_archive, unpack_archive, rmtree
 from time import localtime, strftime
 
-from .File import dfCheck
+from .File import dfCheck, moveFile
 from .Configs import Configs
 from .Path import path as Pathmd, pathAdder
 
@@ -77,46 +77,51 @@ class Logs():
             except AttributeError:
                 continue
             FilelistForTime[ReGroups[1]] = ReGroups[0]
-        FileList = list()
+        LogFileList = list()
         Temp = list(FilelistForTime.keys())
         Temp.sort()
-        for i in Temp: FileList.append(FilelistForTime[i])
+        for i in Temp: LogFileList.append(FilelistForTime[i])
+        del(Temp)
 
-        # 直接删除 
+        # 直接删除
         match self.Configs["ProcessOldLog"]["Type"]:
             case "Delete":
                 TypeConfigs = self.Configs["ProcessOldLog"]["TypeSettings"]["Delete"]
                 # 若不满足情况则直接返回
-                if (len(FileList) <= TypeConfigs["MaxKeepFile"]): return(None)
-                for FileName in FileList:
+                if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): return(None)
+                for FileName in LogFileList:
                     remove(self.LogPath + "/" + FileName)
                     self.TheLogger.info("Deleted old log file: \"%s\"", FileName)
-                    FileList.remove(FileName)
-                    if (len(FileList) <= TypeConfigs["MaxKeepFile"]): break
+                    LogFileList.remove(FileName)
+                    if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): break
 
             # 进行存档
             case "Archive":
                 TypeConfigs = self.Configs["ProcessOldLog"]["TypeSettings"]["Archive"]
 
                 # 若不满足情况则直接返回
-                if (len(FileList) <= TypeConfigs["MaxKeepFile"]): return(None)
+                if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): return(None)
 
-                TarFilePath = pathAdder(self.LogPath, TypeConfigs["ArchiveFileName"])
+                ArchiveFilePath = pathAdder(self.LogPath, TypeConfigs["ArchiveFileName"])
                 TempDir = pathAdder("$CACHE", TypeConfigs["TempDirName"])
                 dfCheck(Path=TempDir, Type="dm")
-                
-                if (dfCheck(Path=TarFilePath + ".tar.xz", Type="f")):
-                    unpack_archive(filename=TarFilePath + ".tar.xz", extract_dir=TempDir, format="xztar")
 
-                for FileName in FileList:
-                    FilePath = pathAdder(self.LogPath, FileName)
-                    move(src=FilePath, dst=TempDir)
-                    self.TheLogger.info("Archived old log file: \"%s\"", FileName)
-                    FileList.remove(FileName)
-                    if (len(FileList) <= TypeConfigs["MaxKeepFile"]): break
-                
+                if (dfCheck(Path=ArchiveFilePath + ".tar.xz", Type="f")):
+                    try:
+                        unpack_archive(filename=ArchiveFilePath + ".tar.xz", extract_dir=TempDir, format="xztar")
+                    except EOFError:
+                        self.TheLogger.error("Archive File (%s) EOF!", ArchiveFilePath)
+                        remove(ArchiveFilePath + ".tar.xz")
+
+                for LogFileName in LogFileList:
+                    LogFilePath = pathAdder(self.LogPath, LogFileName)
+                    moveFile(File=LogFilePath, ToDir=TempDir)
+                    self.TheLogger.info("Archived old log file: \"%s\"", LogFileName)
+                    LogFileList.remove(LogFileName)
+                    if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): break
+
                 try:
-                    make_archive(base_name=TarFilePath, format="xztar", root_dir=TempDir)
+                    make_archive(base_name=ArchiveFilePath, format="xztar", root_dir=TempDir)
                 except PermissionError:
                     self.TheLogger.error("Make archive error")
                 rmtree(path=TempDir)

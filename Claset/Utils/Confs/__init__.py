@@ -23,21 +23,24 @@ ConfigInfos = {
         "Paths": Paths.LastVersion,
         "Mirrors": Mirrors.LastVersion,
         "Settings": Settings.LastVersion,
-        "Logs": Logs.LastVersion
+        "Logs": Logs.LastVersion,
+        "Game": Game.LastVersion
     },
     "File": {
         "Download": Download.File,
         "Paths": Paths.File,
         "Mirrors": Mirrors.File,
         "Settings": Settings.File,
-        "Logs": Logs.File
+        "Logs": Logs.File,
+        "Game": Game.File
     },
     "Difference": {
         "Download": Download.Difference,
         "Paths": Paths.Difference,
         "Mirrors": Mirrors.Difference,
         "Settings": Settings.Difference,
-        "Logs": Logs.Difference
+        "Logs": Logs.Difference,
+        "Game": Game.Difference
     }
 }
 
@@ -45,6 +48,7 @@ del(Download)
 del(Paths)
 del(Mirrors)
 del(Settings)
+del(Game)
 
 __all__ = [
     "ConfigIDs", "ConfigInfos"

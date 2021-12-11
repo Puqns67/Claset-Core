@@ -3,11 +3,11 @@
 
 from json import load, dumps
 from logging import getLogger
-from os import makedirs
-from os.path import exists, getsize, dirname
-from shutil import move as moveFile
+from os import makedirs, remove
+from os.path import exists, getsize, dirname, basename, isdir
+from shutil import move
 
-from .Path import path as Pathmd
+from .Path import path as Pathmd, pathAdder
 
 __all__ = ["loadFile", "saveFile", "moveFile", "dfCheck"]
 Logger = getLogger(__name__)
@@ -71,10 +71,12 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
     检测文件夹/文件是否存在和体积是否正常\n
     在输入 Type 不存在时触发 ValueError\n
     检查选项
-    * f: 检测文件是否存在
-    * d: 检测文件夹是否存在
-    * m: 在选项d存在时创建文件夹, 在选项f存在时建立对应的文件夹
-    * s: 在选项f存在时对比输入的 Size, 在文件不存在时触发 FileNotFoundError, 在 Size 为 None 时触发 ValueError
+    * f: 检测文件是否存在, 也可检测文件夹
+    * d: 检测文件夹是否存在, 也可检测文件
+    * dm: 创建文件夹
+    * fm: 建立对应的文件夹
+    * fs: 对比输入的 Size, 在文件不存在时触发 FileNotFoundError, Size 为空时触发 ValueError\n
+    若选项有误则触发 ValueError
     """
     if "$" in Path: Path = Pathmd(Path, IsPath=True)
 
@@ -102,4 +104,18 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
         return(exists(Path))
     else:
         raise ValueError(Type)
+
+
+def moveFile(File: str, ToDir: str, OverWrite: bool = True):
+    if dfCheck(Path=File, Type="f") == False:
+        raise FileNotFoundError(File)
+    
+    dfCheck(Path=ToDir, Type="dm")
+
+    if (dfCheck(Path=pathAdder(ToDir, basename(File)), Type="f") == True):
+        if (OverWrite == False):
+            raise FileExistsError
+        else: remove(pathAdder(ToDir, basename(File)))
+
+    move(src=File, dst=ToDir)
 

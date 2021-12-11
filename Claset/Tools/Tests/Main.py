@@ -15,11 +15,12 @@ def Main():
     Logger = Claset.getLogger()
     Logger.info("Started!!!")
     Logger.info("Running In \"%s\"", " ".join(uname()))
+    Downloader = Claset.Utils.Download.DownloadManager()
 
     try:
-        Claset.Game.Install.GameInstaller(Name="Test", Version="1.18")
+        Claset.Game.Install.GameInstaller(Downloader=Downloader, Name="Test", Version="1.18")
     except KeyboardInterrupt:
-        Claset._Downloader.stop()
+        Downloader.stop()
 
     Logger.info("Stopped!!!")
     Logger.info("Used time: %s", str(time() - StartTime))

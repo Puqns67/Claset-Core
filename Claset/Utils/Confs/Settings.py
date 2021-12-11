@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 1
+LastVersion = 2
 
 
 File = {
-    "DownloadServer": "Vanilla"
+    "DownloadServer": "Vanilla",
+    "GlobalConfig": {
+        "JavaPath": None,
+        "NotCheckGame": False,
+        "NotCheckJvm": False
+    }
 }
 
 
-Difference = {}
-
+Difference = {
+    "1->2": [
+        "REPLACE:[GlobalConfig, JavaPath]->None",
+        "REPLACE:[GlobalConfig, NotCheckGame]->False",
+        "REPLACE:[GlobalConfig, NotCheckJvm]->False"
+    ]
+}

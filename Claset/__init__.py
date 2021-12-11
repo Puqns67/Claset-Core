@@ -4,31 +4,20 @@
 基于 Python 的 Minecraft 启动管理器, 未完成
 """
 
-from logging import getLogger, DEBUG
+from logging import getLogger, Logger, DEBUG
 
-from .Utils import Logs
+from . import Utils, Game, Tools
 
-# 初始化全局日志
-_Logger = getLogger(__name__)
-_Logger.setLevel(DEBUG)
+GolbalLogger = getLogger(__name__)
+GolbalLogger.setLevel(DEBUG)
 
-ProcessLogger = Logs.Logs(_Logger)
+ProcessLogger = Utils.Logs.Logs(GolbalLogger)
 ProcessLogger.SettingHandler()
-ProcessLogger.processOldLog()
 ProcessLogger.SettingLevel()
+ProcessLogger.processOldLog()
 
-def getLogger():
-    return(_Logger)
-
-from . import Utils
-
-# 初始化 Downloader
-_Downloader = Utils.Download.DownloadManager()
-
-def getDownloader():
-    return(_Downloader)
-
-from . import Game, Tools
+def getLogger() -> Logger:
+    return(GolbalLogger)
 
 __all__ = ["Utils", "Game", "Tools", "getLogger", "getDownloader"]
 
