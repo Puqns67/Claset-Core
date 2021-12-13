@@ -18,7 +18,7 @@ def Main():
     Downloader = Claset.Utils.Download.DownloadManager()
 
     try:
-        Claset.Game.Install.GameInstaller(Downloader=Downloader, Name="Test", Version="1.18")
+        Claset.Game.Install.GameInstaller(Downloader=Downloader, Name="Test", Version="1.18.1")
     except KeyboardInterrupt:
         Downloader.stop()
 

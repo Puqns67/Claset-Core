@@ -9,7 +9,7 @@ from os.path import basename as baseName, splitext as splitExt
 from hashlib import sha1
 from copy import deepcopy as deepCopy
 
-from Claset.Utils.File import saveFile
+from Claset.Utils.File import dfCheck, saveFile
 from Claset.Utils.AdvancedPath import path as aPathmd
 from Claset.Utils.Path import pathAdder
 
@@ -235,5 +235,6 @@ def ProcessClassifiers(Task: dict): # 需要对其中的 sha1 文件处理
             if not (sha1(TheFile).hexdigest() == FileSha1[FilePathInZip]):
                 raise Ex_LoadJson.Sha1VerificationError
 
-        saveFile(Path=pathAdder(Task["NextArgs"]["ExtractTo"], FilePathInZip), FileContent=TheFile, Type="bytes")
+        RealFilePath = pathAdder(Task["NextArgs"]["ExtractTo"], FilePathInZip)
+        saveFile(Path=RealFilePath, FileContent=TheFile, Type="bytes")
 

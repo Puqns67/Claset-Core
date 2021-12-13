@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 """下载游戏"""
 
+from logging import getLogger
+from re import compile as reCompile
+
 from Claset.Utils.Download import DownloadManager
 from Claset.Utils.Path import pathAdder
 from Claset.Utils.AdvancedPath import path as aPathmd
 from Claset.Utils.File import loadFile, saveFile, dfCheck, moveFile
+from Claset.Utils.Configs import Configs
 
 from . import LoadJson
 
 from .Exceptions import Install as Ex_Install, LoadJson as Ex_LoadJson
 
 __all__ = ["GameInstaller", "getVersionManifestURL"]
+Logger = getLogger(__name__)
 
 
 class GameInstaller():
@@ -20,19 +25,29 @@ class GameInstaller():
     * Version: 游戏版本号
     * Downloader: 下载器，不定义则使用全局下载器
     """
-    def __init__(self, Downloader: DownloadManager, Name: str, Version: str, WaitDownloader: bool = True, **Others: dict[str, str]):
+    def __init__(self, Downloader: DownloadManager, Name: str, Version: str, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
         self.Downloader = Downloader
-
         self.Name = Name
         self.Version = Version
-
         self.WaitDownloader = WaitDownloader
 
+        # 载入相关的配置
+        if UsingDownloadServer != None: self.UsingDownloadServer: str = Configs().getConfig(ID="Settings", TargetVersion=0)["DownloadServer"]
+        else: self.UsingDownloadServer = UsingDownloadServer
+
+        if self.UsingDownloadServer == "Vanilla": self.Mirrors = Configs().getConfig(ID="Mirrors", TargetVersion=0)
+        else: self.Mirrors = None
+
+        # 开始安装
         self.InstallVanilla()
+
+        # 更新版本 Json
+        self.updateVersionJson()
 
 
     def InstallVanilla(self):
         """下载并安装游戏"""
+        Logger.info("Start installation \"%s\" from Vanilla Verison \"%s\"", self.Name, self.Version)
         VersionManifest_Info = getVersionManifestURL()
         self.MainDownloadProject = self.Downloader.addTask(InputTask=VersionManifest_Info)
 
@@ -46,10 +61,9 @@ class GameInstaller():
         DownloadList.extend(LoadJson.AssetIndex_DownloadList(InitFile=self.AssetIndexJson))
 
         # 下载
+        Logger.info("Downloading Minecraft Vanilla Verison \"%s\", from mirror \"%s\"", self.Name, self.Version)
         self.Downloader.addTasks(InputTasks=DownloadList, MainProjectID=self.MainDownloadProject)
-        if (self.WaitDownloader == True) and (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise Ex_Install.DownloadError
-
-        self.UpdateVersionJson()
+        if ((self.WaitDownloader == True) and (self.Downloader.projectJoin(self.MainDownloadProject) > 0)): raise Ex_Install.DownloadError
 
 
     def getVersionJson(self, VersionManifest_Info: dict):
@@ -82,11 +96,15 @@ class GameInstaller():
         self.AssetIndexJson = loadFile(Path=AssetIndexJsonPath, Type="json")
 
 
-    def UpdateVersionJson(self, **About: dict[str: str]):
+    def updateVersionJson(self, **About: dict[str: str]):
         """更新 Version Json"""
         self.VersionJson["id"] = self.Name
         self.VersionJson["jar"] = self.Name
         saveFile(Path=self.VersionJsonPath, FileContent=self.VersionJson, Type="json")
+
+
+    def replaceURL(self, URL: str, URLType: str, MirrorName: str | None = None) -> str:
+        if MirrorName == None: MirrorName = self.UsingDownloadServer
 
 
     def InstallForge(self):
