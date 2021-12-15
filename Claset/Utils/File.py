@@ -4,7 +4,7 @@
 from json import load, dumps
 from logging import getLogger
 from os import makedirs, remove
-from os.path import exists, getsize, dirname, basename, isdir
+from os.path import exists, getsize, dirname, basename, isdir, isfile
 from shutil import move
 
 from .Path import path as Pathmd, pathAdder
@@ -106,16 +106,22 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
         raise ValueError(Type)
 
 
-def moveFile(File: str, ToDir: str, OverWrite: bool = True):
-    if dfCheck(Path=File, Type="f") == False:
-        raise FileNotFoundError(File)
-    
-    dfCheck(Path=ToDir, Type="dm")
+def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False):
+    if not dfCheck(Path=File, Type="f"): raise FileNotFoundError(File)
 
-    if (dfCheck(Path=pathAdder(ToDir, basename(File)), Type="f") == True):
-        if (OverWrite == False):
-            raise FileExistsError
-        else: remove(pathAdder(ToDir, basename(File)))
+    if isdir(To):
+        # 若为文件夹, 则检查在其中是否有与源文件重名的文件
+        if dfCheck(Path=pathAdder(To, basename(File)), Type="f"):
+            if (OverWrite == False): raise FileExistsError(pathAdder(To, basename(File)))
+            else: remove(pathAdder(To, basename(File)))
+        else: To = pathAdder(To, basename(File))
+    elif isfile(To):
+        # 若为文件，此时 OverWrite 为 False 则触发 FileExistsError，若为 True 则覆盖
+        if OverWrite == False: raise FileExistsError(To)
+        else: remove(To)
+    else:
+        # 若目标文件夹不为文件夹也不为文件则判断是否需要覆盖, 若 Rename 为 True 则优先判定其为重命名
+        if Rename == False: dfCheck(Path=To, Type="dm")
 
-    move(src=File, dst=ToDir)
+    move(src=File, dst=To)
 

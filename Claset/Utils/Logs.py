@@ -115,7 +115,7 @@ class Logs():
 
                 for LogFileName in LogFileList:
                     LogFilePath = pathAdder(self.LogPath, LogFileName)
-                    moveFile(File=LogFilePath, ToDir=TempDir)
+                    moveFile(File=LogFilePath, To=TempDir)
                     self.TheLogger.info("Archived old log file: \"%s\"", LogFileName)
                     LogFileList.remove(LogFileName)
                     if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): break
