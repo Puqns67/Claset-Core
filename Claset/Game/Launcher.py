@@ -2,11 +2,13 @@
 """游戏启动器"""
 
 from logging import getLogger
+from re import compile as reCompile
 
-from Claset.Utils.Path import path as Pathmd, pathAdder
+from Claset.Utils.Path import pathAdder
 from Claset.Utils.File import loadFile, dfCheck
 from Claset.Utils.Configs import Configs
 
+from .LoadJson import ResolveRule
 from .Exceptions import Launcher as Ex_Launcher
 
 Logger = getLogger(__name__)
@@ -14,6 +16,9 @@ Logger = getLogger(__name__)
 
 class GameLauncher():
     """游戏启动器"""
+    MatchRunCodeKey = reCompile(r"^(.*)\$\{(.+)\}(.*)$")
+    Features: dict[str, bool] = {"is_demo_user": False, "has_custom_resolution": True}
+    JvmHeader: tuple[str] = ()
     def __init__(self, VersionName: str, **OthersSettings: dict[str, str]):
         self.VersionName = VersionName
         self.OthersSettings = OthersSettings
@@ -23,12 +28,20 @@ class GameLauncher():
         if ((VersionName == str()) or (dfCheck(self.VersionDir, Type="d") == False)):
             raise Ex_Launcher.VersionNotFound
 
+        # 配置文件相关处理
         self.VersionConfigFilePath = pathAdder(self.VersionDir, "ClasetVersionConfig.json")
         self.VersionConfig = Configs().getConfig(ID="Game", TargetVersion=0, FilePath=self.VersionConfigFilePath)
 
         if self.VersionConfig["UseGlobalConfig"] == True:
             self.GlobalConfig = Configs().getConfig(ID="Settings", TargetVersion=0)
         else: self.GlobalConfig = None
+
+        # 版本 Json
+        self.VersionJsonPath = pathAdder(self.VersionDir, VersionName + ".json")
+        self.VersionJson = loadFile(Path=self.VersionJsonPath, Type="json")
+
+        # Natives
+        self.NativesPath = pathAdder(self.VersionDir, "natives")
 
 
     def launchGame():
@@ -39,37 +52,75 @@ class GameLauncher():
         pass
 
 
+    def getRunCodeList(self, Type: str | None = None) -> list[str]:
+        Arguments = list()
+        match Type:
+            case "JVM":
+                Arguments.extend(self.VersionJson["arguments"]["jvm"])
+            case "Game":
+                Arguments.extend(self.VersionJson["arguments"]["game"])
+            case None:
+                Arguments.extend(self.VersionJson["arguments"]["jvm"])
+                Arguments.extend(("${JVMEND}", "${MAINCLASS}", "${GAMEARGSPREFIX}",))
+                Arguments.extend(self.VersionJson["arguments"]["game"])
+            case _: ValueError
+
+        Output = ["${JVMPREFIX}"]
+        for Argument in Arguments:
+            if (type(Argument) == type(dict())):
+                if (ResolveRule(Items=Argument["rules"], Features=self.Features)):
+                    if (type(Argument["value"]) == type(str())):
+                        Output.append(Argument["value"])
+                    elif (type(Argument["value"]) == type(list())):
+                        Output.extend(Argument["value"])
+                    else:
+                        raise(ValueError("Argument[\"value\"] type error"))
+            elif (type(Argument) == type(str())):
+                Output.append(Argument)
+            else:
+                raise(ValueError("Argument type error"))
+        Output.append("${GAMEARGSEND}")
+        return(Output)
+
+
+    def processRunCode(self, RunCodeList: list[str] = list()) -> list[str]:
+        Output = list()
+        for RunCode in RunCodeList:
+            Matched = self.MatchRunCodeKey.match(RunCode)
+            while Matched != None:
+                MatchedGroups = list(Matched.groups())
+                MatchedGroups[1] = self._replaces(MatchedGroups[1])
+                RunCode = str().join(MatchedGroups)
+                Matched = self.MatchRunCodeKey.match(RunCode)
+            Output.append(RunCode)
+        return(Output)
+
+
     def _replaces(self, Key: str) -> str:
         """替换"""
-        """
-        [
-            '-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump',
-            '-Dos.name=Windows 10',
-            '-Dos.version=10.0',
-            '-Djava.library.path=${natives_directory}',
-            '-Dminecraft.launcher.brand=${launcher_name}',
-            '-Dminecraft.launcher.version=${launcher_version}',
-            '-cp', '${classpath}',
-            '--username', '${auth_player_name}',
-            '--version', '${version_name}',
-            '--gameDir', '${game_directory}',
-            '--assetsDir', '${assets_root}',
-            '--assetIndex', '${assets_index_name}',
-            '--uuid', '${auth_uuid}',
-            '--accessToken', '${auth_access_token}',
-            '--userType', '${user_type}',
-            '--versionType', '${version_type}'
-        ]
-        """
         match Key:
+            case "JVMPREFIX": return(Key)
+            case "JVMEND": return(Key)
+            case "GAMEARGSPREFIX": return(Key)
+            case "GAMEARGSEND": return(Key)
+            case "MAINCLASS": return(self.VersionJson["mainClass"])
             case "launcher_name": return("Claset")
-            case "launcher_version": return("21")
+            case "launcher_version": return("0.1.0")
             case "assetsDir": return("$ASSETS")
-            case "assets_index_name": return("")
+            case "assets_index_name": return("WIP")
+            case "assets_root": return("WIP")
             case "auth_player_name": return("WIP")
+            case "auth_access_token": return("WIP")
+            case "auth_uuid": return("WIP")
             case "user_type": return("WIP")
-            case "version_type": return("WIP")
+            case "auth_xuid": return("WIP")
+            case "version_name": return(self.VersionName)
+            case "version_type": return(self._replaces("launcher_name") + " " + self._replaces("launcher_version"))
             case "classpath": return("WIP")
-            case "natives_directory": return("WIP")
+            case "natives_directory": return(self.NativesPath)
             case "game_directory": return("WIP")
+            case "clientid": return("WIP")
+            case "resolution_width": return("WIP")
+            case "resolution_height": return("WIP")
+            case _: raise ValueError(Key)
 

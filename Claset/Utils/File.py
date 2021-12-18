@@ -111,10 +111,11 @@ def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False):
 
     if isdir(To):
         # 若为文件夹, 则检查在其中是否有与源文件重名的文件
-        if dfCheck(Path=pathAdder(To, basename(File)), Type="f"):
-            if (OverWrite == False): raise FileExistsError(pathAdder(To, basename(File)))
-            else: remove(pathAdder(To, basename(File)))
-        else: To = pathAdder(To, basename(File))
+        ToFile = pathAdder(To, basename(File))
+        if dfCheck(Path=ToFile, Type="f"):
+            if (OverWrite == False): raise FileExistsError(ToFile)
+            else: remove(ToFile)
+        else: To = ToFile
     elif isfile(To):
         # 若为文件，此时 OverWrite 为 False 则触发 FileExistsError，若为 True 则覆盖
         if OverWrite == False: raise FileExistsError(To)

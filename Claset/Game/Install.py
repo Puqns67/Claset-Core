@@ -81,7 +81,7 @@ class GameInstaller():
         self.VersionJsonPath = aPathmd().pathAdder("$VERSION", self.Name, self.Name + ".json")
 
         dfCheck(self.VersionJsonPath, "fm")
-        moveFile(Path=OldVersionJsonPath, To=self.VersionJsonPath, Rename=True)
+        moveFile(File=OldVersionJsonPath, To=self.VersionJsonPath, Rename=True)
         self.VersionJson = loadFile(Path=self.VersionJsonPath, Type="json")
 
 

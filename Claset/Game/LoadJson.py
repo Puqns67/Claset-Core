@@ -9,7 +9,7 @@ from os.path import basename as baseName, splitext as splitExt
 from hashlib import sha1
 from copy import deepcopy as deepCopy
 
-from Claset.Utils.File import dfCheck, saveFile
+from Claset.Utils.File import saveFile
 from Claset.Utils.AdvancedPath import path as aPathmd
 from Claset.Utils.Path import pathAdder
 
@@ -105,34 +105,6 @@ def Version_Server_DownloadList(InitFile: dict, SaveTo: str) -> list[dict]:
         "OutputPath": aPathmd().path(SaveTo, IsPath=True),
         "Overwrite": False
     }])
-
-
-def Version_RunCodeList(InitFile: dict, Type: str | None = None, Features: dict | None = None) -> list[str]:
-    Arguments = list()
-    if Type == "JVM":
-        Arguments.extend(InitFile["arguments"]["jvm"])
-    elif Type == "Game":
-        Arguments.extend(InitFile["arguments"]["game"])
-    elif Type == None:
-        Arguments.extend(InitFile["arguments"]["jvm"])
-        Arguments.extend(InitFile["arguments"]["game"])
-    else: ValueError
-
-    Output = list()
-    for Argument in Arguments:
-        if (type(Argument) == type(dict())):
-            if (ResolveRule(Items=Argument["rules"], Features=Features)):
-                if (type(Argument["value"]) == type(str())):
-                    Output.append(Argument["value"])
-                elif (type(Argument["value"]) == type(list())):
-                    Output.extend(Argument["value"])
-                else:
-                    raise(ValueError("Argument[\"value\"] type error"))
-        elif (type(Argument) == type(str())):
-            Output.append(Argument)
-        else:
-            raise(ValueError("Argument type error"))
-    return(Output)
 
 
 def Version_To_AssetIndex(InitFile: dict) -> dict:
