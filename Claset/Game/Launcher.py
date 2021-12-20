@@ -4,6 +4,7 @@
 from logging import getLogger
 from re import compile as reCompile
 
+from Claset import __version__
 from Claset.Utils.Path import pathAdder
 from Claset.Utils.File import loadFile, dfCheck
 from Claset.Utils.Configs import Configs
@@ -63,7 +64,7 @@ class GameLauncher():
                 Arguments.extend(self.VersionJson["arguments"]["jvm"])
                 Arguments.extend(("${JVMEND}", "${MAINCLASS}", "${GAMEARGSPREFIX}",))
                 Arguments.extend(self.VersionJson["arguments"]["game"])
-            case _: ValueError
+            case _: ValueError(Type)
 
         Output = ["${JVMPREFIX}"]
         for Argument in Arguments:
@@ -105,7 +106,7 @@ class GameLauncher():
             case "GAMEARGSEND": return(Key)
             case "MAINCLASS": return(self.VersionJson["mainClass"])
             case "launcher_name": return("Claset")
-            case "launcher_version": return("0.1.0")
+            case "launcher_version": return(__version__)
             case "assetsDir": return("$ASSETS")
             case "assets_index_name": return("WIP")
             case "assets_root": return("WIP")

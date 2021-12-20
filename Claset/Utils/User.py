@@ -1,108 +1,85 @@
-#VERSION=3
-#
-#Claset/Base/User.py
-#管理用户
-#
+# -*- coding: utf-8 -*-
+"""管理用户"""
 
 from base64 import b64encode, b64decode
 
-from .File import loadFile, saveFile
+from .Configs import Configs
+from .File import saveFile
+from .Path import path, pathAdder
 
-class user():
+from .Confs import ConfigIDs
+from .Exceptions import User as Ex_User
+
+class User():
     def __init__(self):
-        self.users = loadFile("$CONFIG/Users.json", "json")
+        self.UserConfigs = Configs().getConfig(ID="Users", TargetVersion=0)
+        self.Users: list = self.UserConfigs["Users"]
 
 
-    # 返回list形式的User列表
-    def listt(self) -> list:
-        users = []
-        for i in range(len(self.users)):
-            users.append(self.users[i])
-        return(users)
+    def create(self, Name: str, UserType: str, Password: str | None = None) -> None:
+        """创建用户"""
+        try:
+            self.userID(Name)
+        except Ex_User.UserNotFound:
+            NewUser = {"Name": Name, "UserType": UserType}
+            if len(self.Users) == 0: NewUser["Default"] = True
+            else: NewUser["Default"] = False
+            if UserType == "Offline": NewUser["Password"] = None
+            elif Password != None: NewUser["Password"] = self.encodeBase64(Password)
+            else: raise ValueError("Password is None")
+            self.Users.append(NewUser)
+            return(None)
+        raise Ex_User.UserDuplicate(f"Duplicate user: {Name}")
 
 
-    # 创建用户
-    def create(self, usertype, name, password=None):
-
-        if not self.userid(name) == "DontFindThisUser":
-            if self.users[self.userid(name)]["Name"] == name:
-                return("UserNameRepeat")
-
-        newuser = {}
-        newuser["UserType"] = usertype
-        newuser["Name"] = name
-
-        if len(self.users) == 0:
-            newuser["Default"] = True
-        else:
-            newuser["Default"] = False
-
-        if usertype == "Offline":
-            newuser["Password"] = None
-        else:
-            import base64
-            password = str(b64encode(bytes(password, encoding="utf8")), encoding="utf8")
-            newuser["Password"] = password
-
-        self.users.append(newuser)
+    def remove(self, Name: str) -> None:
+        """通过用户名删除用户"""
+        self.Users.remove(self.Users[self.userID(Name)])
+        # 若要删除的账户为默认账户, 则设置另一个账户为默认
+        self.getDefault()
 
 
-    #删除用户
-    def remove(self, name):
-        newconfig = self.users
-
-        if self.userid(name) == "DontFindThisUser":
-            return("DontHaveThisUserInConfig")#若无此账户则返回
-
-        #设置另一个default账户且删除要删除的账户
-        if newconfig[self.userid(name)]["Default"] == True:
-            newconfig.remove(newconfig[self.userid(name)])
-            if not len(newconfig) == 0:
-                newconfig[0]["Default"] = True
-        else:
-            newconfig.remove(newconfig[self.userid(name)])
-
-        self.users = newconfig
+    def save(self) -> None:
+        """保存用户数据"""
+        ConfigContent = {"Users": self.Users, "VERSION": self.UserConfigs["VERSION"]}
+        saveFile(Path=pathAdder("$CONFIG", ConfigIDs["Users"]), FileContent=ConfigContent, Type="json")
 
 
-    #设置默认用户
-    def setdefault(self, name):
-        newusers = self.users
-        newusers[self.default()]["Default"] = False
-        newusers[self.userid(name)]["Default"] = True
-        self.users = newusers
+    def setDefault(self, Name: str) -> None:
+        """设置默认用户"""
+        Users = self.Users
+        Users[self.getDefault()]["Default"] = False
+        Users[self.userID(Name)]["Default"] = True
+        self.Users = Users
 
 
-    #返回默认用户的id
-    def default(self):
-        for i in range(len(self.users)):
-            if self.users[i]["Default"] == True:
+    def getDefault(self) -> int:
+        """返回默认用户的id, 若不存在默认用户则设置 0 号用户为默认账户"""
+        for i in range(len(self.Users)):
+            if self.Users[i]["Default"] == True:
                 return(i)
+        if len(self.Users) >= 1:
+            self.Users[0]["Default"] = True
+            return(0)
 
 
-    #返回解码base64后的密码
-    def decode(self, name):
-        password = self.users[self.userid(name)]["Password"]
-        password = str(b64decode(bytes(password, encoding="utf8")), encoding="utf8")
-        return(password)
+    def encodeBase64(self, Input: str) -> str:
+        """返回Base64编码后的字符串"""
+        return(str(b64encode(bytes(Input, encoding="utf8")), encoding="utf8"))
 
 
-    #返回id
-    def userid(self, name):
-        output = "DontFindThisUser"
-        for i in range(len(self.users)):
-            if self.users[i]["Name"] == name:
-                output = i
+    def decodeBase64(self, Input: str) -> str:
+        """返回Base64解码后的字符串"""
+        return(str(b64decode(bytes(Input, encoding="utf8")), encoding="utf8"))
+
+
+    def userID(self, Name: str) -> int:
+        """通过用户名获取用户ID"""
+        Output = None
+        for i in range(len(self.Users)):
+            if self.Users[i]["Name"] == Name:
+                Output = i
                 break
-        return(output)
-
-
-    #保存到文件
-    def save(self):
-        saveFile(self.path, self.users)
-
-
-    #重新从文件加载数据
-    def reload(self):
-        self.users = loadFile(self.path, "json")
+        if Output == None: raise Ex_User.UserNotFound(f"User \"{Name}\" Not found")
+        return(Output)
 

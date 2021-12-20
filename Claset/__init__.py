@@ -4,6 +4,9 @@
 基于 Python 的 Minecraft 启动管理器, 未完成
 """
 
+__author__ = "Puqns67"
+__version__ = "0.1.0"
+
 from logging import getLogger, Logger, DEBUG
 
 from . import Utils, Game, Tools

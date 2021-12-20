@@ -85,6 +85,10 @@ class Configs():
         saveFile(Path=Path, FileContent=FileContent, Type="json")
 
 
+    def saveConfig(self, ID: str, FileContent: dict):
+        """WIP"""
+
+
     def updateConfig(self, ID: str, Path: str, TargetVersion: int, NowVersion: int = None, OverWrite: bool = True) -> None:
         """更新或降级配置文件版本(NowVersion)至目标版本(TargetVersion)"""
         if ID not in Confs.ConfigIDs.keys(): raise Ex_Configs.ConfigUnregistered(ID)

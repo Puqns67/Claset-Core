@@ -9,7 +9,13 @@ File = {
     "JavaPath": None,
     "NativesDir": None,
     "NotCheckGame": False,
-    "NotCheckJvm": False
+    "NotCheckJvm": False,
+    "PerfixAndEnds": {
+        "JvmPerfix": None,
+        "JvmEnd": None,
+        "GamePreFix": None,
+        "GameEnd": None
+    }
 }
 
 

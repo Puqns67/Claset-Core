@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 """默认配置相关的内容, 包含最新的版本的版本号与文件, 和老版本之间的差异"""
 
-from . import Paths
-from . import Download
-from . import Mirrors
-from . import Settings
-from . import Logs
-from . import Game
+from . import Download, Game, Logs, Mirrors, Paths, Settings, User
 
 ConfigIDs = {
     "Paths": "Paths.json",
@@ -14,7 +9,8 @@ ConfigIDs = {
     "Mirrors": "Mirrors.json",
     "Settings": "Settings.json",
     "Logs": "Logs.json",
-    "Game": "$NONGLOBAL"
+    "Game": "$NONGLOBAL",
+    "Users": "Users.json"
 }
 
 ConfigInfos = {
@@ -24,7 +20,8 @@ ConfigInfos = {
         "Mirrors": Mirrors.LastVersion,
         "Settings": Settings.LastVersion,
         "Logs": Logs.LastVersion,
-        "Game": Game.LastVersion
+        "Game": Game.LastVersion,
+        "Users": User.LastVersion
     },
     "File": {
         "Download": Download.File,
@@ -32,7 +29,8 @@ ConfigInfos = {
         "Mirrors": Mirrors.File,
         "Settings": Settings.File,
         "Logs": Logs.File,
-        "Game": Game.File
+        "Game": Game.File,
+        "Users": User.File
     },
     "Difference": {
         "Download": Download.Difference,
@@ -40,15 +38,10 @@ ConfigInfos = {
         "Mirrors": Mirrors.Difference,
         "Settings": Settings.Difference,
         "Logs": Logs.Difference,
-        "Game": Game.Difference
+        "Game": Game.Difference,
+        "Users": User.Difference
     }
 }
-
-del(Download)
-del(Paths)
-del(Mirrors)
-del(Settings)
-del(Game)
 
 __all__ = [
     "ConfigIDs", "ConfigInfos"
