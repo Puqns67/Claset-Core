@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from . import LoadJson, Install, Launcher
+from . import LoadJson, Install, Launcher, Check
 
 __all__ = [
-    "LoadJson", "Install", "Launcher"
+    "LoadJson", "Install", "Launcher", "Check"
 ]
 

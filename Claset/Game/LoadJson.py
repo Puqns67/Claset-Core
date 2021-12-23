@@ -4,14 +4,9 @@
 from logging import getLogger
 from re import match
 from platform import system, machine, version
-from zipfile import ZipFile, Path as ZipPath, is_zipfile as isZipFile
-from os.path import basename as baseName, splitext as splitExt
-from hashlib import sha1
-from copy import deepcopy as deepCopy
+from os.path import basename as baseName
 
-from Claset.Utils.File import saveFile
 from Claset.Utils.AdvancedPath import path as aPathmd
-from Claset.Utils.Path import pathAdder
 
 from .Exceptions import LoadJson as Ex_LoadJson
 
@@ -53,32 +48,19 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
 
     # Libraries
     for Libraries in InitFile["libraries"]:
-        LibrariesKeys = Libraries.keys()
-
-        if "rules" in LibrariesKeys:
+        if "rules" in Libraries.keys():
             if ResolveRule(Items=Libraries["rules"], Features=Types) == False: continue
 
-        if "natives" in LibrariesKeys:
-            try:
-                SystemHost = {"Windows": "windows", "Darwin": "osx", "Linux": "linux", "Java": "java", "": None}[system()]
-                if SystemHost in ("java", None): raise Ex_LoadJson.UnsupportSystemHost(SystemHost)
-                Classifiers = Libraries["downloads"]["classifiers"][Libraries["natives"][SystemHost]]
-                if "extract" in LibrariesKeys: Extract = Libraries["extract"]
-                else: Extract = list()
-                Tasks.append({
-                    "URL": Classifiers["url"],
-                    "Size": Classifiers["size"],
-                    "Sha1": Classifiers["sha1"],
-                    "OutputPath": "$LIBRERIES/" + Classifiers["path"],   
-                    "Overwrite": False,
-                    "FileName": None,
-                    "Next": ProcessClassifiers,
-                    "NextArgs": {
-                        "ExtractTo": aPathmd().pathAdder("$VERSION/", Name, "/natives"),
-                        "Extract": Extract
-                    }
-                })
-            except KeyError: pass
+        Natives = getNativesObject(Libraries=Libraries, Features=Types)
+        if Natives != None:
+            Tasks.append({
+                "URL": Natives["url"],
+                "Size": Natives["size"],
+                "Sha1": Natives["sha1"],
+                "OutputPath": "$LIBRERIES/" + Natives["path"],
+                "Overwrite": False,
+                "FileName": None
+            })
 
         try:
             Artifact = Libraries["downloads"]["artifact"]
@@ -167,46 +149,22 @@ def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
     return(allow)
 
 
-def ProcessClassifiers(Task: dict): # 需要对其中的 sha1 文件处理
-    """处理 Classifiers"""
-    if not(isZipFile(Task["OutputPaths"])): raise Ex_LoadJson.ClassifiersFileError
-    Logger.info("Extract Classifiers: %s", Task["FileName"])
-    File = ZipFile(file=Task["OutputPaths"], mode="r")
-    FileList = File.namelist()
+def getNativesObject(Libraries: dict, Features: dict | None = None, getExtract: bool = False) -> dict | None:
+    # 判断是否需要输出
+    LibrariesKeys = Libraries.keys()
+    if not ("natives" in LibrariesKeys): return(None)
+    if "rules" in LibrariesKeys:
+        if ResolveRule(Items=Libraries["rules"], Features=Features) == False: return(None)
 
-    # 分离 sha1 文件, 并生成 File Sha1 的对应关系, 存入 FileSha1
-    FileSha1 = dict()
-    FileListBackUp = deepCopy(FileList)
-    for FilePathInZip in FileListBackUp:
-        Name, Ext = splitExt(FilePathInZip)
-        TheZipPath = ZipPath(File, at=FilePathInZip)
-        if Ext == ".git":
-            FileList.remove(FilePathInZip)
-            Logger.debug("Excluded: \"%s\" From \"%s\" By file extension name", FilePathInZip, baseName(Task["OutputPaths"]))
-        elif Ext == ".sha1":
-            FileList.remove(FilePathInZip)
-            # 读取对应的 sha1 值
-            Sha1 = File.read(FilePathInZip).decode("utf-8")
-            if Sha1[-1] == "\n": Sha1 = Sha1.rstrip()
-            # 存入 FileSha1
-            FileSha1[Name] = Sha1
-        elif TheZipPath.is_dir():
-            FileList.remove(FilePathInZip)
-        elif ((Task["NextArgs"].get("Extract") != None) and ("exclude" in Task["NextArgs"]["Extract"])):
-            for Exclude in Task["NextArgs"]["Extract"]["exclude"]:
-                if Exclude in FilePathInZip:
-                    FileList.remove(FilePathInZip)
-                    Logger.debug("Excluded: \"%s\" From \"%s\" By Extract", FilePathInZip, baseName(Task["OutputPaths"]))
-                    break
+    # 解析系统信息
+    SystemHost = {"Windows": "windows", "Darwin": "osx", "Linux": "linux", "Java": "java", "": None}[system()]
+    if SystemHost in ("java", None): raise Ex_LoadJson.UnsupportSystemHost(SystemHost)
+    Output = Libraries["downloads"]["classifiers"][Libraries["natives"][SystemHost]]
 
-    FileSha1Keys = FileSha1.keys()
+    # 实现 getExtract
+    if (getExtract and ("extract" in LibrariesKeys)):
+        Output["Extract"] = Libraries["extract"]
+    else: Output["Extract"] = dict()
 
-    for FilePathInZip in FileList:
-        TheFile = File.read(FilePathInZip)
-        if (FilePathInZip in FileSha1Keys):
-            if not (sha1(TheFile).hexdigest() == FileSha1[FilePathInZip]):
-                raise Ex_LoadJson.Sha1VerificationError
-
-        RealFilePath = pathAdder(Task["NextArgs"]["ExtractTo"], FilePathInZip)
-        saveFile(Path=RealFilePath, FileContent=TheFile, Type="bytes")
+    return(Output)
 

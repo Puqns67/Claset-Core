@@ -6,15 +6,19 @@ LastVersion = 0
 
 File = {
     "UseGlobalConfig": True,
-    "JavaPath": None,
-    "NativesDir": None,
-    "NotCheckGame": False,
-    "NotCheckJvm": False,
-    "PerfixAndEnds": {
-        "JvmPerfix": None,
-        "JvmEnd": None,
-        "GamePreFix": None,
-        "GameEnd": None
+    "Global": {
+        "JavaPath": None,
+        "NotCheckGame": False,
+        "NotCheckJvm": False
+    },
+    "UnableGlobal": {
+        "NativesDir": None,
+        "PerfixAndEnds": {
+            "JvmPerfix": [],
+            "JvmEnd": [],
+            "GamePreFix": [],
+            "GameEnd": []
+        }
     }
 }
 

@@ -2,7 +2,6 @@
 """下载游戏"""
 
 from logging import getLogger
-from re import compile as reCompile
 
 from Claset.Utils.Download import DownloadManager
 from Claset.Utils.Path import pathAdder
@@ -14,7 +13,7 @@ from . import LoadJson
 
 from .Exceptions import Install as Ex_Install, LoadJson as Ex_LoadJson
 
-__all__ = ["GameInstaller", "getVersionManifestURL"]
+__all__ = ["GameInstaller", "getVersionManifestURL", "genNativesDirName"]
 Logger = getLogger(__name__)
 
 
@@ -130,4 +129,7 @@ def getVersionManifestURL(Ver: int = 1, Path: str | None = None) -> dict:
     URL = APath.path(URL)
     if Path == None: Path = APath.path("$MCVersionManifest/", IsPath=True)
     return({"URL": URL, "FileName": FileName, "OutputPath": Path})
+
+def genNativesDirName():
+    pass
 

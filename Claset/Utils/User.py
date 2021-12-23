@@ -5,7 +5,7 @@ from base64 import b64encode, b64decode
 
 from .Configs import Configs
 from .File import saveFile
-from .Path import path, pathAdder
+from .Path import pathAdder
 
 from .Confs import ConfigIDs
 from .Exceptions import User as Ex_User

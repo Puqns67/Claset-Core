@@ -14,21 +14,18 @@ from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
 
 
 class path():
+    ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
+
     def __init__(self, Others: list | None = None, IsPath: bool = False):
         self.Configs = Configs().getConfig("Paths", TargetVersion=0)
         self.IsPath = IsPath
-        self.ReSearch = None
-        self.CompleteConfigs = self.Configs["Prefixs"]
+        self.CompleteConfigs: dict = self.Configs["Prefixs"]
         self.CompleteConfigsKeys = self.CompleteConfigs.keys()
 
-        if Others != None:
-            self.ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
-            self.getFromOthersKeys(Others)
+        if Others != None: self.getFromOthersKeys(Others)
 
 
     def loadOtherString(self, Objects: str) -> dict:
-        if self.ReSearch == None: self.ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
-
         try:
             File, Value = self.ReSearch.search(Objects).groups()
             File = Configs().getConfig(File, TargetVersion=0)
@@ -37,10 +34,8 @@ class path():
         except ConfigUnregistered:
             File = loadFile(Path=File, Type="json")
 
-        try:
-            Value = self.loadOtherString(Value)
-        except Ex_AdvancedPath.SearchError:
-            pass
+        try: Value = self.loadOtherString(Value)
+        except Ex_AdvancedPath.SearchError: pass
 
         return(File[Value])
 

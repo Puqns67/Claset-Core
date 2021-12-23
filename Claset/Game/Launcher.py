@@ -10,6 +10,8 @@ from Claset.Utils.File import loadFile, dfCheck
 from Claset.Utils.Configs import Configs
 
 from .LoadJson import ResolveRule
+from .Check import ProcessNatives
+
 from .Exceptions import Launcher as Ex_Launcher
 
 Logger = getLogger(__name__)
@@ -19,7 +21,8 @@ class GameLauncher():
     """游戏启动器"""
     MatchRunCodeKey = reCompile(r"^(.*)\$\{(.+)\}(.*)$")
     Features: dict[str, bool] = {"is_demo_user": False, "has_custom_resolution": True}
-    JvmHeader: tuple[str] = ()
+    ClasetJvmHeader: tuple[str] = ()
+
     def __init__(self, VersionName: str, **OthersSettings: dict[str, str]):
         self.VersionName = VersionName
         self.OthersSettings = OthersSettings
@@ -66,7 +69,7 @@ class GameLauncher():
                 Arguments.extend(self.VersionJson["arguments"]["game"])
             case _: ValueError(Type)
 
-        Output = ["${JVMPREFIX}"]
+        Output = ["${CLASETJVMHEADER}", "${JVMPREFIX}"]
         for Argument in Arguments:
             if (type(Argument) == type(dict())):
                 if (ResolveRule(Items=Argument["rules"], Features=self.Features)):
@@ -90,16 +93,19 @@ class GameLauncher():
             Matched = self.MatchRunCodeKey.match(RunCode)
             while Matched != None:
                 MatchedGroups = list(Matched.groups())
-                MatchedGroups[1] = self._replaces(MatchedGroups[1])
+                Replaced = self._replaces(MatchedGroups[1])
+                if ((Replaced != None) and (len(Replaced) > 0)):
+                    MatchedGroups[1] = Replaced
                 RunCode = str().join(MatchedGroups)
                 Matched = self.MatchRunCodeKey.match(RunCode)
             Output.append(RunCode)
         return(Output)
 
 
-    def _replaces(self, Key: str) -> str:
+    def _replaces(self, Key: str) -> str | tuple | None:
         """替换"""
         match Key:
+            case "CLASETJVMHEADER": return(self.ClasetJvmHeader)
             case "JVMPREFIX": return(Key)
             case "JVMEND": return(Key)
             case "GAMEARGSPREFIX": return(Key)
