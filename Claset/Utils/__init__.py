@@ -2,12 +2,22 @@
 """Claset 基础包"""
 
 from . import (
-    AdvancedPath, Configs, Confs, Download, Exceptions,
-    File, Logs, Path, JavaHelper, User
+    Exceptions, Confs, JavaHelper
 )
+from .Tests import Main
+from .Logs import Logs
+from .File import loadFile, saveFile, moveFile, dfCheck
+from .AdvancedPath import AdvancedPath
+from .Confs import ConfigIDs, ConfigInfos
+from .Configs import Configs
+from .Download import DownloadManager
+from .User import User
+from .Path import path, pathAdder
 
 __all__ = [
-    "Path", "File", "Configs", "Download", "Logs", "User",
-    "AdvancedPath", "Exceptions", "Confs", "JavaHelper"
+    "Configs", "DownloadManager", "Logs", "User",
+    "AdvancedPath", "Exceptions", "Confs", "JavaHelper",
+    "Main", "ConfigIDs", "ConfigInfos", "path", "pathAdder",
+    "loadFile", "saveFile", "moveFile", "dfCheck"
 ]
 

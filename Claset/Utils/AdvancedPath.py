@@ -9,11 +9,11 @@ from .File import loadFile
 from .Configs import Configs
 from .Path import PathRegex
 
-from .Exceptions.Configs import ConfigUnregistered
 from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
+from .Exceptions.Configs import ConfigUnregistered
 
 
-class path():
+class AdvancedPath():
     ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
 
     def __init__(self, Others: list | None = None, IsPath: bool = False):

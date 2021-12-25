@@ -6,12 +6,11 @@ from os.path import basename as baseName, splitext as splitExt
 from hashlib import sha1
 from copy import deepcopy as deepCopy
 
-from Claset.Utils.Path import pathAdder
-from Claset.Utils.File import saveFile
+from Claset.Utils import pathAdder, saveFile
 
 from .LoadJson import getNativesObject
 
-from .Exceptions import Check as Ex_Check
+from .Exceptions import NativesFileError, Sha1VerificationError
 
 Logger = getLogger(__name__)
 
@@ -24,7 +23,7 @@ def ProcessNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = No
             Extract: dict = NativesObject["Extract"]
             BaseNameByPath = baseName(Path)
 
-            if not(isZipFile(Path)): raise Ex_Check.NativesFileError
+            if not(isZipFile(Path)): raise NativesFileError
             Logger.info("Extract Natives: %s", BaseNameByPath)
             File = ZipFile(file=Path, mode="r")
             FileList = File.namelist()
@@ -60,7 +59,8 @@ def ProcessNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = No
                 TheFile = File.read(FilePathInZip)
                 if (FilePathInZip in FileSha1Keys):
                     if not (sha1(TheFile).hexdigest() == FileSha1[FilePathInZip]):
-                        raise Ex_Check.Sha1VerificationError
+                        raise Sha1VerificationError
 
                 RealFilePath = pathAdder(ExtractTo, FilePathInZip)
                 saveFile(Path=RealFilePath, FileContent=TheFile, Type="bytes")
+

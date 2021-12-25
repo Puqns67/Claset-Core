@@ -3,17 +3,20 @@
 
 from logging import getLogger
 
-from Claset.Utils.Download import DownloadManager
-from Claset.Utils.Path import pathAdder
-from Claset.Utils.AdvancedPath import path as aPathmd
-from Claset.Utils.File import loadFile, saveFile, dfCheck, moveFile
-from Claset.Utils.Configs import Configs
+from Claset.Utils import (
+    DownloadManager, Configs, AdvancedPath,
+    loadFile, saveFile, dfCheck, moveFile, pathAdder
+)
 
-from . import LoadJson
+from ..Utils import (
+    getVersionManifestURL,
+    Version_Client_DownloadList, AssetIndex_DownloadList,
+    VersionManifest_To_Version, Version_To_AssetIndex
+)
+from ..Utils.Exceptions import TargetVersionNotFound
 
-from .Exceptions import Install as Ex_Install, LoadJson as Ex_LoadJson
+from .Exceptions import UnknownVersion, DownloadError
 
-__all__ = ["GameInstaller", "getVersionManifestURL", "genNativesDirName"]
 Logger = getLogger(__name__)
 
 
@@ -46,38 +49,36 @@ class GameInstaller():
 
     def InstallVanilla(self):
         """下载并安装游戏"""
-        Logger.info("Start installation \"%s\" from Vanilla Verison \"%s\"", self.Name, self.Version)
+        Logger.info("Start installation name \"%s\" from Vanilla Verison \"%s\"", self.Name, self.Version)
         VersionManifest_Info = getVersionManifestURL()
         self.MainDownloadProject = self.Downloader.addTask(InputTask=VersionManifest_Info)
 
-        if (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise Ex_Install.DownloadError
+        if (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise DownloadError
 
         self.getVersionJson(VersionManifest_Info)
         self.getAssetIndexJson()
 
         # 解析下载项
-        DownloadList = LoadJson.Version_Client_DownloadList(InitFile=self.VersionJson, Name=self.Name)
-        DownloadList.extend(LoadJson.AssetIndex_DownloadList(InitFile=self.AssetIndexJson))
+        DownloadList = Version_Client_DownloadList(InitFile=self.VersionJson, Name=self.Name)
+        DownloadList.extend(AssetIndex_DownloadList(InitFile=self.AssetIndexJson))
 
         # 下载
         Logger.info("Downloading Minecraft Vanilla Verison \"%s\", from mirror \"%s\"", self.Name, self.Version)
         self.Downloader.addTasks(InputTasks=DownloadList, MainProjectID=self.MainDownloadProject)
-        if ((self.WaitDownloader == True) and (self.Downloader.projectJoin(self.MainDownloadProject) > 0)): raise Ex_Install.DownloadError
+        if ((self.WaitDownloader == True) and (self.Downloader.projectJoin(self.MainDownloadProject) > 0)): raise DownloadError
 
 
     def getVersionJson(self, VersionManifest_Info: dict):
         """获取对应版本的 Version json"""
-        try:
-            VersionJsonTask = LoadJson.VersionManifest_To_Version(InitFile=loadFile(pathAdder(VersionManifest_Info["OutputPath"], VersionManifest_Info["FileName"]), Type="json"), TargetVersion=self.Version)
-        except Ex_LoadJson.TargetVersionNotFound:
-            raise Ex_Install.UnknownVersion
+        try: VersionJsonTask = VersionManifest_To_Version(InitFile=loadFile(pathAdder(VersionManifest_Info["OutputPath"], VersionManifest_Info["FileName"]), Type="json"), TargetVersion=self.Version)
+        except TargetVersionNotFound: raise UnknownVersion
 
         OldVersionJsonPath = pathAdder(VersionJsonTask["OutputPath"], VersionJsonTask["FileName"])
         self.Downloader.addTask(InputTask=VersionJsonTask, ProjectID=self.MainDownloadProject)
 
-        if (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise Ex_Install.DownloadError
+        if (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise DownloadError
 
-        self.VersionJsonPath = aPathmd().pathAdder("$VERSION", self.Name, self.Name + ".json")
+        self.VersionJsonPath = AdvancedPath().pathAdder("$VERSION", self.Name, self.Name + ".json")
 
         dfCheck(self.VersionJsonPath, "fm")
         moveFile(File=OldVersionJsonPath, To=self.VersionJsonPath, Rename=True)
@@ -86,11 +87,11 @@ class GameInstaller():
 
     def getAssetIndexJson(self):
         """获取对应版本的 AssetIndex json"""
-        AssetIndexJsonTask = LoadJson.Version_To_AssetIndex(InitFile=self.VersionJson)
+        AssetIndexJsonTask = Version_To_AssetIndex(InitFile=self.VersionJson)
         AssetIndexJsonPath = pathAdder(AssetIndexJsonTask["OutputPath"], AssetIndexJsonTask["FileName"])
         self.Downloader.addTask(InputTask=AssetIndexJsonTask, ProjectID=self.MainDownloadProject)
 
-        if (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise Ex_Install.DownloadError
+        if (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise DownloadError
 
         self.AssetIndexJson = loadFile(Path=AssetIndexJsonPath, Type="json")
 
@@ -112,24 +113,4 @@ class GameInstaller():
 
     def InstallFabric(self):
         """安装Fabric"""
-
-
-def getVersionManifestURL(Ver: int = 1, Path: str | None = None) -> dict:
-    """获取对应版本的 Manifest URL"""
-    match Ver:
-        case 1:
-            FileName = "version_manifest.json"
-            URL = "$LauncherMeta/mc/game/version_manifest.json"
-        case 2:
-            FileName = "version_manifest_v2.json"
-            URL = "$LauncherMeta/mc/game/version_manifest_v2.json"
-        case _:
-            raise ValueError("getVersionManifestURL(): Unknown Type")
-    APath = aPathmd(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
-    URL = APath.path(URL)
-    if Path == None: Path = APath.path("$MCVersionManifest/", IsPath=True)
-    return({"URL": URL, "FileName": FileName, "OutputPath": Path})
-
-def genNativesDirName():
-    pass
 

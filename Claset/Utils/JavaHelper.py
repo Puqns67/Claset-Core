@@ -66,4 +66,3 @@ def getJavaInfo(Path: str) -> tuple[str]:
     except AttributeError:
         raise Ex_JavaHelper.MatchStringError(DecodedReturn)
 
-

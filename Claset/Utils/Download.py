@@ -320,5 +320,8 @@ class DownloadManager():
             while ((self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) != self.Projects[ProjectID]["AllTasksCount"]):
                 sleep(self.Configs["SleepTime"])
             ErrorTasksCount += self.Projects[ProjectID]["ErrorTasksCount"]
+        if (len(ProjectIDs) > 1):
+            Logger.debug("Joined Projects %s completed by %s Errors", ProjectIDs, ErrorTasksCount)
+        else: Logger.debug("Joined Project \"%s\" completed by %s Errors", ProjectIDs[0], ErrorTasksCount)
         return(ErrorTasksCount)
 
