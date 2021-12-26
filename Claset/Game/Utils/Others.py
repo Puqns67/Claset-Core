@@ -3,7 +3,7 @@
 from platform import system, machine, version
 from re import match
 
-from Claset.Utils import AdvancedPath
+from Claset.Utils import AdvancedPath, pathAdder
 
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
 
@@ -18,7 +18,7 @@ def getVersionManifestURL(Ver: int = 1, Path: str | None = None) -> dict:
             FileName = "version_manifest_v2.json"
             URL = "$LauncherMeta/mc/game/version_manifest_v2.json"
         case _:
-            raise ValueError("getVersionManifestURL(): Unknown Type")
+            raise ValueError("Unknown Ver")
     APath = AdvancedPath(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
     URL = APath.path(URL)
     if Path == None: Path = APath.path("$MCVersionManifest/", IsPath=True)

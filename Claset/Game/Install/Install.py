@@ -27,18 +27,24 @@ class GameInstaller():
     * Version: 游戏版本号
     * Downloader: 下载器，不定义则使用全局下载器
     """
-    def __init__(self, Downloader: DownloadManager, Name: str, Version: str, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
+    Configs = Configs()
+    Mirrors = None
+
+    def __init__(self, Downloader: DownloadManager, VersionName: str, MinecraftVersion: str, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
         self.Downloader = Downloader
-        self.Name = Name
-        self.Version = Version
+        self.VersionName = VersionName
+        self.MinecraftVersion = MinecraftVersion
         self.WaitDownloader = WaitDownloader
+        self.VersionDir = pathAdder("$VERSION", VersionName)
 
         # 载入相关的配置
-        if UsingDownloadServer != None: self.UsingDownloadServer: str = Configs().getConfig(ID="Settings", TargetVersion=0)["DownloadServer"]
-        else: self.UsingDownloadServer = UsingDownloadServer
-
-        if self.UsingDownloadServer == "Vanilla": self.Mirrors = Configs().getConfig(ID="Mirrors", TargetVersion=0)
-        else: self.Mirrors = None
+        self.GlobalSettings = self.Configs.getConfig(ID="Settings", TargetVersion=0)
+        if UsingDownloadServer != None:
+            self.UsingDownloadServer: str = self.Configs.getConfig(ID="Settings", TargetVersion=0)["DownloadServer"]
+        else:
+            self.UsingDownloadServer = UsingDownloadServer
+        if self.UsingDownloadServer == "Vanilla":
+            self.Mirrors = self.Configs.getConfig(ID="Mirrors", TargetVersion=0)
 
         # 开始安装
         self.InstallVanilla()
@@ -46,10 +52,13 @@ class GameInstaller():
         # 更新版本 Json
         self.updateVersionJson()
 
+        # 创建版本配置文件
+        self.createConfig()
 
-    def InstallVanilla(self):
+
+    def InstallVanilla(self) -> None:
         """下载并安装游戏"""
-        Logger.info("Start installation name \"%s\" from Vanilla Verison \"%s\"", self.Name, self.Version)
+        Logger.info("Start installation name \"%s\" from Vanilla Verison \"%s\"", self.VersionName, self.MinecraftVersion)
         VersionManifest_Info = getVersionManifestURL()
         self.MainDownloadProject = self.Downloader.addTask(InputTask=VersionManifest_Info)
 
@@ -59,18 +68,18 @@ class GameInstaller():
         self.getAssetIndexJson()
 
         # 解析下载项
-        DownloadList = Version_Client_DownloadList(InitFile=self.VersionJson, Name=self.Name)
+        DownloadList = Version_Client_DownloadList(InitFile=self.VersionJson, Name=self.VersionName)
         DownloadList.extend(AssetIndex_DownloadList(InitFile=self.AssetIndexJson))
 
         # 下载
-        Logger.info("Downloading Minecraft Vanilla Verison \"%s\", from mirror \"%s\"", self.Name, self.Version)
+        Logger.info("Downloading Minecraft Vanilla Verison \"%s\", from mirror \"%s\"", self.VersionName, self.MinecraftVersion)
         self.Downloader.addTasks(InputTasks=DownloadList, MainProjectID=self.MainDownloadProject)
         if ((self.WaitDownloader == True) and (self.Downloader.projectJoin(self.MainDownloadProject) > 0)): raise DownloadError
 
 
-    def getVersionJson(self, VersionManifest_Info: dict):
+    def getVersionJson(self, VersionManifest_Info: dict) -> None:
         """获取对应版本的 Version json"""
-        try: VersionJsonTask = VersionManifest_To_Version(InitFile=loadFile(pathAdder(VersionManifest_Info["OutputPath"], VersionManifest_Info["FileName"]), Type="json"), TargetVersion=self.Version)
+        try: VersionJsonTask = VersionManifest_To_Version(InitFile=loadFile(pathAdder(VersionManifest_Info["OutputPath"], VersionManifest_Info["FileName"]), Type="json"), TargetVersion=self.MinecraftVersion)
         except TargetVersionNotFound: raise UnknownVersion
 
         OldVersionJsonPath = pathAdder(VersionJsonTask["OutputPath"], VersionJsonTask["FileName"])
@@ -78,14 +87,14 @@ class GameInstaller():
 
         if (self.Downloader.projectJoin(self.MainDownloadProject) > 0): raise DownloadError
 
-        self.VersionJsonPath = AdvancedPath().pathAdder("$VERSION", self.Name, self.Name + ".json")
+        self.VersionJsonPath = AdvancedPath().pathAdder("$VERSION", self.VersionName, self.VersionName + ".json")
 
         dfCheck(self.VersionJsonPath, "fm")
         moveFile(File=OldVersionJsonPath, To=self.VersionJsonPath, Rename=True)
         self.VersionJson = loadFile(Path=self.VersionJsonPath, Type="json")
 
 
-    def getAssetIndexJson(self):
+    def getAssetIndexJson(self) -> None:
         """获取对应版本的 AssetIndex json"""
         AssetIndexJsonTask = Version_To_AssetIndex(InitFile=self.VersionJson)
         AssetIndexJsonPath = pathAdder(AssetIndexJsonTask["OutputPath"], AssetIndexJsonTask["FileName"])
@@ -96,11 +105,17 @@ class GameInstaller():
         self.AssetIndexJson = loadFile(Path=AssetIndexJsonPath, Type="json")
 
 
-    def updateVersionJson(self, **About: dict[str: str]):
+    def updateVersionJson(self, **About: dict[str: str]) -> None:
         """更新 Version Json"""
-        self.VersionJson["id"] = self.Name
-        self.VersionJson["jar"] = self.Name
+        self.VersionJson["id"] = self.VersionName
+        self.VersionJson["jar"] = self.VersionName
         saveFile(Path=self.VersionJsonPath, FileContent=self.VersionJson, Type="json")
+
+    
+    def createConfig(self) -> None:
+        """创建版本配置文件"""
+        ProcessList = ["REPLACE:[UnableGlobal, NativesDir]->natives"]
+        self.Configs.genConfig(ID="Game", Path=pathAdder("$VERSION", self.VersionName, "ClasetVersionConfig.json"), ProcessList=ProcessList)
 
 
     def replaceURL(self, URL: str, URLType: str, MirrorName: str | None = None) -> str:

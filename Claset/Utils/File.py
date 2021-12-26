@@ -106,7 +106,14 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
         raise ValueError(Type)
 
 
-def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False):
+def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False) -> None:
+    """
+    移动文件: 较为稳定的移动文件方式
+    * File: 源文件位置
+    * To: 目标文件夹/目标路径(重命名)
+    * OverWirte: 若目标文件夹指向文件，此时 OverWrite 为 False 则触发 FileExistsError，若为 True 则覆盖
+    * Rename: 若无法分辨 To 为"目标文件夹"还是"目标路径"时, 此时 Rename 为 True 则视为"目标路径", 若为 False 则为"目标文件夹"
+    """
     if not dfCheck(Path=File, Type="f"): raise FileNotFoundError(File)
 
     if isdir(To):

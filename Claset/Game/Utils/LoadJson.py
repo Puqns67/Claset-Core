@@ -4,7 +4,7 @@
 from logging import getLogger
 from os.path import basename as baseName
 
-from Claset.Utils import AdvancedPath
+from Claset.Utils import AdvancedPath, path, pathAdder
 
 from .Others import ResolveRule, getNativesObject
 from .Exceptions import TargetVersionNotFound
@@ -25,7 +25,7 @@ def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> dict:
         if Version["id"] == TargetVersion:
             return({
                 "URL": Version["url"],
-                "OutputPath": "$MCVersion",
+                "OutputPath": path("$MCVersion", IsPath=True),
                 "FileName": baseName(Version["url"]),
                 "Overwrite": False,
             })
@@ -41,7 +41,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
         "URL": Client["url"],
         "Sha1": Client["sha1"],
         "Size": Client["size"],
-        "OutputPaths": AdvancedPath().path("$VERSION/" + Name + "/" + Name + ".jar", IsPath=True),
+        "OutputPaths": pathAdder("$VERSION", Name, Name + ".jar"),
         "Overwrite": False
     })
 
@@ -56,7 +56,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
                 "URL": Natives["url"],
                 "Size": Natives["size"],
                 "Sha1": Natives["sha1"],
-                "OutputPath": "$LIBRERIES/" + Natives["path"],
+                "OutputPath": pathAdder("$LIBRERIES/", Natives["path"]),
                 "Overwrite": False,
                 "FileName": None
             })
@@ -67,7 +67,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
                 "URL": Artifact["url"],
                 "Size": Artifact["size"],
                 "Sha1": Artifact["sha1"],
-                "OutputPath": "$LIBRERIES/" + Artifact["path"],
+                "OutputPath": pathAdder("$LIBRERIES/", Artifact["path"]),
                 "Overwrite": False,
                 "FileName": None
             })
@@ -83,7 +83,7 @@ def Version_Server_DownloadList(InitFile: dict, SaveTo: str) -> list[dict]:
         "URL": Server["url"],
         "Sha1": Server["sha1"],
         "Size": Server["size"],
-        "OutputPath": AdvancedPath().path(SaveTo, IsPath=True),
+        "OutputPath": path(SaveTo, IsPath=True),
         "Overwrite": False
     }])
 
@@ -95,7 +95,7 @@ def Version_To_AssetIndex(InitFile: dict) -> dict:
         "URL": assetIndex["url"],
         "Sha1": assetIndex["sha1"],
         "Size": assetIndex["size"],
-        "OutputPath": "$MCAssetIndex",
+        "OutputPath": path("$MCAssetIndex", IsPath=True),
         "FileName": baseName(assetIndex["url"]),
         "Overwrite": False
     })
@@ -111,7 +111,7 @@ def AssetIndex_DownloadList(InitFile: dict) -> list[dict]:
             "FileName": Objects[i]["hash"],
             "URL": Pather.path("$Assets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"]),
             "Size": Objects[i]["size"],
-            "OutputPath": "$ASSETS/objects/" + Objects[i]["hash"][:2],
+            "OutputPath": pathAdder("$ASSETS/objects", Objects[i]["hash"][:2]),
             "Sha1": Objects[i]["hash"],
             "Overwrite": False,
             "Retry": 3,
@@ -120,4 +120,17 @@ def AssetIndex_DownloadList(InitFile: dict) -> list[dict]:
         })
 
     return(Tasks)
+
+
+def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None = None) -> str:
+    Output = str()
+    for Libraries in VersionJson["libraries"]:
+        if "rules" in Libraries.keys():
+            if ResolveRule(Items=Libraries["rules"], Features=Features) == False: continue
+        try: Temp = pathAdder("$LIBRERIES/", Libraries["downloads"]["artifact"]["path"])
+        except KeyError: pass
+        if Temp not in Output:
+            Output += Temp + ";"
+    Output += VersionJarPath
+    return(Output)
 

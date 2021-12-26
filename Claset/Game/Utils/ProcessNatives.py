@@ -14,7 +14,7 @@ from .Exceptions import NativesFileError, Sha1VerificationError
 
 Logger = getLogger(__name__)
 
-def ProcessNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = None):
+def processNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = None):
     """处理 Natives"""
     for Libraries in VersionJson["libraries"]:
         NativesObject = getNativesObject(Libraries=Libraries, Features=Features, getExtract=True)

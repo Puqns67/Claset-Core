@@ -5,6 +5,7 @@
 """
 
 __author__ = "Puqns67"
+__productname__ = "Claset"
 __version__ = "0.1.0"
 
 from logging import getLogger, Logger, DEBUG

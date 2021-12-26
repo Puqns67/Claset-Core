@@ -15,8 +15,8 @@ Logger = getLogger(__name__)
 
 class Configs():
     """管理日志"""
-    reFindTypeAndKey = reCompile(r"([a-zA-Z0-9_]+):(.+)")
-    reFindOldAndNew = reCompile(r"(.+)->(.*)")
+    reFindTypeAndKey = reCompile(r"^([a-zA-Z0-9_]+):(.+)$")
+    reFindOldAndNew = reCompile(r"^(.+)->(.*)$")
     reIFStrList = reCompile(r"^\[.*\]")
 
     def __init__(self):
@@ -40,7 +40,10 @@ class Configs():
 
         # 如果指定了文件位置, 类型将判断为非全局
         if FilePath == None:
-            FilePath = "$CONFIG/" + ConfigIDs[ID]
+            if ConfigIDs[ID] == "$NONGLOBAL$":
+                raise Ex_Configs.ConfigNonGlobalMissingFilePath
+            else:
+                FilePath = "$CONFIG/" + ConfigIDs[ID]
 
         # 判断配置文件是否存在, 存在则查看是否需要检查更新, 不存在则生成配置文件
         if dfCheck(Path=FilePath, Type="f") == False: self.genConfig(ID=ID, Path=FilePath, OverWrite=False)
@@ -75,14 +78,20 @@ class Configs():
         return(True)
 
 
-    def genConfig(self, ID: str, Path: str, OverWrite: bool = True) -> None:
+    def genConfig(self, ID: str, Path: str, OverWrite: bool = True, ProcessList: list = list()) -> None:
         """生成配置文件"""
         if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigUnregistered(ID)
         if (dfCheck(Path=Path, Type="f") and (OverWrite == False)): raise Ex_Configs.ConfigExist(ID)
 
         FileContent = self.setVersion(Config=ConfigInfos["File"][ID], Version=ConfigInfos["Version"][ID])
-        Logger.info("Created Config: %s", ID)
+
+        # 在保存文件前执行"处理"
+        for Process in ProcessList:
+            Type, Key = self.reFindTypeAndKey.match(Process).groups()
+            FileContent = self.processConfig(OldConfig=FileContent, Key=Key, Type=Type)
+
         saveFile(Path=Path, FileContent=FileContent, Type="json")
+        Logger.info("Created Config: %s", ID)
 
 
     def saveConfig(self, ID: str, FileContent: dict):
@@ -107,10 +116,8 @@ class Configs():
         DifferenceS = self.getDifferenceS(ID=ID, TargetVersion=TargetVersion, NowVersion=NowVersion, Reverse=Reverse)
 
         for Difference in DifferenceS:
-            Type, Key = self.reFindTypeAndKey.search(Difference).groups()
-            if Type in ["REPLACE", "DELETE"]:
-                NewConfig = self.processConfig(OldConfig=OldConfig, Key=Key, Type=Type)
-            else: raise Ex_Configs.UnknownDifferenceType
+            Type, Key = self.reFindTypeAndKey.match(Difference).groups()
+            NewConfig = self.processConfig(OldConfig=OldConfig, Key=Key, Type=Type)
         NewConfig = self.setVersion(Config=NewConfig, Version=TargetVersion)
 
         saveFile(Path=Path, FileContent=NewConfig, Type="json")
@@ -124,7 +131,7 @@ class Configs():
         DifferenceS = list()
 
         for DifferentsKey in Differences:
-            Old, New = self.reFindOldAndNew.search(DifferentsKey).groups()
+            Old, New = self.reFindOldAndNew.match(DifferentsKey).groups()
             ChangeList.append([int(Old), int(New)])
         ChangeList = sorted(ChangeList, key=lambda ChangeList: ChangeList[0], reverse=Reverse)
 
@@ -152,6 +159,8 @@ class Configs():
             case "DELETE":
                 Old = Key
                 New = None
+            case _:
+                raise Ex_Configs.UnknownDifferenceType
 
         if self.reIFStrList.search(Old.strip()) != None: Old = self.__StrList2List(Old)
         else: Old = [Old]

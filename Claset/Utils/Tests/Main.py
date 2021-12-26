@@ -18,9 +18,12 @@ def Main():
     Downloader = Claset.Utils.DownloadManager()
 
     try:
-        Claset.Game.Install.GameInstaller(Downloader=Downloader, Name="Test", Version="1.18.1")
+        Claset.Game.Install.GameInstaller(Downloader=Downloader, VersionName="Test", MinecraftVersion="1.18.1")
     except KeyboardInterrupt:
         Downloader.stop()
+
+    GameLauncher = Claset.Game.Launch.GameLauncher(VersionName="Test")
+    GameLauncher.launchGame()
 
     Logger.info("Stopped!!!")
     Logger.info("Used time: %s", str(time() - StartTime))

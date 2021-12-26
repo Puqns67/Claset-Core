@@ -9,7 +9,7 @@ ConfigIDs = {
     "Mirrors": "Mirrors.json",
     "Settings": "Settings.json",
     "Logs": "Logs.json",
-    "Game": "$NONGLOBAL",
+    "Game": "$NONGLOBAL$",
     "Users": "Users.json"
 }
 
