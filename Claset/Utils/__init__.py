@@ -13,12 +13,12 @@ from .Configs import Configs
 from .Download import DownloadManager
 from .User import User
 from .Path import path, pathAdder
-from .Others import getValueFromDict
+from .Others import getValueFromDict, fixType
 
 __all__ = [
     "Configs", "DownloadManager", "Logs", "User",
     "AdvancedPath", "Exceptions", "Confs", "JavaHelper",
     "Main", "ConfigIDs", "ConfigInfos", "path", "pathAdder",
-    "loadFile", "saveFile", "moveFile", "dfCheck", "getValueFromDict"
+    "loadFile", "saveFile", "moveFile", "dfCheck", "getValueFromDict", "fixType"
 ]
 

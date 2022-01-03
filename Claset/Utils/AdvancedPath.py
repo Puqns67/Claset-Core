@@ -17,9 +17,9 @@ class AdvancedPath():
     ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
 
     def __init__(self, Others: list | None = None, IsPath: bool = False):
-        self.Configs = Configs().getConfig("Paths", TargetVersion=0)
+        self.Configs = Configs(ID="Paths", TargetVersion=0)
         self.IsPath = IsPath
-        self.CompleteConfigs: dict = self.Configs["Prefixs"]
+        self.CompleteConfigs: dict = self.Configs.get(["Prefixs"])
         self.CompleteConfigsKeys = self.CompleteConfigs.keys()
 
         if Others != None: self.getFromOthersKeys(Others)
@@ -28,7 +28,7 @@ class AdvancedPath():
     def loadOtherString(self, Objects: str) -> dict:
         try:
             File, Value = self.ReSearch.search(Objects).groups()
-            File = Configs().getConfig(File, TargetVersion=0)
+            File = Configs(File, TargetVersion=0)
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
         except ConfigUnregistered:
@@ -37,14 +37,14 @@ class AdvancedPath():
         try: Value = self.loadOtherString(Value)
         except Ex_AdvancedPath.SearchError: pass
 
-        return(File[Value])
+        return(File.get([Value]))
 
 
     def getFromOthersKeys(self, OtherTypes: list) -> None:
-        if len(self.Configs["Others"]) == 0:
+        if len(self.Configs.get(["Others"])) == 0:
             OthersKeys = OtherTypes
         else:
-            OthersKeys = self.Configs["Others"] + OtherTypes
+            OthersKeys = self.Configs.get(["Others"]) + OtherTypes
 
         # 顺序获取之后再放入 Prefixs
         for i in OthersKeys:

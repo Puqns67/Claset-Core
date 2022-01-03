@@ -27,7 +27,6 @@ class GameInstaller():
     * Version: 游戏版本号
     * Downloader: 下载器，不定义则使用全局下载器
     """
-    Configs = Configs()
     Mirrors = None
 
     def __init__(self, Downloader: DownloadManager, VersionName: str, MinecraftVersion: str, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
@@ -38,13 +37,13 @@ class GameInstaller():
         self.VersionDir = pathAdder("$VERSION", VersionName)
 
         # 载入相关的配置
-        self.GlobalSettings = self.Configs.getConfig(ID="Settings", TargetVersion=0)
+        self.GlobalSettings = Configs(ID="Settings", TargetVersion=0)
         if UsingDownloadServer != None:
-            self.UsingDownloadServer: str = self.Configs.getConfig(ID="Settings", TargetVersion=0)["DownloadServer"]
+            self.UsingDownloadServer: str = Configs(ID="Settings", TargetVersion=0).get(["DownloadServer"])
         else:
             self.UsingDownloadServer = UsingDownloadServer
         if self.UsingDownloadServer == "Vanilla":
-            self.Mirrors = self.Configs.getConfig(ID="Mirrors", TargetVersion=0)
+            self.Mirrors = Configs(ID="Mirrors", TargetVersion=0)
 
         # 开始安装
         self.InstallVanilla()
@@ -115,7 +114,7 @@ class GameInstaller():
     def createConfig(self) -> None:
         """创建版本配置文件"""
         ProcessList = ["REPLACE:[UnableGlobal, NativesDir]->natives"]
-        self.Configs.genConfig(ID="Game", Path=pathAdder("$VERSION", self.VersionName, "ClasetVersionConfig.json"), ProcessList=ProcessList)
+        Configs(ID="Game", FilePath=pathAdder("$VERSION", self.VersionName, "ClasetVersionConfig.json"), ProcessList=ProcessList)
 
 
     def replaceURL(self, URL: str, URLType: str, MirrorName: str | None = None) -> str:

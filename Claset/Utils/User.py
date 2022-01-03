@@ -12,8 +12,8 @@ from .Exceptions import User as Ex_User
 
 class User():
     def __init__(self):
-        self.UserConfigs = Configs().getConfig(ID="Users", TargetVersion=0)
-        self.Users: list = self.UserConfigs["Users"]
+        self.UserConfigs = Configs(ID="Users", TargetVersion=0)
+        self.Users: list = self.UserConfigs.get(["Users"])
 
 
     def create(self, Name: str, UserType: str, Password: str | None = None) -> None:
@@ -41,7 +41,7 @@ class User():
 
     def save(self) -> None:
         """保存用户数据"""
-        ConfigContent = {"Users": self.Users, "VERSION": self.UserConfigs["VERSION"]}
+        ConfigContent = {"Users": self.Users, "VERSION": self.UserConfigs.get(["VERSION"])}
         saveFile(Path=pathAdder("$CONFIG", ConfigIDs["Users"]), FileContent=ConfigContent, Type="json")
 
 

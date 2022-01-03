@@ -34,8 +34,8 @@ class GameLauncher():
 
         # 配置文件相关处理
         self.VersionConfigFilePath = pathAdder(self.VersionDir, "ClasetVersionConfig.json")
-        self.VersionConfig = Configs().getConfig(ID="Game", TargetVersion=0, FilePath=self.VersionConfigFilePath)
-        self.GlobalConfig = Configs().getConfig(ID="Settings", TargetVersion=0)
+        self.VersionConfig = Configs(ID="Game", FilePath=self.VersionConfigFilePath)
+        self.GlobalConfig = Configs(ID="Settings")
 
 
         # 版本 Json
@@ -43,7 +43,7 @@ class GameLauncher():
         self.VersionJson = loadFile(Path=self.VersionJsonPath, Type="json")
 
         # Natives
-        self.NativesPath = pathAdder(self.VersionDir, self.VersionConfig["UnableGlobal"]["NativesDir"])
+        self.NativesPath = pathAdder(self.VersionDir, self.VersionConfig.get(["UnableGlobal", "NativesDir"]))
 
         self.RunCode = self.getRunCode()
 
@@ -116,10 +116,10 @@ class GameLauncher():
         """替换"""
         match Key:
             case "CLASETJVMHEADER": return(self.ClasetJvmHeader)
-            case "JVMPREFIX": return(self.VersionConfig["UnableGlobal"]["PrefixAndEnds"]["JvmPrefix"])
-            case "JVMEND": return(self.VersionConfig["UnableGlobal"]["PrefixAndEnds"]["JvmEnd"])
-            case "GAMEARGSPREFIX": return(self.VersionConfig["UnableGlobal"]["PrefixAndEnds"]["GamePrefix"])
-            case "GAMEARGSEND": return(self.VersionConfig["UnableGlobal"]["PrefixAndEnds"]["GameEnd"])
+            case "JVMPREFIX": return(self.VersionConfig.get(["UnableGlobal", "PrefixAndEnds", "JvmPrefix"]))
+            case "JVMEND": return(self.VersionConfig.get(["UnableGlobal", "PrefixAndEnds", "JvmEnd"]))
+            case "GAMEARGSPREFIX": return(self.VersionConfig.get(["UnableGlobal", "PrefixAndEnds", "GamePrefix"]))
+            case "GAMEARGSEND": return(self.VersionConfig.get(["UnableGlobal", "PrefixAndEnds", "GameEnd"]))
             case "MAINCLASS": return(self.VersionJson["mainClass"])
             case "launcher_name": return(__productname__)
             case "launcher_version": return(__version__)
@@ -142,12 +142,12 @@ class GameLauncher():
 
 
     def getConfig(self, Keys: list) -> Any:
-        if Keys[0] in self.VersionConfig["Global"].keys():
-            if self.VersionConfig["UseGlobalConfig"]:
-                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
+        if Keys[0] in self.VersionConfig.get(["Global"]).keys():
+            if self.VersionConfig.get(["UseGlobalConfig"]):
+                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig.get(["GlobalConfig"])))
             else:
-                Return = getValueFromDict(Keys=Keys, Dict=self.VersionConfig["Global"])
+                Return = getValueFromDict(Keys=Keys, Dict=self.VersionConfig.get(["Global"]))
                 if Return != None: return(Return)
-                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
-        else: return(getValueFromDict(Keys=Keys, Dict=self.VersionConfig["UnableGlobal"]))
+                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig.get(["GlobalConfig"])))
+        else: return(getValueFromDict(Keys=Keys, Dict=self.VersionConfig.get(["UnableGlobal"])))
 
