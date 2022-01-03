@@ -49,12 +49,7 @@ class Configs():
 
 
     def getConfig(self) -> dict:
-        """
-        通过配置文件 ID 取得配置文件
-        * ID: 配置文件ID, 可通过 Claset.Utils.Confs.ConfigIDs.keys() 获取当前已注册的所有ID
-        * TargetVersion: 目标版本, 若为 None 则不检查版本, 若为 0 则使用最新版本
-        * FilePath: 目标文件路径, 若不为 None 则判断为非全局配置文件
-        """
+        """取得配置文件"""
         # 判断配置文件是否存在, 存在则查看是否需要检查更新, 不存在则生成配置文件
         if dfCheck(Path=self.FilePath, Type="f") == False: self.genConfig(OverWrite=False)
         # 读取文件并返回数据
@@ -64,8 +59,6 @@ class Configs():
     def checkUpdate(self, Type: str = "!=") -> bool:
         """
         通过配置文件 ID 取得全局类型的配置文件
-        * ID: 配置文件ID, 可通过 Claset.Utils.Confs.ConfigIDs.keys() 获取当前已注册的所有ID
-        * TargetVersion: 目标版本
         * Type: 判定其是否需要更新的三种类型("!=", ">=", "<="), 当前版本为左值, 目标版本为右值\n
         若更新了配置文件则返回True, 反之则返回False
         """
@@ -84,16 +77,11 @@ class Configs():
         return(True)
 
 
-    def genConfig(self, OverWrite: bool = True, ProcessList: list = list()) -> None:
+    def genConfig(self, OverWrite: bool = True) -> None:
         """生成配置文件"""
         if (dfCheck(Path=self.FilePath, Type="f") and (OverWrite == False)): raise Ex_Configs.ConfigExist(self.ID)
 
         FileContent = self.setVersion(Config=ConfigInfos["File"][self.ID], Version=ConfigInfos["Version"][self.ID])
-
-        # 在保存文件前执行"处理"
-        for Process in ProcessList:
-            Type, Key = self.reFindTypeAndKey.match(Process).groups()
-            FileContent = self.processConfig(OldConfig=FileContent, Key=Key, Type=Type)
 
         saveFile(Path=self.FilePath, FileContent=FileContent, Type="json")
         Logger.info("Created Config: %s", self.ID)
@@ -101,10 +89,11 @@ class Configs():
 
     def saveConfig(self):
         """保存配置文件"""
+        saveFile(Path=self.FilePath, FileContent=self.TheConfig, Type="json")
 
 
     def updateConfig(self, TargetVersion: int | None = None, Differences: list | None = None) -> None:
-        """更新或降级配置文件版本(NowVersion)至目标版本(TargetVersion)"""
+        """更新或降级配置文件版本至目标版本(TargetVersion)"""
         # 处理版本数据
         if TargetVersion == None:
             TargetVersion = self.TargetVersion
