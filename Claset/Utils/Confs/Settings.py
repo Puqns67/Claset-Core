@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 2
+LastVersion = 3
 
 
 File = {
     "DownloadServer": "Vanilla",
     "GlobalConfig": {
+        "MemoryMin": 512,
+        "MemoryMax": 1024,
         "WindowWidth": 854,
         "WindowHeight": 480,
         "JavaPath": "java.exe",
@@ -17,6 +19,10 @@ File = {
 
 
 Difference = {
+    "2->3": [
+        "REPLACE:[GlobalConfig, MemoryMin]->512",
+        "REPLACE:[GlobalConfig, MemoryMax]->1024"
+    ],
     "1->2": [
         "REPLACE:[GlobalConfig, WindowWidth]->845",
         "REPLACE:[GlobalConfig, WindowHeight]->480"

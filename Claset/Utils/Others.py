@@ -6,11 +6,23 @@ fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
 
 
 def getValueFromDict(Keys: list, Dict: dict) -> Any:
-    """使用列表从字典中获取数据"""
-    if len(Keys) == 1:
-        return(Dict[Keys[0]])
-    else:
+    """使用列表从字典获取数据"""
+    if len(Keys) > 1:
         return(getValueFromDict(Keys=Keys[1:], Dict=Dict[Keys[0]]))
+    else:
+        return(Dict[Keys[0]])
+
+
+def setValueFromDict(Keys: list, Value: Any, Dict: dict | None = None, ) -> dict:
+    """使用列表向字典填充数据"""
+    if type(Dict) != type(dict()): Dict = dict()
+    if len(Keys) > 1:
+        if Dict.get(Keys[0]) == None: Dict[Keys[0]] = dict()
+        Dict[Keys[0]] = setValueFromDict(Keys=Keys[1:], Value=Value, Dict=Dict[Keys[0]], )
+        return(Dict)
+    else:
+        Dict[Keys[0]] = Value
+        return(Dict)
 
 
 def fixType(Input: str) -> Any:
@@ -24,6 +36,5 @@ def fixType(Input: str) -> Any:
             try: Output = float(Input)
             except ValueError: pass
     else: Output = Input
-
     return(Output)
 

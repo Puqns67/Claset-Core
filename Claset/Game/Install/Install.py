@@ -27,9 +27,7 @@ class GameInstaller():
     * Version: 游戏版本号
     * Downloader: 下载器，不定义则使用全局下载器
     """
-    Mirrors = None
-
-    def __init__(self, Downloader: DownloadManager, VersionName: str, MinecraftVersion: str, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
+    def __init__(self, Downloader: DownloadManager, VersionName: str, MinecraftVersion: str, WaitDownloader: bool = True, UsingDownloadServer: str | None = None, AutoInstall: bool = True):
         self.Downloader = Downloader
         self.VersionName = VersionName
         self.MinecraftVersion = MinecraftVersion
@@ -37,22 +35,23 @@ class GameInstaller():
         self.VersionDir = pathAdder("$VERSION", VersionName)
 
         # 载入相关的配置
-        self.GlobalSettings = Configs(ID="Settings", TargetVersion=0)
+        self.GlobalSettings = Configs(ID="Settings")
         if UsingDownloadServer != None:
-            self.UsingDownloadServer: str = Configs(ID="Settings", TargetVersion=0).get(["DownloadServer"])
-        else:
             self.UsingDownloadServer = UsingDownloadServer
-        if self.UsingDownloadServer == "Vanilla":
-            self.Mirrors = Configs(ID="Mirrors", TargetVersion=0)
+        else:
+            self.UsingDownloadServer: str = Configs(ID="Settings").get(["DownloadServer"])
 
-        # 开始安装
-        self.InstallVanilla()
+        self.Mirrors = Configs(ID="Mirrors")[self.UsingDownloadServer]
 
-        # 更新版本 Json
-        self.updateVersionJson()
+        if AutoInstall:
+            # 开始安装
+            self.InstallVanilla()
 
-        # 创建版本配置文件
-        self.createConfig()
+            # 更新版本 Json
+            self.updateVersionJson()
+
+            # 创建版本配置文件
+            self.createConfig()
 
 
     def InstallVanilla(self) -> None:

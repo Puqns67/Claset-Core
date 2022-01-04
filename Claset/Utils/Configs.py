@@ -23,29 +23,52 @@ class Configs():
     def __init__(self, ID: str, TargetVersion: int = 0, FilePath: str | None = None, ProcessList: list = list()) -> None:
         if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigUnregistered(ID)
         self.ID = ID
-        self.TargetVersion = TargetVersion
+        if TargetVersion == 0:
+            self.TargetVersion = ConfigInfos["Version"][ID]
+        else:
+            self.TargetVersion = TargetVersion
 
         # 如果指定了文件位置, 类型将判断为非全局
         if FilePath == None:
-            if ConfigIDs[self.ID] == "$NONGLOBAL$":
+            if ConfigIDs[ID] == "$NONGLOBAL$":
                 raise Ex_Configs.ConfigNonGlobalMissingFilePath
             else:
-                self.FilePath = "$CONFIG/" + ConfigIDs[self.ID]
+                self.FilePath = "$CONFIG/" + ConfigIDs[ID]
         else: self.FilePath = FilePath
 
         self.TheConfig = self.getConfig()
         self.NowVersion = self.TheConfig["VERSION"]
 
         # 检查更新
-        if TargetVersion != None: self.checkUpdate()
+        self.checkUpdate()
 
         if len(ProcessList) >= 1:
             self.updateConfig(Differences=ProcessList)
 
 
+    def __str__(self) -> str:
+        """实现str()"""
+        return(self.ID)
+
+
+    def __getitem__(self, Key) -> Any:
+        """实现下标获取"""
+        return(self.TheConfig[Key])
+
+
+    def __setitem__(self, Key, Value) -> None:
+        """实现下标写入"""
+        self.TheConfig[Key] = Value
+
+
+    def keys(self) -> list:
+        return(list(self.TheConfig.keys()))
+
+
     def get(self, Keys: list | str) -> Any:
         if type(Keys) == type(str()): Keys = [Keys]
-        return(getValueFromDict(Keys=Keys, Dict=self.TheConfig))
+        try: return(getValueFromDict(Keys=Keys, Dict=self.TheConfig))
+        except KeyError: return(None)
 
 
     def getConfig(self) -> dict:
@@ -69,11 +92,11 @@ class Configs():
         else: return(False)
 
         # 尝试进行更新
-        try:
-            self.updateConfig()
-        except Exception as INFO:
-            Logger.warning("Updating Config (%s) Error! INFO: %s", self.ID, INFO)
-            return(False)
+        # try:
+        self.updateConfig()
+        # except Exception as INFO:
+        #     Logger.warning("Updating Config (%s) Error! INFO: %s", self.ID, INFO)
+        #     return(False)
         return(True)
 
 
@@ -95,27 +118,27 @@ class Configs():
     def updateConfig(self, TargetVersion: int | None = None, Differences: list | None = None) -> None:
         """更新或降级配置文件版本至目标版本(TargetVersion)"""
         # 处理版本数据
-        if TargetVersion == None:
-            TargetVersion = self.TargetVersion
-        if TargetVersion == 0:
-            TargetVersion = ConfigInfos["Version"][self.ID]
-            if TargetVersion == self.NowVersion: return(None)
-        if TargetVersion < self.NowVersion:
-            Reverse = True
-        else:
-            Reverse = False
-
         Logger.info("Update Config (%s) From Version %s to Version %s", self.ID, self.NowVersion, TargetVersion)
 
         if Differences != None:
-            DifferenceS = self.getDifferenceS(TargetVersion=TargetVersion, Reverse=Reverse)
-        else:
             DifferenceS = Differences
+        else:
+            if TargetVersion == None:
+                TargetVersion = self.TargetVersion
+            if TargetVersion == 0:
+                TargetVersion = ConfigInfos["Version"][self.ID]
+                if TargetVersion == self.NowVersion: return(None)
+            if TargetVersion < self.NowVersion:
+                Reverse = True
+            else:
+                Reverse = False
+            DifferenceS = self.getDifferenceS(TargetVersion=TargetVersion, Reverse=Reverse)
 
         for Difference in DifferenceS:
             Type, Key = self.reFindTypeAndKey.match(Difference).groups()
-            NewConfig = self.processConfig(OldConfig=self.TheConfig, Key=Key, Type=Type)
-        NewConfig = self.setVersion(Config=NewConfig, Version=TargetVersion)
+            NewConfig = self.processConfig(Key=Key, Type=Type)
+
+        if Differences == None: NewConfig = self.setVersion(Config=NewConfig, Version=TargetVersion)
 
         saveFile(Path=self.FilePath, FileContent=NewConfig, Type="json")
         self.TheConfig = NewConfig
