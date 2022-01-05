@@ -7,7 +7,7 @@ from subprocess import run
 from re import compile
 from platform import system
 
-from .Path import path as Pathmd
+from .Path import path as Pathmd, pathAdder
 from .File import dfCheck
 from .Others import fixType
 
@@ -15,7 +15,7 @@ from .Exceptions import JavaHelper as Ex_JavaHelper, Claset as Ex_Claset
 
 Logger = getLogger(__name__)
 reMatchJavaInfos = compile(r"\s*os\.arch=\"(.+)\"\s*java\.version=\"(.+)\"\s*java\.vendor=\"(.+)\"\s*")
-__all__ = ["getJavaPath", "getJavaInfo", "versionFormater", "getJavaInfoList", "reMatchJavaInfos"]
+__all__ = ["getJavaPath", "getJavaInfo", "versionFormater", "getJavaInfoList", "reMatchJavaInfos", "fixJavaPath"]
 
 
 def getJavaPath() -> list[str]:
@@ -31,20 +31,20 @@ def getJavaPath() -> list[str]:
     for OnePath in Paths:
         match system():
             case "Windows":
-                OnePath += "/java.exe"
+                OnePath = pathAdder(OnePath, "java.exe")
             case "Linux":
-                OnePath += "/java"
+                OnePath = pathAdder(OnePath, "java")
             case _:
                 Ex_Claset.UnsupportSystemHost(system())
-        OnePath = Pathmd(OnePath, IsPath=True)
         if dfCheck(Path=OnePath, Type="d"):
             if (not (OnePath in Output)):
                 Output.append(OnePath)
     return(Output)
 
 
-def getJavaInfo(Path: str) -> tuple[str]:
+def getJavaInfo(Path: str | None) -> tuple[str]:
     """通过 Java 源文件获取 Java 版本"""
+    Path = fixJavaPath(Path)
     JarPath = Pathmd("$EXEC/Utils/JavaHelper/GetJavaInfo.jar", IsPath=True)
     Return = run(args=[Path, "-jar", JarPath], capture_output=True)
     Logger.debug("Java from \"%s\" return: \"%s\"", Path, Return)
@@ -53,6 +53,21 @@ def getJavaInfo(Path: str) -> tuple[str]:
         return(reMatchJavaInfos.match(DecodedReturn).groups())
     except AttributeError:
         raise Ex_JavaHelper.MatchStringError(DecodedReturn)
+
+
+def fixJavaPath(Path: str) -> str:
+    """修正路径"""
+    if Path == None: Path = str()
+    match system():
+        case "Windows":
+            if Path[-4] == "java":
+                Path = Path[:-4] + "java.exe"
+        case "Linux":
+            if Path[-8:] == "java.exe":
+                Path = Path[:-8] + "java"
+        case _:
+            Ex_Claset.UnsupportSystemHost(system())
+    return(Path)
 
 
 def versionFormater(Version: str) -> list:

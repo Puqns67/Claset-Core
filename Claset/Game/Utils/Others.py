@@ -3,7 +3,7 @@
 from platform import system, machine, version
 from re import match
 
-from Claset.Utils import AdvancedPath, pathAdder
+from Claset.Utils import AdvancedPath
 
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
 
@@ -32,11 +32,11 @@ def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
     for Item in Items:
         if Item.get("os") != None:
             if Item["os"].get("name") != None:
-                SystemHost = {"Windows": "windows", "Darwin": "osx", "Linux": "linux", "Java": "java", "": None}[system()]
+                SystemHost = {"windows": "windows", "darwin": "osx", "linux": "linux", "java": "java", "": None}[system().lower()]
                 if SystemHost in ("java", None): raise UnsupportSystemHost(SystemHost)
                 if Item["os"]["name"] != SystemHost: continue
             if Item["os"].get("arch") != None:
-                if Item["os"]["arch"] != {"AMD64": "x64", "X64": "x64", "i386": "x86", "X86": "x86", "i686": "x86"}[machine()]: continue
+                if Item["os"]["arch"] != {"amd64": "x64", "x86_64": "x64", "x64": "x64", "i386": "x86", "x86": "x86", "i686": "x86"}[machine().lower()]: continue
             if Item["os"].get("version") != None:
                 if match(Item["os"]["version"], version()) == None: continue
         if Item.get("features") != None:

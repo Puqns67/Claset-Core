@@ -45,7 +45,6 @@ class GameLauncher():
 
         # Natives
         self.NativesPath = pathAdder(self.VersionDir, self.getConfig(["NativesDir"]))
-        print(self.NativesPath)
 
         self.JavaPath, self.JavaInfo = self.setJava()
         self.RunCode = self.getRunCode()
@@ -53,8 +52,8 @@ class GameLauncher():
 
     def launchGame(self) -> None:
         """启动游戏"""
-        Logger.debug("Run code: %s", self.RunCode)
         processNatives(VersionJson=self.VersionJson, ExtractTo=self.NativesPath, Features=self.Features)
+        Logger.debug("Run code: %s", self.RunCode)
         run(args=[self.JavaPath] + self.RunCode)
 
 
@@ -167,12 +166,12 @@ class GameLauncher():
 
 
     def setJava(self) -> tuple[str]:
-        JavaPath = self.getConfig(["JavaPath"])
+        JavaPath = JavaHelper.fixJavaPath(self.getConfig(["JavaPath"]))
         JavaInfo = JavaHelper.getJavaInfoList(PathList=[JavaPath])[0]
         recommendJavaVersion = self.VersionJson["javaVersion"]["majorVersion"]
         if recommendJavaVersion > JavaInfo["Version"][0]:
-            Logger.warning("Java version (%s) too old, recommend Java Version is \"%s\"", JavaInfo["Version"], recommendJavaVersion)
+            Logger.warning("Java version %s too old, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
         elif recommendJavaVersion < JavaInfo["Version"][0]:
-            Logger.warning("Java version (%s) too new, recommend Java Version is \"%s\"", JavaInfo["Version"], recommendJavaVersion)
+            Logger.warning("Java version %s too new, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
         return((JavaPath,JavaInfo,))
 
