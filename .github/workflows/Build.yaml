@@ -97,7 +97,7 @@ jobs:
           echo ===========================
 
       - name: Build
-        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Tools\Tests\Main.py"
+        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Utils\Tests\Main.py"
 
       - name: Upload Build Artifact to Release
         if: env.UPLOAD_TO_RELEASE == true

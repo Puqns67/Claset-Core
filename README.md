@@ -1,6 +1,6 @@
 # Claset
 
-[![Build By Actions](https://github.com/Puqns67/Claset/actions/workflows/AutoBuild.yaml/badge.svg)](https://github.com/Puqns67/Claset/actions/workflows/AutoBuild.yaml) ![License](https://img.shields.io/github/license/Puqns67/Claset?label=License)
+[![Build By Actions](https://github.com/Puqns67/Claset/actions/workflows/Build.yaml/badge.svg)](https://github.com/Puqns67/Claset/actions/workflows/Build.yaml) ![License](https://img.shields.io/github/license/Puqns67/Claset?label=License)
 
 基于 Python 的 Minecraft 启动管理器, 未完成.
 仅支持 Python 3.10.0 及以上的版本.
