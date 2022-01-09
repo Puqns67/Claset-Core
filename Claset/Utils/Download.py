@@ -24,11 +24,13 @@ Logger = getLogger(__name__)
 
 class DownloadManager():
     """下载管理器"""
+    DownloadsTasks = list()
+    Projects = dict()
+    Adding = False
+    Stopping = False
+
     def __init__(self):
         self.Configs = Configs(ID="Download", TargetVersion=0)
-        self.Projects = dict()
-        self.DownloadsTasks = list()
-        self.Adding = False
 
         # 线程池(ThreadPool)
         self.ThreadPool = ThreadPoolExecutor(max_workers=self.Configs.get(["MaxThread"]), thread_name_prefix="DownloadTask")
@@ -36,8 +38,6 @@ class DownloadManager():
         # 定义全局 Requests Session
         if self.Configs.get(["UseGobalRequestsSession"]) == True:
             self.RequestsSession = self.setSession()
-
-        self.Stopping = False
 
         Logger.debug("urllib3 Version: %s", Urllib3Version)
         Logger.debug("requests Version: %s", RequestsVersion)
@@ -48,7 +48,6 @@ class DownloadManager():
         if TheSession == None: TheSession = Session()
 
         TheSession.headers = self.Configs.get(['Headers'])
-
         TheSession.trust_env = self.Configs.get(["UseSystemProxy"])
 
         Proxies = dict()

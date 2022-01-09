@@ -24,6 +24,7 @@ def Main():
 
     GameLauncher = Claset.Game.Launch.GameLauncher(VersionName="Test")
     GameLauncher.launchGame()
+    Claset.waitALLGames()
 
     Logger.info("Stopped!!!")
     Logger.info("Used time: %s", str(time() - StartTime))

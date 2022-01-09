@@ -1,5 +1,9 @@
-name: AutoBuild/自动编译
+name: Build
+
 on:
+  push:
+    branches: 
+      - master
   workflow_dispatch:
     inputs:
       use_nuitka_develop_version:
@@ -11,23 +15,20 @@ env:
   UPLOAD_TO_RELEASE: false
   UPLOAD_TO_ACTIONS: true
   REMOVE_OLD_RELEASES: false
-  PYTHON_VERSION: "3.10.0"
+  PYTHON_VERSION: "3.10.1"
   RELEASES_NAME_PERFIX: Claset-AutoBuild
+  CACHE_NUITKA_GCC: true
+  CACHE_PYPI: true
+  CACHE_BUILD: false
 
 jobs:
-  Build_MS_Windows:
+  Build_Windows:
     runs-on: windows-latest
     strategy:
       matrix:
         include:
-          - cache_Nuitka_gcc: true
-            cache_PyPi: true
-            cache_Build: false
-            Python_architecture: x64
-          - cache_Nuitka_gcc: true
-            cache_PyPi: true
-            cache_Build: false
-            Python_architecture: x86
+          - Python_architecture: x64
+          - Python_architecture: x86
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -45,7 +46,7 @@ jobs:
           echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.filename }}.exe"
 
       - name: PyPI Cache
-        if: ${{ matrix.cache_PyPi }} == true
+        if: ${{ env.CACHE_PYPI }} == true
         uses: actions/cache@v2
         with:
           path: ~\AppData\Local\pip\Cache
@@ -53,7 +54,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-python-pip-
 
       - name: Nuitka Gcc Cache
-        if: ${{ matrix.cache_Nuitka_gcc }} == true
+        if: ${{ env.CACHE_NUITKA_GCC }} == true
         uses: actions/cache@v2
         with:
           path: ~\AppData\Local\Nuitka\Nuitka
@@ -61,7 +62,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-nuitka-gcc-
 
       - name: Build Cache
-        if: ${{ matrix.cache_Build }} == true
+        if: ${{ env.CACHE_BUILD }} == true
         uses: actions/cache@v2
         with:
           path: |
@@ -96,7 +97,7 @@ jobs:
           echo ===========================
 
       - name: Build
-        run: nuitka --standalone --follow-imports --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Tools\Tests\Main.py"
+        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Tools\Tests\Main.py"
 
       - name: Upload Build Artifact to Release
         if: env.UPLOAD_TO_RELEASE == true
@@ -122,3 +123,4 @@ jobs:
           delete_tags: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

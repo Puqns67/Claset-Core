@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any
+from base64 import b64encode, b64decode
 
 fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
 
@@ -37,4 +38,14 @@ def fixType(Input: str) -> Any:
             except ValueError: pass
     else: Output = Input
     return(Output)
+
+
+def encodeBase64(Input: str) -> str:
+    """返回Base64编码后的字符串"""
+    return(str(b64encode(bytes(Input, encoding="utf8")), encoding="utf8"))
+
+
+def decodeBase64(Input: str) -> str:
+    """返回Base64解码后的字符串"""
+    return(str(b64decode(bytes(Input, encoding="utf8")), encoding="utf8"))
 

@@ -7,10 +7,12 @@
 __author__ = "Puqns67"
 __productname__ = "Claset"
 __version__ = "0.1.0"
+__all__ = ["Accounts", "Utils", "Game", "getLogger"]
+LaunchedGames = list()
 
 from logging import getLogger, Logger, DEBUG
 
-from . import Utils, Game
+from . import Accounts, Utils, Game
 
 GolbalLogger = getLogger(__name__)
 GolbalLogger.setLevel(DEBUG)
@@ -23,7 +25,8 @@ ProcessLogger.processOldLog()
 def getLogger() -> Logger:
     return(GolbalLogger)
 
-__all__ = [
-    "Utils", "Game", "getLogger"
-]
+
+def waitALLGames() -> None:
+    for I in LaunchedGames:
+        I.waitGame()
 

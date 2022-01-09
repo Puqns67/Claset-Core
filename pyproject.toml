@@ -7,11 +7,11 @@ license = "GPLv3"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-requests = "^2.26.0"
+requests = "^2.27.1"
 urllib3 = "^1.26.7"
 
 [tool.poetry.dev-dependencies]
-Nuitka = "^0.6.18"
+Nuitka = "^0.6.19"
 zstandard = "^0.16.0"
 
 [[tool.poetry.source]]

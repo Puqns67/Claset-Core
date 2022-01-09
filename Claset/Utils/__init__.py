@@ -11,14 +11,14 @@ from .AdvancedPath import AdvancedPath
 from .Confs import ConfigIDs, ConfigInfos
 from .Configs import Configs
 from .Download import DownloadManager
-from .User import User
 from .Path import path, pathAdder
-from .Others import getValueFromDict, fixType
+from .Others import getValueFromDict, fixType, encodeBase64, decodeBase64
 
 __all__ = [
-    "Configs", "DownloadManager", "Logs", "User",
+    "Configs", "DownloadManager", "Logs",
     "AdvancedPath", "Exceptions", "Confs", "JavaHelper",
     "Main", "ConfigIDs", "ConfigInfos", "path", "pathAdder",
-    "loadFile", "saveFile", "moveFile", "dfCheck", "getValueFromDict", "fixType"
+    "loadFile", "saveFile", "moveFile", "dfCheck",
+    "getValueFromDict", "fixType", "encodeBase64", "decodeBase64"
 ]
 

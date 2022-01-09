@@ -4,9 +4,9 @@
 from logging import getLogger
 from re import compile as reCompile
 from typing import Any
-from subprocess import run
+from subprocess import Popen
 
-from Claset import __version__, __productname__
+from Claset import __version__, __productname__, LaunchedGames
 from Claset.Utils import Configs, JavaHelper, pathAdder, loadFile, dfCheck, path, getValueFromDict
 
 from ..Utils import ResolveRule, getClassPath, processNatives
@@ -54,7 +54,18 @@ class GameLauncher():
         """启动游戏"""
         processNatives(VersionJson=self.VersionJson, ExtractTo=self.NativesPath, Features=self.Features)
         Logger.debug("Run code: %s", self.RunCode)
-        run(args=[self.JavaPath] + self.RunCode)
+        self.Game = Popen(args=[self.JavaPath] + self.RunCode, cwd=self.VersionDir)
+        LaunchedGames.append(self)
+
+
+    def waitGame(self) -> None:
+        if self.Game:
+            self.Game.wait()
+
+
+    def stopGame(self) -> None:
+        if self.Game:
+            self.Game.terminate()
 
 
     def getRunCode(self) -> dict:
