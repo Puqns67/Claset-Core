@@ -109,7 +109,7 @@ jobs:
 
 
       - name: Upload Build Artifact to Actions
-        if: env.UPLOAD_TO_ACTIONS == true
+        if: ${{ env.UPLOAD_TO_ACTIONS }} == true
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.genReleaseNameAndFileName.outputs.filename }}
