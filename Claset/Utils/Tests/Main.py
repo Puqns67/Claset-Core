@@ -10,11 +10,8 @@ path.append(getcwd())
 
 import Claset
 
-def Main():
-    StartTime = time()
-    Logger = Claset.getLogger()
-    Logger.info("Started!!!")
-    Logger.info("Running In \"%s\"", " ".join(uname()))
+
+def testInstallAndRun():
     Downloader = Claset.Utils.DownloadManager()
 
     try:
@@ -26,8 +23,25 @@ def Main():
     GameLauncher.launchGame()
     Claset.waitALLGames()
 
+
+def testMicrosoftOAuth():
+    Logger = Claset.getLogger()
+    OAuth = Claset.Accounts.Auth.MicrosoftOAuth()
+    OAuth.auth()
+    Logger.info("Microsoft Account Keys: \"%s\", \"%s\"", OAuth.AccessToken, OAuth.RefreshToken)
+
+
+def Main():
+    StartTime = time()
+    Logger = Claset.getLogger()
+    Logger.info("Started!!!")
+    Logger.info("Running In \"%s\"", " ".join(uname()))
+
+    testMicrosoftOAuth()
+
     Logger.info("Stopped!!!")
     Logger.info("Used time: %s", str(time() - StartTime))
+
 
 
 if __name__ == "__main__":

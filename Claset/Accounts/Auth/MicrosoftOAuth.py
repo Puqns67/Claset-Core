@@ -16,45 +16,57 @@ class MicrosoftOAuth():
     MICROSOFT_DEVICE_CODE_URL = f"https://login.microsoftonline.com/{MICROSOFT_TENANT}/oauth2/v2.0/devicecode"
     MICROSOFT_TOKEN_URL = f"https://login.microsoftonline.com/{MICROSOFT_TENANT}/oauth2/v2.0/token"
 
-    def __init__(self):
+    def __init__(self, RefreshToken: str | None = None):
         self.RequestsSession = Session()
         self.RequestsSession.trust_env = False
-        self.RequestsSession.headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        self.RequestsSession.headers = {"Content-Type": "application/x-www-form-urlencoded", "charset": "UTF-8"}
+
+        self.RefreshToken = RefreshToken
 
 
     def auth(self):
-        self.Access_Token, self.RefreshToken = self.getMicrosoftTokens()
+        self.AccessToken, self.RefreshToken = self.getTokens()
 
 
-    def refresh(self, RefreshToken):
-        self.RefreshToken = RefreshToken
-        Params = {
-            "client_id": self.CLASET_CLIENT_ID,
-            "scope": self.CLASET_SCOPE
-        }
-        RefreshRequestReturned: dict = self.RequestsSession.get(url=self.MICROSOFT_TOKEN_URL, params=Params).json()
+    def refresh(self):
+        if self.RefreshToken == None: raise ValueError
+        self.AccessToken, self.RefreshToken = self.refreshAccessTokens()
 
 
-    def getMicrosoftTokens(self) -> tuple[str]:
+    def getTokens(self) -> tuple[str, str]:
         ParamsOne = {"client_id": self.CLASET_CLIENT_ID, "scope": self.CLASET_SCOPE}
-        NewRequestReturned: dict = self.RequestsSession.get(url=self.MICROSOFT_DEVICE_CODE_URL, params=ParamsOne).json()
+        NewRequestReturned: dict = self.RequestsSession.post(url=self.MICROSOFT_DEVICE_CODE_URL, data=ParamsOne).json()
         Logger.info(NewRequestReturned["message"])
 
         ParamsTwo = {
             "client_id": self.CLASET_CLIENT_ID,
             "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
-            "code": NewRequestReturned["device_code"]
+            "device_code": NewRequestReturned["device_code"]
         }
 
         while True:
             sleep(NewRequestReturned["interval"])
-            CheckRequestReturned = self.RequestsSession.post(url=self.MICROSOFT_TOKEN_URL, params=ParamsTwo)
-            match CheckRequestReturned.json().get("error"):
+            CheckRequestReturned = self.RequestsSession.post(url=self.MICROSOFT_TOKEN_URL, data=ParamsTwo).json()
+            match CheckRequestReturned.get("error"):
                 case "authorization_pending": continue
                 case "authorization_declined": raise MicrosoftOAuthDeclined
                 case "expired_token": raise MicrosoftOAuthTimeOut
                 case None: break
-                case _: raise ValueError(CheckRequestReturned.json().get("error"), CheckRequestReturned.json().get("error_description"))
+                case _: raise ValueError(CheckRequestReturned.get("error"), CheckRequestReturned.get("error_description"))
 
         return((CheckRequestReturned["access_token"], CheckRequestReturned["refresh_token"],))
+
+
+    def refreshAccessTokens(self, RefreshToken: str | None = None) -> tuple[str, str]:
+        if RefreshToken != None: self.RefreshToken = RefreshToken
+
+        Params = {
+            "client_id": self.CLASET_CLIENT_ID,
+            "grant_type": "refresh_token",
+            "refresh_token": self.RefreshToken
+        }
+
+        RefreshRequestReturned: dict = self.RequestsSession.post(url=self.MICROSOFT_TOKEN_URL, data=Params).json()
+        if RefreshToken != None: self.AccessToken = RefreshRequestReturned["access_token"]
+        return((RefreshRequestReturned["access_token"], RefreshRequestReturned["refresh_token"],))
 

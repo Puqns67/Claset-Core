@@ -12,9 +12,7 @@ on:
         default: 'false'
 
 env:
-  UPLOAD_TO_RELEASE: false
   UPLOAD_TO_ACTIONS: true
-  REMOVE_OLD_RELEASES: false
   PYTHON_VERSION: "3.10.1"
   RELEASES_NAME_PERFIX: Claset-AutoBuild
   CACHE_NUITKA_GCC: true
@@ -33,17 +31,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+
       - name: Generate Times
         id: genReleaseTimes
         run: |
           echo "::set-output name=tag::$(date +'%Y/%m/%d_%H/%M/%S')"
           echo "::set-output name=filename::$(date +'%Y-%m-%d_%H-%M-%S')"
 
+
       - name: Generate release name
         id: genReleaseNameAndFileName
         run: |
           echo "::set-output name=tag::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.tag }}"
           echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.filename }}.exe"
+
 
       - name: PyPI Cache
         if: ${{ env.CACHE_PYPI }} == true
@@ -53,6 +54,7 @@ jobs:
           key: ${{ runner.os }}-cache-python-pip-${{ hashFiles('**/requirements_build.txt') }}
           restore-keys: ${{ runner.os }}-cache-python-pip-
 
+
       - name: Nuitka Gcc Cache
         if: ${{ env.CACHE_NUITKA_GCC }} == true
         uses: actions/cache@v2
@@ -60,6 +62,7 @@ jobs:
           path: ~\AppData\Local\Nuitka\Nuitka
           key: ${{ runner.os }}-cache-nuitka-gcc
           restore-keys: ${{ runner.os }}-cache-nuitka-gcc-
+
 
       - name: Build Cache
         if: ${{ env.CACHE_BUILD }} == true
@@ -72,20 +75,24 @@ jobs:
           key: ${{ runner.os }}-cache-nuitka-build-${{ steps.genReleaseNameAndFileName.outputs.tag }}
           restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
+
       - name: Setting Python Environment
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           architecture: ${{ matrix.Python_architecture }}
 
+
       - name: Setting PyPI Environment
         run: |
           pip install --upgrade pip setuptools wheel
           pip install -r requirements_build.txt
 
+
       - name: Using Develop Version Nuitka
         if: github.event.inputs.use_nuitka_develop_version  == 'true'
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
+
 
       - name: Show Environment
         run: |
@@ -96,16 +103,10 @@ jobs:
           pip list --outdate
           echo ===========================
 
+
       - name: Build
         run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Utils\Tests\Main.py"
 
-      - name: Upload Build Artifact to Release
-        if: env.UPLOAD_TO_RELEASE == true
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.genReleaseTimes.outputs.tag }}
-          name: ${{ steps.genReleaseNameAndFileName.outputs.tag }}
-          files: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
 
       - name: Upload Build Artifact to Actions
         if: env.UPLOAD_TO_ACTIONS == true
@@ -114,13 +115,4 @@ jobs:
           name: ${{ steps.genReleaseNameAndFileName.outputs.filename }}
           path: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
           retention-days: 30
-
-      - name: Remove old Releases
-        if: env.REMOVE_OLD_RELEASES == true
-        uses: dev-drprasad/delete-older-releases@v0.2.0
-        with:
-          keep_latest: 3
-          delete_tags: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

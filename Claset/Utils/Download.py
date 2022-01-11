@@ -30,13 +30,13 @@ class DownloadManager():
     Stopping = False
 
     def __init__(self):
-        self.Configs = Configs(ID="Download", TargetVersion=0)
+        self.Configs = Configs(ID="Download")
 
         # 线程池(ThreadPool)
-        self.ThreadPool = ThreadPoolExecutor(max_workers=self.Configs.get(["MaxThread"]), thread_name_prefix="DownloadTask")
+        self.ThreadPool = ThreadPoolExecutor(max_workers=self.Configs["MaxThread"], thread_name_prefix="DownloadTask")
 
         # 定义全局 Requests Session
-        if self.Configs.get(["UseGobalRequestsSession"]) == True:
+        if self.Configs["UseGobalRequestsSession"] == True:
             self.RequestsSession = self.setSession()
 
         Logger.debug("urllib3 Version: %s", Urllib3Version)
@@ -47,12 +47,12 @@ class DownloadManager():
         """设置/获取 Session"""
         if TheSession == None: TheSession = Session()
 
-        TheSession.headers = self.Configs.get(['Headers'])
-        TheSession.trust_env = self.Configs.get(["UseSystemProxy"])
+        TheSession.headers = self.Configs['Headers']
+        TheSession.trust_env = self.Configs["UseSystemProxy"]
 
         Proxies = dict()
-        if self.Configs.get(["Proxies", "http"]) != None: Proxies["http"] = self.Configs.get(["Proxies", "http"])
-        if self.Configs.get(["Proxies", "https"]) != None: Proxies["https"] = self.Configs.get(["Proxies", "https"])
+        if self.Configs["Proxies"]["http"] != None: Proxies["http"] = self.Configs["Proxies"]["http"]
+        if self.Configs["Proxies"]["https"] != None: Proxies["https"] = self.Configs["Proxies"]["https"]
         if Proxies != dict(): TheSession.proxies = Proxies
         return(TheSession)
 
@@ -65,9 +65,9 @@ class DownloadManager():
         if not "ProjectID"      in Task: Task["ProjectID"]      = None
         if not "Overwrite"      in Task: Task["Overwrite"]      = True
         if not "Sha1"           in Task: Task["Sha1"]           = None
-        if not "ConnectTimeout" in Task: Task["ConnectTimeout"] = self.Configs.get(["Timeouts", "Connect"])
-        if not "ReadTimeout"    in Task: Task["ReadTimeout"]    = self.Configs.get(["Timeouts", "Read"])
-        if not "Retry"          in Task: Task["Retry"]          = self.Configs.get(["Retry"])
+        if not "ConnectTimeout" in Task: Task["ConnectTimeout"] = self.Configs["Timeouts"]["Connect"]
+        if not "ReadTimeout"    in Task: Task["ReadTimeout"]    = self.Configs["Timeouts"]["Read"]
+        if not "Retry"          in Task: Task["Retry"]          = self.Configs["Retry"]
         if not "Next"           in Task: Task["Next"]           = None
 
         if ((not "OutputPaths" in Task) or (Task["OutputPaths"] == None)):
@@ -185,7 +185,7 @@ class DownloadManager():
         if ((Overwrite == False) and (Sha1 != None) and (dfCheck(Path=OutputPaths, Type="f") == True) and (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1)):
             raise Ex_Download.FileExist
 
-        if self.Configs.get(["UseGobalRequestsSession"]) == True:
+        if self.Configs["UseGobalRequestsSession"] == True:
             UsedSession = self.RequestsSession
         else:
             UsedSession = self.setSession()
@@ -317,7 +317,7 @@ class DownloadManager():
         ErrorTasksCount = int()
         for ProjectID in ProjectIDs:
             while ((self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) != self.Projects[ProjectID]["AllTasksCount"]):
-                sleep(self.Configs.get(["SleepTime"]))
+                sleep(self.Configs["SleepTime"])
             ErrorTasksCount += self.Projects[ProjectID]["ErrorTasksCount"]
         if (len(ProjectIDs) > 1):
             Logger.debug("Joined Projects %s completed by %s Errors", ProjectIDs, ErrorTasksCount)

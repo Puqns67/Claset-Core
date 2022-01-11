@@ -5,7 +5,8 @@ LastVersion = 1
 
 
 File = {
-    "Users": list()
+    "Accounts": list(),
+    "DefaultAccount": None
 }
 
 

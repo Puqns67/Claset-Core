@@ -21,7 +21,7 @@ class Configs():
     reIFStrList = reCompile(r"^\[.*\]")
 
     def __init__(self, ID: str, TargetVersion: int = 0, FilePath: str | None = None, ProcessList: list = list()) -> None:
-        if ID not in ConfigIDs.keys(): raise Ex_Configs.ConfigUnregistered(ID)
+        if ID not in ConfigIDs: raise Ex_Configs.ConfigUnregistered(ID)
         self.ID = ID
         if TargetVersion == 0:
             self.TargetVersion = ConfigInfos["Version"][ID]
@@ -30,10 +30,10 @@ class Configs():
 
         # 如果指定了文件位置, 类型将判断为非全局
         if FilePath == None:
-            if ConfigIDs[ID] == "$NONGLOBAL$":
+            if ConfigInfos["Path"][ID] == "$NONGLOBAL$":
                 raise Ex_Configs.ConfigNonGlobalMissingFilePath
             else:
-                self.FilePath = "$CONFIG/" + ConfigIDs[ID]
+                self.FilePath = "$CONFIG/" + ConfigInfos["Path"][ID]
         else: self.FilePath = FilePath
 
         self.TheConfig = self.getConfig()

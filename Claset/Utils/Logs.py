@@ -16,15 +16,15 @@ class Logs():
     """日志相关的处理方案"""
     def __init__(self, TheLogger: logging.Logger):
         self.Configs = Configs(ID="Logs", TargetVersion=0)
-        self.LogPath = Pathmd(self.Configs.get(["FilePath"]), IsPath=True)
+        self.LogPath = Pathmd(self.Configs["FilePath"], IsPath=True)
         self.TheLogger = TheLogger
-        self.Formatter = logging.Formatter(fmt=self.Configs.get(["LogFormats", "Format"]), datefmt=self.Configs.get(["LogFormats", "Date"]))
+        self.Formatter = logging.Formatter(fmt=self.Configs["LogFormats"]["Format"], datefmt=self.Configs["LogFormats"]["Date"])
 
 
     def SettingHandler(self):
         """设置 Handler"""
-        if self.Configs.get(["Handlers", "Stream"]) == True: self.SettingStreamHandler()
-        if self.Configs.get(["Handlers", "File"])   == True: self.SettingFileHandler()
+        if self.Configs["Handlers"]["Stream"] == True: self.SettingStreamHandler()
+        if self.Configs["Handlers"]["File"]   == True: self.SettingFileHandler()
 
 
     def SettingStreamHandler(self):
@@ -52,7 +52,7 @@ class Logs():
 
     def SettingLevel(self, LevelName: str | None = None):
         """设置日志级别, 若为空则使用默认配置"""
-        if LevelName == None: LevelName = self.Configs.get(["LoggingLevel"])
+        if LevelName == None: LevelName = self.Configs["LoggingLevel"]
         Level: int = logging.getLevelName(LevelName.upper())
         self.TheLogger.info("Setting logging level to: %s", logging.getLevelName(Level))
         self.TheLogger.setLevel(Level)
@@ -84,9 +84,9 @@ class Logs():
         del(Temp)
 
         # 直接删除
-        match self.Configs.get(["ProcessOldLog", "Type"]):
+        match self.Configs["ProcessOldLog"]["Type"]:
             case "Delete":
-                TypeConfigs = self.Configs.get(["ProcessOldLog", "TypeSettings", "Delete"])
+                TypeConfigs = self.Configs["ProcessOldLog"]["TypeSettings"]["Delete"]
                 # 若不满足情况则直接返回
                 if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): return(None)
                 for FileName in LogFileList:
@@ -97,7 +97,7 @@ class Logs():
 
             # 进行存档
             case "Archive":
-                TypeConfigs = self.Configs.get(["ProcessOldLog", "TypeSettings", "Archive"])
+                TypeConfigs = self.Configs["ProcessOldLog"]["TypeSettings"]["Archive"]
 
                 # 若不满足情况则直接返回
                 if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): return(None)
@@ -126,5 +126,5 @@ class Logs():
                     self.TheLogger.error("Make archive error")
                 rmtree(path=TempDir)
 
-            case _: self.TheLogger.warning("Unsupport Type: %s", self.Configs.get(["ProcessOldLog", "Type"]))
+            case _: self.TheLogger.warning("Unsupport Type: %s", self.Configs["ProcessOldLog"]["Type"])
 

@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 """默认配置相关的内容, 包含最新的版本的版本号与文件, 和老版本之间的差异"""
 
-from . import Download, Game, Logs, Mirrors, Paths, Settings, User
+from . import Accounts, Download, Game, Logs, Mirrors, Paths, Settings
 
-ConfigIDs = {
-    "Paths": "Paths.json",
-    "Download": "Download.json",
-    "Mirrors": "Mirrors.json",
-    "Settings": "Settings.json",
-    "Logs": "Logs.json",
-    "Game": "$NONGLOBAL$",
-    "Users": "Users.json"
-}
+ConfigIDs = [
+    "Download", "Paths", "Mirrors", "Settings", "Logs", "Game", "Accounts"
+]
 
 ConfigInfos = {
     "Version": {
@@ -21,7 +15,7 @@ ConfigInfos = {
         "Settings": Settings.LastVersion,
         "Logs": Logs.LastVersion,
         "Game": Game.LastVersion,
-        "Users": User.LastVersion
+        "Accounts": Accounts.LastVersion
     },
     "File": {
         "Download": Download.File,
@@ -30,8 +24,8 @@ ConfigInfos = {
         "Settings": Settings.File,
         "Logs": Logs.File,
         "Game": Game.File,
-        "Users": User.File
-    },
+        "Accounts": Accounts.File
+    }, 
     "Difference": {
         "Download": Download.Difference,
         "Paths": Paths.Difference,
@@ -39,11 +33,29 @@ ConfigInfos = {
         "Settings": Settings.Difference,
         "Logs": Logs.Difference,
         "Game": Game.Difference,
-        "Users": User.Difference
+        "Accounts": Accounts.Difference
+    },
+    "Path": {
+        "Download": "Download.json",
+        "Paths": "Paths.json",
+        "Mirrors": "Mirrors.json",
+        "Settings": "Settings.json",
+        "Logs": "Logs.json",
+        "Game": "$NONGLOBAL$",
+        "Accounts": "Accounts.json"
     }
 }
 
+
+def changeConfObject(Name: str, Version: int, File: dict, Difference: dict, Path: str) -> None:
+    if Name not in ConfigIDs: ConfigIDs.append(Name)
+    ConfigInfos["Version"][Name] = Version
+    ConfigInfos["File"][Name] = File
+    ConfigInfos["Difference"][Name] = Difference
+    ConfigInfos["Path"][Name] = Path
+
+
 __all__ = [
-    "ConfigIDs", "ConfigInfos"
+    "ConfigIDs", "ConfigInfos", "changeConfigObject"
 ]
 
