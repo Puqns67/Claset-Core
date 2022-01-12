@@ -14,6 +14,7 @@ on:
 env:
   UPLOAD_TO_ACTIONS: ${{ true }}
   PYTHON_VERSION: ${{ '3.10.1' }}
+  PYTHON_ARCHITECTURE: ${{ 'x64' }}
   RELEASES_NAME_PERFIX: ${{ 'Claset-AutoBuild' }}
   CACHE_NUITKA_GCC: ${{ true }}
   CACHE_PYPI: ${{ true }}
@@ -23,11 +24,6 @@ env:
 jobs:
   Build_Windows:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        include:
-          - Python_architecture: ${{ 'x64' }}
-          - Python_architecture: ${{ 'x86' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -80,7 +76,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          architecture: ${{ matrix.Python_architecture }}
+          architecture: ${{ env.PYTHON_ARCHITECTURE }}
 
 
       - name: Setting PyPI Environment
@@ -123,11 +119,6 @@ jobs:
 
   Build_Ubuntu:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - Python_architecture: ${{ 'x64' }}
-          - Python_architecture: ${{ 'x86' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -171,7 +162,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          architecture: ${{ matrix.Python_architecture }}
+          architecture: ${{ env.PYTHON_ARCHITECTURE }}
 
 
       - name: Setting PyPI Environment
