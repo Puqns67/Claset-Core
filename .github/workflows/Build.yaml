@@ -9,7 +9,7 @@ on:
       use_nuitka_develop_version:
         description: 'use Nuitka develop version / 使用Nuitka 开发版编译.'
         required: true
-        default: ${{ false }}
+        default: 'false'
 
 env:
   UPLOAD_TO_ACTIONS: ${{ true }}
