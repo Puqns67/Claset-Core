@@ -39,7 +39,7 @@ jobs:
       - name: Generate release name
         id: genFileName
         run: |
-          echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ runner.os }}-${{ matrix.Python_architecture }}-${{ steps.genReleaseTimes.outputs.filename }}.exe"
+          echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ runner.os }}-${{ env.PYTHON_ARCHITECTURE }}-${{ steps.genReleaseTimes.outputs.filename }}.exe"
 
 
       - name: PyPI Cache
@@ -134,7 +134,7 @@ jobs:
       - name: Generate release name
         id: genFileName
         run: |
-          echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ runner.os }}-${{ matrix.Python_architecture }}-${{ steps.genReleaseTimes.outputs.filename }}"
+          echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ runner.os }}-${{ env.PYTHON_ARCHITECTURE }}-${{ steps.genReleaseTimes.outputs.filename }}"
 
 
       - name: PyPI Cache
@@ -151,9 +151,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ${{ github.workspace }}\Claset_Test.build
-            ${{ github.workspace }}\Claset_Test.dist
-            ${{ github.workspace }}\Claset_Test.onefile-build
+            ${{ github.workspace }}/Claset_Test.build
+            ${{ github.workspace }}/Claset_Test.dist
+            ${{ github.workspace }}/Claset_Test.onefile-build
           key: ${{ runner.os }}-cache-nuitka-build-${{ steps.genFileName.outputs.tag }}
           restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
@@ -191,7 +191,7 @@ jobs:
 
 
       - name: Build
-        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Utils\Tests\Main.py"
+        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}/${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}/Claset/Utils/Tests/Main.py"
 
 
       - name: Upload Build Artifact to Actions
@@ -199,6 +199,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.genFileName.outputs.filename }}
-          path: ${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}
+          path: ${{ github.workspace }}/${{ steps.genFileName.outputs.filename }}
           retention-days: ${{ env.RETENTION_DAYS }}
 
