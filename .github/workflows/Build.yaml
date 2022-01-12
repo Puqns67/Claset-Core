@@ -9,15 +9,16 @@ on:
       use_nuitka_develop_version:
         description: 'use Nuitka develop version / 使用Nuitka 开发版编译.'
         required: true
-        default: 'false'
+        default: ${{ false }}
 
 env:
-  UPLOAD_TO_ACTIONS: true
-  PYTHON_VERSION: "3.10.1"
-  RELEASES_NAME_PERFIX: Claset-AutoBuild
-  CACHE_NUITKA_GCC: true
-  CACHE_PYPI: true
-  CACHE_BUILD: false
+  UPLOAD_TO_ACTIONS: ${{ true }}
+  PYTHON_VERSION: ${{ '3.10.1' }}
+  RELEASES_NAME_PERFIX: ${{ 'Claset-AutoBuild' }}
+  CACHE_NUITKA_GCC: ${{ true }}
+  CACHE_PYPI: ${{ true }}
+  CACHE_BUILD: ${{ false }}
+  RETENTION_DAYS: ${{ 16 }}
 
 jobs:
   Build_Windows:
@@ -25,8 +26,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - Python_architecture: x64
-          - Python_architecture: x86
+          - Python_architecture: ${{ 'x64' }}
+          - Python_architecture: ${{ 'x86' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -40,14 +41,13 @@ jobs:
 
 
       - name: Generate release name
-        id: genReleaseNameAndFileName
+        id: genFileName
         run: |
-          echo "::set-output name=tag::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.tag }}"
-          echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ steps.genReleaseTimes.outputs.filename }}.exe"
+          echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ runner.os }}-${{ matrix.Python_architecture }}-${{ steps.genReleaseTimes.outputs.filename }}.exe"
 
 
       - name: PyPI Cache
-        if: ${{ env.CACHE_PYPI }} == true
+        if: ${{ env.CACHE_PYPI }}
         uses: actions/cache@v2
         with:
           path: ~\AppData\Local\pip\Cache
@@ -55,24 +55,24 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-python-pip-
 
 
-      - name: Nuitka Gcc Cache
-        if: ${{ env.CACHE_NUITKA_GCC }} == true
+      - name: Nuitka Cache
+        if: ${{ env.CACHE_NUITKA_GCC }}
         uses: actions/cache@v2
         with:
           path: ~\AppData\Local\Nuitka\Nuitka
-          key: ${{ runner.os }}-cache-nuitka-gcc
-          restore-keys: ${{ runner.os }}-cache-nuitka-gcc-
+          key: ${{ runner.os }}-cache-nuitka
+          restore-keys: ${{ runner.os }}-cache-nuitka
 
 
       - name: Build Cache
-        if: ${{ env.CACHE_BUILD }} == true
+        if: ${{ env.CACHE_BUILD }}
         uses: actions/cache@v2
         with:
           path: |
             ${{ github.workspace }}\Claset_Test.build
             ${{ github.workspace }}\Claset_Test.dist
             ${{ github.workspace }}\Claset_Test.onefile-build
-          key: ${{ runner.os }}-cache-nuitka-build-${{ steps.genReleaseNameAndFileName.outputs.tag }}
+          key: ${{ runner.os }}-cache-nuitka-build-${{ steps.genFileName.outputs.tag }}
           restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
 
@@ -97,22 +97,117 @@ jobs:
       - name: Show Environment
         run: |
           python -c "from sys import version; print('Python', version)"
-          echo "PyPI packages list - All" ===========================
+          echo "PyPI packages list - All"
+          echo "==========================="
           pip list
-          echo =========================== "" "PyPI packages list - Outdate" ===========================
+          echo "==========================="
+          echo ""
+          echo "PyPI packages list - Outdate"
+          echo "==========================="
           pip list --outdate
-          echo ===========================
+          echo "==========================="
 
 
       - name: Build
-        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Utils\Tests\Main.py"
+        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Utils\Tests\Main.py"
 
 
       - name: Upload Build Artifact to Actions
-        if: ${{ env.UPLOAD_TO_ACTIONS }} == true
+        if: ${{ env.UPLOAD_TO_ACTIONS }}
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ steps.genReleaseNameAndFileName.outputs.filename }}
-          path: ${{ github.workspace }}\${{ steps.genReleaseNameAndFileName.outputs.filename }}
-          retention-days: 30
+          name: ${{ steps.genFileName.outputs.filename }}
+          path: ${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}
+          retention-days: ${{ env.RETENTION_DAYS }}
+
+
+  Build_Ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - Python_architecture: ${{ 'x64' }}
+          - Python_architecture: ${{ 'x86' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+
+      - name: Generate Times
+        id: genReleaseTimes
+        run: |
+          echo "::set-output name=tag::$(date +'%Y/%m/%d_%H/%M/%S')"
+          echo "::set-output name=filename::$(date +'%Y-%m-%d_%H-%M-%S')"
+
+
+      - name: Generate release name
+        id: genFileName
+        run: |
+          echo "::set-output name=filename::${{ env.RELEASES_NAME_PERFIX }}-${{ runner.os }}-${{ matrix.Python_architecture }}-${{ steps.genReleaseTimes.outputs.filename }}"
+
+
+      - name: PyPI Cache
+        if: ${{ env.CACHE_PYPI }}
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-cache-python-pip-${{ hashFiles('**/requirements_build.txt') }}
+          restore-keys: ${{ runner.os }}-cache-python-pip-
+
+
+      - name: Build Cache
+        if: ${{ env.CACHE_BUILD }}
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ github.workspace }}\Claset_Test.build
+            ${{ github.workspace }}\Claset_Test.dist
+            ${{ github.workspace }}\Claset_Test.onefile-build
+          key: ${{ runner.os }}-cache-nuitka-build-${{ steps.genFileName.outputs.tag }}
+          restore-keys: ${{ runner.os }}-cache-nuitka-build-
+
+
+      - name: Setting Python Environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: ${{ matrix.Python_architecture }}
+
+
+      - name: Setting PyPI Environment
+        run: |
+          pip install --upgrade pip setuptools wheel
+          pip install -r requirements_build.txt
+
+
+      - name: Using Develop Version Nuitka
+        if: github.event.inputs.use_nuitka_develop_version  == 'true'
+        run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
+
+
+      - name: Show Environment
+        run: |
+          python -c "from sys import version; print('Python', version)"
+          echo "PyPI packages list - All"
+          echo "==========================="
+          pip list
+          echo "==========================="
+          echo ""
+          echo "PyPI packages list - Outdate"
+          echo "==========================="
+          pip list --outdate
+          echo "==========================="
+
+
+      - name: Build
+        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Utils\Tests\Main.py"
+
+
+      - name: Upload Build Artifact to Actions
+        if: ${{ env.UPLOAD_TO_ACTIONS }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.genFileName.outputs.filename }}
+          path: ${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}
+          retention-days: ${{ env.RETENTION_DAYS }}
 

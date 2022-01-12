@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from logging import getLogger
-from requests import Session
 from time import sleep
+
+from requests import Session
 
 from .Exceptions import MicrosoftOAuthDeclined, MicrosoftOAuthTimeOut
 
