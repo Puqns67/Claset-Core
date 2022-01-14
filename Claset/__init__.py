@@ -7,12 +7,13 @@
 __author__ = "Puqns67"
 __productname__ = "Claset"
 __version__ = "0.1.0"
-__all__ = ["Accounts", "Utils", "Game", "getLogger"]
+__all__ = ["Accounts", "Execution", "Utils", "Game", "getLogger"]
+
 LaunchedGames = list()
 
 from logging import getLogger, Logger, DEBUG
 
-from . import Accounts, Utils, Game
+from . import Accounts, Execution, Utils, Game
 
 GolbalLogger = getLogger(__name__)
 GolbalLogger.setLevel(DEBUG)

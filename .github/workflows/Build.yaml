@@ -15,11 +15,12 @@ env:
   UPLOAD_TO_ACTIONS: ${{ true }}
   PYTHON_VERSION: ${{ '3.10.1' }}
   PYTHON_ARCHITECTURE: ${{ 'x64' }}
-  RELEASES_NAME_PERFIX: ${{ 'Claset-AutoBuild' }}
+  RELEASES_NAME_PERFIX: ${{ 'Claset-Build' }}
   CACHE_NUITKA_GCC: ${{ true }}
   CACHE_PYPI: ${{ true }}
   CACHE_BUILD: ${{ false }}
   RETENTION_DAYS: ${{ 16 }}
+  DEFAULT_MODULE_NAME: ${{ 'Tests' }}
 
 jobs:
   Build_Windows:
@@ -80,6 +81,7 @@ jobs:
 
 
       - name: Setting PyPI Environment
+        shell: pwsh
         run: |
           pip install --upgrade pip setuptools wheel
           pip install -r requirements_build.txt
@@ -87,25 +89,33 @@ jobs:
 
       - name: Using Develop Version Nuitka
         if: github.event.inputs.use_nuitka_develop_version  == 'true'
+        shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
 
 
+      - name: Copy start file
+        shell: pwsh
+        run: Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\Run.py ${{ github.workspace }}\
+
+
       - name: Show Environment
+        shell: pwsh
         run: |
           python -c "from sys import version; print('Python', version)"
-          echo "PyPI packages list - All"
-          echo "==========================="
+          Write-Output "PyPI packages list - All"
+          Write-Output "==========================="
           pip list
-          echo "==========================="
-          echo ""
-          echo "PyPI packages list - Outdate"
-          echo "==========================="
+          Write-Output "==========================="
+          Write-Output ""
+          Write-Output "PyPI packages list - Outdate"
+          Write-Output "==========================="
           pip list --outdate
-          echo "==========================="
+          Write-Output "==========================="
 
 
       - name: Build
-        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}\Claset\Utils\Tests\Main.py"
+        shell: pwsh
+        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}\Run.py"
 
 
       - name: Upload Build Artifact to Actions
@@ -115,6 +125,7 @@ jobs:
           name: ${{ steps.genFileName.outputs.filename }}
           path: ${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}
           retention-days: ${{ env.RETENTION_DAYS }}
+
 
 
   Build_Ubuntu:
@@ -166,6 +177,7 @@ jobs:
 
 
       - name: Setting PyPI Environment
+        shell: pwsh
         run: |
           pip install --upgrade pip setuptools wheel
           pip install -r requirements_build.txt
@@ -173,25 +185,33 @@ jobs:
 
       - name: Using Develop Version Nuitka
         if: github.event.inputs.use_nuitka_develop_version  == 'true'
+        shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
 
 
+      - name: Copy start file
+        shell: pwsh
+        run: Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/Run.py ${{ github.workspace }}/
+
+
       - name: Show Environment
+        shell: pwsh
         run: |
           python -c "from sys import version; print('Python', version)"
-          echo "PyPI packages list - All"
-          echo "==========================="
+          Write-Output "PyPI packages list - All"
+          Write-Output "==========================="
           pip list
-          echo "==========================="
-          echo ""
-          echo "PyPI packages list - Outdate"
-          echo "==========================="
+          Write-Output "==========================="
+          Write-Output ""
+          Write-Output "PyPI packages list - Outdate"
+          Write-Output "==========================="
           pip list --outdate
-          echo "==========================="
+          Write-Output "==========================="
 
 
       - name: Build
-        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}/${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}/Claset/Utils/Tests/Main.py"
+        shell: pwsh
+        run: python -m nuitka --standalone --onefile --assume-yes-for-downloads -o "${{ github.workspace }}/${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}/Run.py"
 
 
       - name: Upload Build Artifact to Actions

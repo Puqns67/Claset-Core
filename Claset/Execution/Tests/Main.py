@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 """测试"""
 
-from sys import path
-from os import getcwd
 from time import time
 from platform import uname
-
-path.append(getcwd())
 
 import Claset
 
@@ -18,10 +14,15 @@ def testInstallAndRun():
         Claset.Game.Install.GameInstaller(Downloader=Downloader, VersionName="Test", MinecraftVersion="1.18.1")
     except KeyboardInterrupt:
         Downloader.stop()
+        exit()
 
     GameLauncher = Claset.Game.Launch.GameLauncher(VersionName="Test")
     GameLauncher.launchGame()
-    Claset.waitALLGames()
+    try:
+        GameLauncher.waitGame()
+    except KeyboardInterrupt:
+        GameLauncher.stopGame()
+        exit()
 
 
 def testMicrosoftOAuth():
@@ -37,13 +38,8 @@ def Main():
     Logger.info("Started!!!")
     Logger.info("Running In \"%s\"", " ".join(uname()))
 
-    testMicrosoftOAuth()
+    testInstallAndRun()
 
     Logger.info("Stopped!!!")
     Logger.info("Used time: %s", str(time() - StartTime))
-
-
-
-if __name__ == "__main__":
-    Main()
 

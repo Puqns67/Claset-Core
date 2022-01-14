@@ -5,20 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Claset",
+            "name": "Debug Tests",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/Claset/Utils/Tests/Main.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/Claset/Execution/Tests/RunVSCDebug.py",
+            "console": "integratedTerminal"
         },
         {
-            "name": "Python: Poetry 虚拟环境",
+            "name": "Debug CommandLine",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/Claset/Execution/CommandLine/RunVSCDebug.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug Poetry Tests:",
             "type": "python",
             "request": "launch",
             "module": "poetry",
             "cwd": "${workspaceFolder}",
-            "args": ["run", "python", "${workspaceFolder}/Claset/Utils/Tests/Main.py"],
+            "args": ["run", "python", "${workspaceFolder}/Claset/Execution/Tests/RunVSCDebug.py"],
             "console": "integratedTerminal"
         }
     ]

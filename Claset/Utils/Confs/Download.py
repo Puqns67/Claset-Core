@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 4
+LastVersion = 5
 
 
 File = {
@@ -10,21 +10,26 @@ File = {
     "Retry": 5,
     "UseGobalRequestsSession": True,
     "UseSystemProxy": True,
+    "ProxyLink": None,
+    "ErrorByStatusCode": True,
+    "SSLVerify": True,
     "Headers": {
         "user-agent": "Claset/0.2.1"
     },
     "Timeouts": {
         "Connect": 5,
         "Read": 30
-    },
-    "Proxies": {
-        "http": None,
-        "https": None
     }
 }
 
 
 Difference = {
+    "4->5": [
+        "DELETE:Proxies",
+        "REPLACE:ProxyLink->Null",
+        "REPLACE:ErrorByStatusCode->True",
+        "REPLACE:SSLVerify->True"
+    ],
     "3->4": [
         "REPLACE:[Headers, user-agent]->Claset/0.2.1"
     ],

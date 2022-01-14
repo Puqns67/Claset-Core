@@ -7,13 +7,12 @@ from Claset.Utils import (
     DownloadManager, Configs, AdvancedPath,
     loadFile, saveFile, dfCheck, moveFile, pathAdder
 )
-
-from ..Utils import (
+from Claset.Game.Utils import (
     getVersionManifestURL,
     Version_Client_DownloadList, AssetIndex_DownloadList,
     VersionManifest_To_Version, Version_To_AssetIndex
 )
-from ..Utils.Exceptions import TargetVersionNotFound
+from Claset.Game.Utils.Exceptions import TargetVersionNotFound
 
 from .Exceptions import UnknownVersion, DownloadError
 

@@ -24,12 +24,12 @@ class SizeError(DownloadExceptions):
 class SchemaError(DownloadExceptions):
     """格式错误"""
 
-class MissingURL(DownloadExceptions):
-    """缺少链接"""
-
 class Stopping(DownloadExceptions):
     """停止 Flag 已经立起"""
 
 class UnpackOutputPathsError(DownloadExceptions):
     """解完整 OutputPaths 时出现的错误"""
+
+class DownloadStatusCodeError(DownloadExceptions):
+    """Http 状态码为错误值 4xx, 5xx"""
 

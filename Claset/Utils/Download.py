@@ -11,7 +11,7 @@ from time import sleep
 from os.path import split as splitPath, basename as baseName
 
 from urllib3 import __version__ as Urllib3Version
-from requests import Session, exceptions as Ex_Requests, __version__ as RequestsVersion
+from requests import Session, exceptions as Ex_Requests, packages as requestsPackages, __version__ as RequestsVersion
 
 from .Path import path as Pathmd, pathAdder
 from .File import saveFile, loadFile, dfCheck
@@ -47,13 +47,22 @@ class DownloadManager():
         """设置/获取 Session"""
         if TheSession == None: TheSession = Session()
 
+        TheSession.stream = True
         TheSession.headers = self.Configs['Headers']
         TheSession.trust_env = self.Configs["UseSystemProxy"]
+        TheSession.verify = self.Configs["SSLVerify"]
 
-        Proxies = dict()
-        if self.Configs["Proxies"]["http"] != None: Proxies["http"] = self.Configs["Proxies"]["http"]
-        if self.Configs["Proxies"]["https"] != None: Proxies["https"] = self.Configs["Proxies"]["https"]
-        if Proxies != dict(): TheSession.proxies = Proxies
+        if self.Configs["SSLVerify"] == False:
+            requestsPackages.urllib3.disable_warnings()
+
+        if self.Configs["ProxyLink"] != None:
+            TheSession.proxies = {"http": self.Configs["ProxyLink"], "https": self.Configs["ProxyLink"]}
+
+            # 使用代理时将强制禁用 SSL 验证与使用系统代理
+            requestsPackages.urllib3.disable_warnings()
+            TheSession.verify = False
+            TheSession.trust_env = False
+
         return(TheSession)
 
 
@@ -194,10 +203,14 @@ class DownloadManager():
         if self.Stopping == True: raise Ex_Download.Stopping
 
         try:
-            Request = UsedSession.get(URL, timeout=(ConnectTimeout, ReadTimeout))
-            StatusCode = str(Request.status_code)
-            if StatusCode[0] in ["4", "5"]: Request.raise_for_status()
-            File.write(Request.content)
+            with UsedSession.get(URL, timeout=(ConnectTimeout, ReadTimeout,)) as Request:
+                StatusCode = str(Request.status_code)
+                if self.Configs["ErrorByStatusCode"] and (StatusCode[0] in ["4", "5"]): Request.raise_for_status()
+                while True:
+                    Temp = Request.raw.read(1024)
+                    if self.Stopping == True: raise Ex_Download.Stopping
+                    if Temp == bytes(): break
+                    File.write(Temp)
         except Ex_Requests.ConnectTimeout:
             raise Ex_Download.ConnectTimeout
         except Ex_Requests.ReadTimeout:
