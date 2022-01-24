@@ -8,21 +8,20 @@ from Claset.Utils import AdvancedPath
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
 
 
-def getVersionManifestURL(Ver: int = 1, Path: str | None = None) -> dict:
+def getVersionManifestDownloadTaskObject(Ver: int = 1, Path: str | None = None) -> dict:
     """获取对应版本的 Manifest URL"""
+    APath = AdvancedPath(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
     match Ver:
         case 1:
             FileName = "version_manifest.json"
-            URL = "$LauncherMeta/mc/game/version_manifest.json"
+            URL = APath.path("$LauncherMeta/mc/game/version_manifest.json")
         case 2:
             FileName = "version_manifest_v2.json"
-            URL = "$LauncherMeta/mc/game/version_manifest_v2.json"
+            URL = APath.path("$LauncherMeta/mc/game/version_manifest_v2.json")
         case _:
             raise ValueError("Unknown Ver")
-    APath = AdvancedPath(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
-    URL = APath.path(URL)
     if Path == None: Path = APath.path("$MCVersionManifest/", IsPath=True)
-    return({"URL": URL, "FileName": FileName, "OutputPath": Path})
+    return({"URL": URL, "OutputPaths": APath.pathAdder(Path, FileName)})
 
 
 def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:

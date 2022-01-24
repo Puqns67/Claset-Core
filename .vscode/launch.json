@@ -21,7 +21,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Debug Poetry Tests:",
+            "name": "Debug Poetry",
             "type": "python",
             "request": "launch",
             "module": "poetry",

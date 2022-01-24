@@ -7,12 +7,12 @@ from .LoadJson import (
     VersionManifest_To_Version, Version_Client_DownloadList, Version_Server_DownloadList,
     Version_To_AssetIndex, AssetIndex_DownloadList
 )
-from .Others import getVersionManifestURL, ResolveRule, getNativesObject
+from .Others import getVersionManifestDownloadTaskObject, ResolveRule, getNativesObject
 
 __all__ = [
     "Exceptions", "processNatives", "Versionmanifest_VersionList", "VersionManifest_To_Version",
     "Version_Client_DownloadList", "Version_Server_DownloadList", "Version_To_AssetIndex",
-    "AssetIndex_DownloadList", "ResolveRule", "getVersionManifestURL", "ResolveRule", "getNativesObject",
+    "AssetIndex_DownloadList", "ResolveRule", "getVersionManifestDownloadTaskObject", "ResolveRule", "getNativesObject",
     "getClassPath"
 ]
 

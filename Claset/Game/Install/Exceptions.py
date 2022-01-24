@@ -9,3 +9,5 @@ class UnknownVersion(InstallError):
 class DownloadError(InstallError):
     """下载出现错误"""
 
+class UndefinedMirror(InstallError):
+    """未定义的镜像源"""

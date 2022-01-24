@@ -1,14 +1,15 @@
 [tool.poetry]
 name = "Claset"
-version = "0.0.1"
+version = "0.1.0"
 description = "基于 Python 的 Minecraft 启动管理器"
 authors = ["Puqns67 <puqns67@yeah.net>"]
 license = "GPLv3"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.10.1"
 requests = "^2.27.1"
-urllib3 = "^1.26.7"
+urllib3 = "^1.26.8"
+cmd2 = "^2.3.3"
 
 [tool.poetry.dev-dependencies]
 Nuitka = "^0.6.19"

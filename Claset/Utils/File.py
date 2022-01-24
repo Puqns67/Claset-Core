@@ -20,6 +20,8 @@ def loadFile(Path: str, Type: str = "text") -> str | dict:
     * Type: 类型(json, bytes, text)
     """
 
+    Logger.debug("Path: \"%s\", Type: \"%s\"", Path, Type)
+
     if "$" in Path: Path = Pathmd(Path)
 
     match Type:

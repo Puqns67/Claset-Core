@@ -30,6 +30,7 @@ def fixType(Input: str) -> Any:
     """修复类型"""
     if Input.lower() in fixType_fixs.keys():
         Output = fixType_fixs[Input.lower()]
+    elif Input == str(): return None
     elif Input[-1] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
         try: Output = int(Input)
         except ValueError:

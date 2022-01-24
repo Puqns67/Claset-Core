@@ -11,16 +11,12 @@ Logs/
 *.json
 
 # Build
-out/
-Main.build/
-Main.dist/
-Main.onefile-build/
-Claset-AutoBuild*
+*.build/
+*.dist/
+*.onefile-build/
 Claset-Build*
 
 # Other
 .vscode/
 !.vscode/launch.json
-!Claset/Tools/Tests/DataSource/*
-poetry.lock
 temp*

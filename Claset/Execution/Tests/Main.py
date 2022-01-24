@@ -8,12 +8,11 @@ import Claset
 
 
 def testInstallAndRun():
-    Downloader = Claset.Utils.DownloadManager()
-
+    GameInstaller = Claset.Game.Install.GameInstaller(VersionName="Test", MinecraftVersion="1.18.1")
     try:
-        Claset.Game.Install.GameInstaller(Downloader=Downloader, VersionName="Test", MinecraftVersion="1.18.1")
+        GameInstaller.InstallVanilla()
     except KeyboardInterrupt:
-        Downloader.stop()
+        Claset.stopALLDownloader()
         exit()
 
     GameLauncher = Claset.Game.Launch.GameLauncher(VersionName="Test")
@@ -21,6 +20,7 @@ def testInstallAndRun():
     try:
         GameLauncher.waitGame()
     except KeyboardInterrupt:
+        Claset.stopALLDownloader()
         GameLauncher.stopGame()
         exit()
 

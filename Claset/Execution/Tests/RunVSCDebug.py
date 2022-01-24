@@ -8,5 +8,7 @@ path.append(getcwd())
 import Claset
 
 if __name__ == "__main__":
+    Claset.setLoggerHandler()
+    Claset.ProcessLogs()
     Claset.Execution.TestMain()
 

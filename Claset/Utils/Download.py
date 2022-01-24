@@ -125,33 +125,33 @@ class DownloadManager():
                 StopType = "Stopping"
             except Ex_Download.SizeError:
                 Errored = True
-                self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
+                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
                 Logger.warning("File \"%s\" Download failure, By SizeError, From \"%s\"", Task["FileName"], Task["URL"])
             except Ex_Download.FileExist:
                 StopType = "FileExist"
             except Ex_Download.SchemaError:
                 Errored = True
-                self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
+                self.addJobToProject(Task["ProjectID"], ErrorTasksCount=1)
                 Logger.error("URL \"%s\" Formart Error", Task["URL"])
             except Ex_Download.HashError:
                 Errored = True
-                self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
+                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
                 Logger.warning("File \"%s\" hash verification failed", Task["FileName"])
             except Ex_Download.ReadTimeout:
                 Errored = True
-                self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
+                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
                 Logger.warning("File \"%s\" Download timeout,  From \"%s\"", Task["FileName"], Task["URL"])
             except Ex_Download.ConnectTimeout:
                 Errored = True
-                self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
+                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
                 Logger.warning("File \"%s\" Connect timeout, From \"%s\"", Task["FileName"], Task["URL"])
             except Ex_Download.DownloadExceptions:
                 Errored = True
-                self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
+                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
                 Logger.warning("File \"%s\" Download failure, By ConnectionError, From \"%s\"", Task["FileName"], Task["URL"])
             except Exception:
                 Errored = True
-                self.projectAddJob(Task["ProjectID"], FailuredTasksCount=1)
+                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
                 Logger.warning("Unknown Error:", exc_info=True)
 
             if Errored == True:
@@ -161,10 +161,10 @@ class DownloadManager():
                     continue
                 else:
                     Logger.error("File \"%s\" Retry Count Max", Task["FileName"])
-                    self.projectAddJob(Task["ProjectID"], ErrorTasksCount=1)
+                    self.addJobToProject(Task["ProjectID"], ErrorTasksCount=1)
                     raise Ex_Download.DownloadExceptions
             else:
-                self.projectAddJob(Task["ProjectID"], CompletedTasksCount=1)
+                self.addJobToProject(Task["ProjectID"], CompletedTasksCount=1)
                 # 没有出现下载错误之后尝试执行 Task["Next"]
                 if Task["Next"] != None:
                     try:
@@ -244,10 +244,10 @@ class DownloadManager():
         JobTotal = len(InputTasks)
         if MainProjectID == None:
             InputProjectID = False
-            MainProjectID = self.projectCreate(AllTasksCount=JobTotal)
+            MainProjectID = self.createProject(AllTasksCount=JobTotal)
         else:
             InputProjectID = True
-            self.projectAddJob(ProjectID=MainProjectID, AllTasksCount=JobTotal)
+            self.addJobToProject(ProjectID=MainProjectID, AllTasksCount=JobTotal)
         Logger.debug("Adding %s tasks to Project %s", JobTotal, MainProjectID)
 
         for InputTask in InputTasks:
@@ -270,10 +270,10 @@ class DownloadManager():
         if self.Stopping == True: raise Ex_Download.Stopping
         if ProjectID == None:
             InputedProjectID = False
-            ProjectID = self.projectCreate(AllTasksCount=1)
+            ProjectID = self.createProject(AllTasksCount=1)
         else:
             InputedProjectID = True
-            self.projectAddJob(ProjectID=ProjectID, AllTasksCount=1)
+            self.addJobToProject(ProjectID=ProjectID, AllTasksCount=1)
         Logger.debug("Adding 1 tasks to Project %s", ProjectID)
 
         InputTask["ProjectID"] = ProjectID
@@ -282,7 +282,11 @@ class DownloadManager():
 
         self.Adding = False
         Logger.info("Added 1 task to Project %s", ProjectID)
-        if InputedProjectID == False: return(ProjectID)
+
+        if InputedProjectID == False:
+            return(ProjectID)
+        else:
+            return(None)
 
 
     def stop(self) -> None:
@@ -303,20 +307,24 @@ class DownloadManager():
         self.ThreadPool.shutdown(wait=False)
 
 
-    def projectCreate(self, AllTasksCount: int = 0, setProjectID: int = 0) -> int:
+    def createProject(self, AllTasksCount: int = 0, setProjectID: int | None = None) -> int:
         """建立 Project 对象"""
-        if setProjectID == 0:
-            Temp = True
-            while Temp:
+        if setProjectID == None:
+            while True:
                 NewProjectID = randint(1,4096)
-                if not (NewProjectID in self.Projects.keys()): Temp = False
-        else: NewProjectID = setProjectID
+                if not (NewProjectID in self.Projects.keys()):
+                    break
+        else:
+            if setProjectID in self.Projects.keys():
+                raise ValueError(setProjectID)
+            else:
+                NewProjectID = setProjectID
         self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0, "ErrorTasksCount":0}
         Logger.info("Created New Project %s", NewProjectID)
         return(NewProjectID)
 
 
-    def projectAddJob(self, ProjectID: int, AllTasksCount: int | None = None, CompletedTasksCount: int | None = None, FailuredTasksCount: int | None = None, ErrorTasksCount: int | None = None) -> None:
+    def addJobToProject(self, ProjectID: int, AllTasksCount: int | None = None, CompletedTasksCount: int | None = None, FailuredTasksCount: int | None = None, ErrorTasksCount: int | None = None) -> None:
         """向 Project 对象添加任务"""
         if AllTasksCount != None:       self.Projects[ProjectID]["AllTasksCount"] += AllTasksCount
         if CompletedTasksCount != None: self.Projects[ProjectID]["CompletedTasksCount"] += CompletedTasksCount
@@ -324,7 +332,7 @@ class DownloadManager():
         if ErrorTasksCount != None:     self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
 
 
-    def projectJoin(self, ProjectIDs: int | list) -> int:
+    def waitProject(self, ProjectIDs: int | list) -> int:
         """通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数"""
         if type(ProjectIDs) == type(int()): ProjectIDs = [ProjectIDs]
         ErrorTasksCount = int()
@@ -333,7 +341,7 @@ class DownloadManager():
                 sleep(self.Configs["SleepTime"])
             ErrorTasksCount += self.Projects[ProjectID]["ErrorTasksCount"]
         if (len(ProjectIDs) > 1):
-            Logger.debug("Joined Projects %s completed by %s Errors", ProjectIDs, ErrorTasksCount)
-        else: Logger.debug("Joined Project \"%s\" completed by %s Errors", ProjectIDs[0], ErrorTasksCount)
+            Logger.debug("Waited Projects %s completed by %s Errors", ProjectIDs, ErrorTasksCount)
+        else: Logger.debug("Waited Project \"%s\" completed by %s Errors", ProjectIDs[0], ErrorTasksCount)
         return(ErrorTasksCount)
 
