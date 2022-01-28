@@ -3,6 +3,7 @@
 
 from time import time
 from platform import uname
+from sys import exit
 
 import Claset
 

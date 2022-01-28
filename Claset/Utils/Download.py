@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
 """通过 URL 列表多线程下载数据"""
 
-from logging import getLogger
 from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha1
 from io import BytesIO
+from logging import getLogger
+from os.path import basename as baseName, split as splitPath
 from random import randint
 from re import search
 from time import sleep
-from os.path import split as splitPath, basename as baseName
 
+from requests import (
+    __version__ as RequestsVersion, Session,
+    exceptions as Ex_Requests, packages as requestsPackages
+)
 from urllib3 import __version__ as Urllib3Version
-from requests import Session, exceptions as Ex_Requests, packages as requestsPackages, __version__ as RequestsVersion
 
-from .Path import path as Pathmd, pathAdder
-from .File import saveFile, loadFile, dfCheck
 from .Configs import Configs
-
 from .Exceptions import Download as Ex_Download
+from .File import dfCheck, loadFile, saveFile
+from .Path import path as Pathmd, pathAdder
 
 Logger = getLogger(__name__)
 
@@ -68,45 +70,14 @@ class DownloadManager():
 
     def Download(self, Task: dict) -> dict:
         """简易下载器 (Download) 的代理运行器"""
-        # 处理缺失的项目
-        if not "URL"            in Task: raise Ex_Download.MissingURL
-        if not "Size"           in Task: Task["Size"]           = None
-        if not "ProjectID"      in Task: Task["ProjectID"]      = None
-        if not "Overwrite"      in Task: Task["Overwrite"]      = True
-        if not "Sha1"           in Task: Task["Sha1"]           = None
-        if not "ConnectTimeout" in Task: Task["ConnectTimeout"] = self.Configs["Timeouts"]["Connect"]
-        if not "ReadTimeout"    in Task: Task["ReadTimeout"]    = self.Configs["Timeouts"]["Read"]
-        if not "Retry"          in Task: Task["Retry"]          = self.Configs["Retry"]
-        if not "Next"           in Task: Task["Next"]           = None
+        if not Task.get("ISFULL"):
+            Task = self.fullTask(Task)
 
-        if ((not "OutputPaths" in Task) or (Task["OutputPaths"] == None)):
-            # 如不存在 OutputPath 或 OutputPath 为空, 则使用当前位置
-            if ((not "OutputPath" in Task) or ("OutputPath" == None)):
-                Task["OutputPath"] = "$PREFIX"
-
-            # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
-            if not "FileName" in Task:
-                Task["FileName"] = baseName(Task["URL"])
-                if Task["FileName"] == str(): Task["FileName"] = baseName(Task["OutputPath"])
-            if Task["FileName"] == None:
-                Task["FileName"] = baseName(Task["OutputPath"])
-                if Task["FileName"] == str(): Task["FileName"] = baseName(Task["URL"])
-            if Task["FileName"] == str(): Task["FileName"] = "NoName"
-
-            # 从 OutputPath 中去除重复的文件名
-            if ((Task["FileName"] in Task["OutputPath"]) and ((search(Task["FileName"] + "$", Task["OutputPath"])) != None)):
-                Task["OutputPath"] = search("^(.*)" + Task["FileName"] + "$", Task["OutputPath"]).groups()[0]
-
-            Task["OutputPaths"] = pathAdder(Task["OutputPath"], Task["FileName"])
-
-        else:
-            Task["OutputPath"], Task["FileName"] = splitPath(Task["OutputPaths"])
-
-        if "$" in Task["URL"]: Task["URL"] = Pathmd(Task["URL"])
-        if "$" in Task["OutputPaths"]: Task["OutputPaths"] = Pathmd(Task["OutputPaths"], IsPath=True)
+        if not "URL" in Task:
+            raise Ex_Download.TaskMissingURL
 
         Retry = True
-        while Retry == True:
+        while Retry:
             Retry = False
             Errored = False
             StopType = "Downloaded"
@@ -233,11 +204,61 @@ class DownloadManager():
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
 
 
+    def fullTask(self, Task: dict = dict()) -> dict:
+        """完善 Task"""
+        # 处理缺失的项目
+        if "Size"           not in Task: Task["Size"]           = None
+        if "ProjectID"      not in Task: Task["ProjectID"]      = None
+        if "Overwrite"      not in Task: Task["Overwrite"]      = True
+        if "Sha1"           not in Task: Task["Sha1"]           = None
+        if "ConnectTimeout" not in Task: Task["ConnectTimeout"] = self.Configs["Timeouts"]["Connect"]
+        if "ReadTimeout"    not in Task: Task["ReadTimeout"]    = self.Configs["Timeouts"]["Read"]
+        if "Retry"          not in Task: Task["Retry"]          = self.Configs["Retry"]
+        if "Next"           not in Task: Task["Next"]           = None
+
+        if (("OutputPaths" not in Task) or (Task["OutputPaths"] == None) or (Task["OutputPaths"] == str())):
+            # 如不存在 OutputPath 或 OutputPath 为空, 则使用当前位置
+            if ((not "OutputPath" in Task) or ("OutputPath" == None)):
+                Task["OutputPath"] = "$PREFIX"
+
+            # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
+            if "FileName" not in Task:
+                Task["FileName"] = baseName(Task["URL"])
+                if Task["FileName"] == str():
+                    Task["FileName"] = baseName(Task["OutputPath"])
+            if Task["FileName"] == None:
+                Task["FileName"] = baseName(Task["OutputPath"])
+                if Task["FileName"] == str():
+                    Task["FileName"] = baseName(Task["URL"])
+            if Task["FileName"] == str():
+                Task["FileName"] = "NoName"
+
+            # 从 OutputPath 中去除重复的文件名
+            if ((Task["FileName"] in Task["OutputPath"]) and ((search(Task["FileName"] + "$", Task["OutputPath"])) != None)):
+                Task["OutputPath"] = search("^(.*)" + Task["FileName"] + "$", Task["OutputPath"]).groups()[0]
+
+            Task["OutputPaths"] = pathAdder(Task["OutputPath"], Task["FileName"])
+        else:
+            try:
+                Task["OutputPath"], Task["FileName"] = splitPath(Task["OutputPaths"])
+            except Exception:
+                raise Ex_Download.UnpackOutputPathsError
+
+        # 解析 Paths
+        if "$" in Task["URL"]:
+            Task["URL"] = Pathmd(Task["URL"])
+        if "$" in Task["OutputPaths"]:
+            Task["OutputPaths"] = Pathmd(Task["OutputPaths"], IsPath=True)
+
+        Task["ISFULL"] = True
+        return(Task)
+
+
     def addTasks(self, InputTasks: list[dict], MainProjectID: int | None = None) -> int | None:
         """添加多个任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         # 如果正在添加任务则不等待添加完成
         while self.Adding:
-            sleep(Configs["SleepTime"])
+            sleep(self.Configs["SleepTime"])
         self.Adding = True
 
         if self.Stopping == True: raise Ex_Download.Stopping
@@ -264,7 +285,7 @@ class DownloadManager():
         """添加单个 dict 任务对象至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         # 如果正在添加任务则不等待添加完成
         while self.Adding:
-            sleep(Configs["SleepTime"])
+            sleep(self.Configs["SleepTime"])
         self.Adding = True
 
         if self.Stopping == True: raise Ex_Download.Stopping
@@ -319,9 +340,14 @@ class DownloadManager():
                 raise ValueError(setProjectID)
             else:
                 NewProjectID = setProjectID
-        self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0, "ErrorTasksCount":0}
+        self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0, "ErrorTasksCount": 0}
         Logger.info("Created New Project %s", NewProjectID)
         return(NewProjectID)
+
+
+    def deleteProject(self, ProjectID: int):
+        """删除 Project 对象"""
+        del(self.Projects[ProjectID])
 
 
     def addJobToProject(self, ProjectID: int, AllTasksCount: int | None = None, CompletedTasksCount: int | None = None, FailuredTasksCount: int | None = None, ErrorTasksCount: int | None = None) -> None:
@@ -332,7 +358,7 @@ class DownloadManager():
         if ErrorTasksCount != None:     self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
 
 
-    def waitProject(self, ProjectIDs: int | list) -> int:
+    def waitProject(self, ProjectIDs: int | list, Raise: Exception | None = None) -> int:
         """通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数"""
         if type(ProjectIDs) == type(int()): ProjectIDs = [ProjectIDs]
         ErrorTasksCount = int()
@@ -340,8 +366,14 @@ class DownloadManager():
             while ((self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) != self.Projects[ProjectID]["AllTasksCount"]):
                 sleep(self.Configs["SleepTime"])
             ErrorTasksCount += self.Projects[ProjectID]["ErrorTasksCount"]
-        if (len(ProjectIDs) > 1):
+
+        if len(ProjectIDs) > 1:
             Logger.debug("Waited Projects %s completed by %s Errors", ProjectIDs, ErrorTasksCount)
-        else: Logger.debug("Waited Project \"%s\" completed by %s Errors", ProjectIDs[0], ErrorTasksCount)
-        return(ErrorTasksCount)
+        else:
+            Logger.debug("Waited Project \"%s\" completed by %s Errors", ProjectIDs[0], ErrorTasksCount)
+
+        if ((Raise != None) and (ErrorTasksCount > 0)):
+            raise Raise(ErrorTasksCount)
+        else:
+            return(ErrorTasksCount)
 

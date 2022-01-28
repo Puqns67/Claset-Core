@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """用于读取/写入/检查文件"""
 
-from json import load, dumps
+from json import dumps, load
 from logging import getLogger
 from os import makedirs, remove
-from os.path import exists, getsize, dirname, basename, isdir, isfile
+from os.path import basename, dirname, exists, getsize, isdir, isfile
 from shutil import move
 
-from .Path import path as Pathmd, pathAdder
+from .Path import pathAdder, path as Pathmd
 
 __all__ = ["loadFile", "saveFile", "moveFile", "dfCheck"]
 Logger = getLogger(__name__)
@@ -116,6 +116,9 @@ def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False) -
     * OverWirte: 若目标文件夹指向文件，此时 OverWrite 为 False 则触发 FileExistsError，若为 True 则覆盖
     * Rename: 若无法分辨 To 为"目标文件夹"还是"目标路径"时, 此时 Rename 为 True 则视为"目标路径", 若为 False 则为"目标文件夹"
     """
+
+    Logger.debug("Path: \"%s\", To: \"%s\"", File, To)
+
     if not dfCheck(Path=File, Type="f"): raise FileNotFoundError(File)
 
     if isdir(To):

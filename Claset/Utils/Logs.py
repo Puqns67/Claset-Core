@@ -8,6 +8,11 @@ from shutil import make_archive, unpack_archive, rmtree
 from time import localtime, strftime
 from threading import Thread
 
+try:
+    from rich.logging import RichHandler
+except ModuleNotFoundError:
+    RichHandler = None
+
 from .File import dfCheck, moveFile
 from .Configs import Configs
 from .Path import path as Pathmd, pathAdder
@@ -22,21 +27,30 @@ class Logs():
         self.Formatter = Formatter(fmt=self.Configs["LogFormats"]["Format"], datefmt=self.Configs["LogFormats"]["Date"])
 
 
-    def SettingHandler(self, Stream: bool = True, File: bool = True):
+    def SettingHandler(self, **Types: dict[str, str | None]):
         """设置 Handler"""
-        if Stream and self.Configs["Handlers"]["Stream"]:
-            self.SettingStreamHandler()
-        if File and self.Configs["Handlers"]["File"]:
-            self.SettingFileHandler()
+        if Types.get("Stream") != "DISABLE":
+            if Types.get("Stream") == None:
+                self.SettingStreamHandler()
+            else:
+                self.SettingStreamHandler(LevelName=Types["Stream"])
+        if Types.get("File") != "DISABLE":
+            if Types.get("File") == None:
+                self.SettingFileHandler()
+            else:
+                self.SettingFileHandler(LevelName=Types["File"])
 
 
     def SettingStreamHandler(self, LevelName: str | None = None):
         """设置日志输出至命令行流"""
         if LevelName == None: LevelName = self.Configs["LoggingLevel"]
         # 建立 Handler
-        CommandLineHandler = StreamHandler()
+        if RichHandler != None and self.Configs["UseRich"]:
+            CommandLineHandler = RichHandler()
+        else:
+            CommandLineHandler = StreamHandler()
+            CommandLineHandler.setFormatter(self.Formatter)
         CommandLineHandler.setLevel(getLevelName(LevelName))
-        CommandLineHandler.setFormatter(self.Formatter)
 
         self.TheLogger.addHandler(CommandLineHandler)
 
@@ -95,12 +109,13 @@ class Logs():
 
         if Type == None: Type = self.Configs["ProcessOldLog"]["Type"]
 
-        # 直接删除
         match Type:
+            # 直接删除
             case "Delete":
                 TypeConfigs = self.Configs["ProcessOldLog"]["TypeSettings"]["Delete"]
                 # 若不满足情况则直接返回
                 if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): return(None)
+
                 for FileName in LogFileList:
                     remove(self.LogPath + "/" + FileName)
                     self.TheLogger.info("Deleted old log file: \"%s\"", FileName)
@@ -110,7 +125,6 @@ class Logs():
             # 进行存档
             case "Archive":
                 TypeConfigs = self.Configs["ProcessOldLog"]["TypeSettings"]["Archive"]
-
                 # 若不满足情况则直接返回
                 if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): return(None)
 

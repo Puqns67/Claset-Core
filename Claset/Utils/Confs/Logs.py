@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 2
+LastVersion = 3
 
 
 File = {
     "FilePath": "$LOG/",
     "LoggingLevel": "DEBUG",
+    "UseRich": True,
     "LogFormats": {
         "Format": "[%(asctime)s][%(module)s][%(funcName)s][%(levelname)s]: %(message)s",
         "Date": "%Y/%m/%d|%H:%M:%S"
@@ -32,6 +33,9 @@ File = {
 
 
 Difference = {
+    "2->3": [
+        "REPLACE:UseRich->True"
+    ],
     "1->2": [
         "REPLACE:[ProcessOldLog, TypeSettings, Archive, ArchiveFileName]->Claset-Log-Archive",
         "REPLACE:[ProcessOldLog, TypeSettings, Archive, TempDirName]->ArchivedLog",

@@ -6,14 +6,15 @@ authors = ["Puqns67 <puqns67@yeah.net>"]
 license = "GPLv3"
 
 [tool.poetry.dependencies]
-python = "^3.10.1"
+python = "^3.10.0"
 requests = "^2.27.1"
 urllib3 = "^1.26.8"
 cmd2 = "^2.3.3"
+rich = "^11.0.0"
 
 [tool.poetry.dev-dependencies]
 Nuitka = "^0.6.19"
-zstandard = "^0.16.0"
+zstandard = "^0.17.0"
 
 [[tool.poetry.source]]
 name = "tuna"

@@ -8,24 +8,25 @@ import Claset
 
 
 class Main(Cmd):
-    prompt = ">"
+    intro = "Claset\nBuiltin Command Line Client\nVersion: " + Claset.__version__
+    prompt = "> "
 
     delattr(Cmd, "do_shell")
     delattr(Cmd, "do_edit")
     delattr(Cmd, "do_quit")
 
     ArgumentParser_InstallGame = Cmd2ArgumentParser()
-    ArgumentParser_InstallGame.add_argument("-n", "--name", help="实例名")
-    ArgumentParser_InstallGame.add_argument("-v", "--version", help="对应的游戏版本")
+    ArgumentParser_InstallGame.add_argument("-v", "--version", help="游戏版本, 不指定时使用最新的正式版")
+    ArgumentParser_InstallGame.add_argument('GameName', help="游戏实例名")
     @with_argparser(ArgumentParser_InstallGame)
     def do_InstallGame(self, init: Namespace):
-        if (init.name == None) or (init.version == None): 
-            raise ValueError("Name and Version cant be None")
-        GameInstaller = Claset.Game.Install.GameInstaller(VersionName=init.name, MinecraftVersion=init.version)
+        """安装游戏"""
+        GameInstaller = Claset.Game.Install.GameInstaller(VersionName=init.GameName, MinecraftVersion=init.version)
         GameInstaller.InstallVanilla()
 
 
-    def do_exit(self, init: Namespace):
+    def do_exit(self, _: Namespace):
+        """退出程序"""
         Claset.stopALLDownloader()
         Claset.waitALLGames()
         raise SystemExit

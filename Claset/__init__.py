@@ -7,7 +7,7 @@
 __author__ = "Puqns67"
 __productname__ = "Claset"
 __version__ = "0.1.0"
-__build__ = 128
+__build__ = 130
 __all__ = [
     "Accounts", "Execution", "Utils", "Game",
     "LaunchedGames", "Downloaders",
@@ -45,9 +45,9 @@ def stopALLDownloader() -> None:
 
 
 from logging import getLogger, Logger, DEBUG
-from multiprocessing import ProcessError
 
 from . import Accounts, Execution, Utils, Game
+
 
 GolbalLogger = getLogger(__name__)
 GolbalLogger.setLevel(DEBUG)
@@ -55,8 +55,8 @@ GolbalLogger.setLevel(DEBUG)
 ProcessLogger = Utils.Logs(GolbalLogger)
 ProcessLogger.SettingLevel()
 
-def setLoggerHandler(**kwargs):
-    ProcessLogger.SettingHandler(**kwargs)
+def setLoggerHandler(**Types: dict[str, str | None]):
+    ProcessLogger.SettingHandler(**Types)
 
 
 def ProcessLogs(Type: str | None = None, ThreadMode: bool = True):
