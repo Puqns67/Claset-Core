@@ -7,7 +7,7 @@
 __author__ = "Puqns67"
 __productname__ = "Claset"
 __version__ = "0.1.0"
-__build__ = 132
+__build__ = 133
 __all__ = [
     "Accounts", "Execution", "Utils", "Game",
     "LaunchedGames", "Downloaders",

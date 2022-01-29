@@ -11,7 +11,7 @@ from re import search
 from time import sleep
 
 from requests import (
-    __version__ as RequestsVersion, Session,
+    __version__ as RequestsVersion, Session, post,
     exceptions as Ex_Requests, packages as requestsPackages
 )
 from urllib3 import __version__ as Urllib3Version
@@ -58,12 +58,16 @@ class DownloadManager():
             requestsPackages.urllib3.disable_warnings()
 
         if self.Configs["ProxyLink"] != None:
-            TheSession.proxies = {"http": self.Configs["ProxyLink"], "https": self.Configs["ProxyLink"]}
-
-            # 使用代理时将强制禁用 SSL 验证与使用系统代理
-            requestsPackages.urllib3.disable_warnings()
-            TheSession.verify = False
-            TheSession.trust_env = False
+            try:
+                post(self.Configs["ProxyLink"])
+            except Ex_Requests.ConnectionError:
+                Logger.warning("Unable to connect to the proxy server: \"%s\", Disable it", self.Configs["ProxyLink"])
+            else:
+                TheSession.proxies = {"http": self.Configs["ProxyLink"], "https": self.Configs["ProxyLink"]}
+                # 使用代理时将强制禁用 SSL 验证与使用系统代理
+                requestsPackages.urllib3.disable_warnings()
+                TheSession.verify = False
+                TheSession.trust_env = False
 
         return(TheSession)
 
@@ -82,15 +86,7 @@ class DownloadManager():
             Errored = False
             StopType = "Downloaded"
             try:
-                self.download(
-                    URL=Task["URL"],
-                    OutputPaths=Task["OutputPaths"],
-                    Size=Task["Size"],
-                    Overwrite=Task["Overwrite"],
-                    Sha1=Task["Sha1"],
-                    ConnectTimeout=Task["ConnectTimeout"],
-                    ReadTimeout=Task["ReadTimeout"]
-                )
+                self.download(**Task)
             # 错误处理
             except Ex_Download.Stopping:
                 StopType = "Stopping"
@@ -159,11 +155,18 @@ class DownloadManager():
         Overwrite:     bool, # 覆盖已有的文件
         Sha1:           str, # 使用sha1验证下载结果
         ConnectTimeout: int, # 连接超时(若为空则使用全局设置)
-        ReadTimeout:    int  # 下载超时(若为空则使用全局设置)
+        ReadTimeout:    int, # 下载超时(若为空则使用全局设置)
+        **_
         ) -> None:
         """简易下载器"""
-        if ((Overwrite == False) and (Sha1 != None) and (dfCheck(Path=OutputPaths, Type="f") == True) and (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1)):
-            raise Ex_Download.FileExist
+        if Overwrite == False:
+            if Sha1 != None:
+                if (dfCheck(Path=OutputPaths, Type="f") == True) and (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1):
+                    raise Ex_Download.FileExist
+                else:
+                    Logger.warning("File: \"%s\" sha1 verify Error! ReDownload it")
+            else:
+                raise Ex_Download.FileExist
 
         if self.Configs["UseGobalRequestsSession"] == True:
             UsedSession = self.RequestsSession

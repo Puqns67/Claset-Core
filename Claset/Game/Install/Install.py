@@ -123,15 +123,10 @@ class GameInstaller():
         return(loadFile(Path=AssetIndexTask["OutputPaths"], Type="json"))
 
 
-    
     def createConfig(self) -> None:
         """创建版本配置文件"""
         ProcessList = ["REPLACE:[UnableGlobal, NativesDir]->natives"]
         Configs(ID="Game", FilePath=pathAdder("$VERSION", self.VersionName, "ClasetVersionConfig.json"), ProcessList=ProcessList)
-
-
-    def replaceURL(self, URL: str, URLType: str, MirrorName: str | None = None) -> str:
-        if MirrorName == None: MirrorName = self.UsingDownloadServer
 
 
     def InstallForge(self):

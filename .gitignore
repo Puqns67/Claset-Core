@@ -20,3 +20,4 @@ Claset-Build*
 .vscode/
 !.vscode/launch.json
 temp*
+*.jar

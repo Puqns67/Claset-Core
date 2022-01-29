@@ -92,11 +92,11 @@ class Configs():
         else: return(False)
 
         # 尝试进行更新
-        # try:
-        self.updateConfig()
-        # except Exception as INFO:
-        #     Logger.warning("Updating Config (%s) Error! INFO: %s", self.ID, INFO)
-        #     return(False)
+        try:
+            self.updateConfig()
+        except Exception as INFO:
+            Logger.warning("Updating Config (%s) Error! INFO: %s", self.ID, INFO)
+            return(False)
         return(True)
 
 
