@@ -159,14 +159,13 @@ class DownloadManager():
         **_
         ) -> None:
         """简易下载器"""
-        if Overwrite == False:
-            if Sha1 != None:
-                if (dfCheck(Path=OutputPaths, Type="f") == True) and (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1):
-                    raise Ex_Download.FileExist
-                else:
-                    Logger.warning("File: \"%s\" sha1 verify Error! ReDownload it")
-            else:
-                raise Ex_Download.FileExist
+        if dfCheck(Path=OutputPaths, Type="f"):
+            if Overwrite == False:
+                if Sha1 != None:
+                    if (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1):
+                        raise Ex_Download.FileExist
+                    else:
+                        Logger.warning("File: \"%s\" sha1 verify Error! ReDownload it")
 
         if self.Configs["UseGobalRequestsSession"] == True:
             UsedSession = self.RequestsSession

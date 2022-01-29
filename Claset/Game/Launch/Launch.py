@@ -6,7 +6,7 @@ from re import compile as reCompile
 from typing import Any
 from subprocess import Popen
 
-from Claset import __version__, __productname__, LaunchedGames
+from Claset import __fullversion__, __productname__, LaunchedGames
 from Claset.Utils import Configs, JavaHelper, pathAdder, loadFile, dfCheck, path, getValueFromDict
 
 from ..Utils import ResolveRule, getClassPath, processNatives
@@ -146,7 +146,7 @@ class GameLauncher():
             case "MEMMAX": return("-Xmx" + str(self.getConfig(["MemoryMax"])) + "M")
             case "MAINCLASS": return(self.VersionJson["mainClass"])
             case "launcher_name": return(__productname__)
-            case "launcher_version": return(__version__)
+            case "launcher_version": return(__fullversion__)
             case "assets_root": return(path("$ASSETS", IsPath=True))
             case "assets_index_name": return(self.VersionJson["assets"])
             case "auth_player_name": return("WIP")

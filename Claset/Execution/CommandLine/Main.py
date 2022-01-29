@@ -8,7 +8,7 @@ import Claset
 
 
 class Main(Cmd):
-    intro = "Claset\nBuiltin Command Line Client\nVersion: " + Claset.__version__
+    intro = "Claset\nBuiltin Command Line Client\nVersion: " + Claset.__fullversion__
     prompt = "> "
 
     delattr(Cmd, "do_shell")
