@@ -75,12 +75,12 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
 
-      - name: Copy files
+      - name: Copy & delete files
         shell: pwsh
         run: |
-          Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\Run.py ${{ github.workspace }}\
-          Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\requirements_build.txt ${{ github.workspace }}\
-          Get-ChildItem -Path ${{ github.workspace }}\Claset\Execution\ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force
+          Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\Run.py ${{ github.workspace }}\ -Verbose
+          Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\requirements_build.txt ${{ github.workspace }}\ -Verbose
+          Get-ChildItem -Path ${{ github.workspace }}\Claset\Execution\ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force -Verbose
 
 
       - name: Setting Python Environment
@@ -178,12 +178,12 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
 
-      - name: Copy files
+      - name: Copy & delete files
         shell: pwsh
         run: |
-          Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/Run.py ${{ github.workspace }}/
-          Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/requirements_build.txt ${{ github.workspace }}/
-          Get-ChildItem -Path ${{ github.workspace }}/Claset/Execution/ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force
+          Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/Run.py ${{ github.workspace }}/ -Verbose
+          Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/requirements_build.txt ${{ github.workspace }}/ -Verbose
+          Get-ChildItem -Path ${{ github.workspace }}/Claset/Execution/ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force -Verbose
 
 
       - name: Setting Python Environment
