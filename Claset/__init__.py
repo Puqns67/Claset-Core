@@ -59,7 +59,9 @@ def setLoggerHandler(**Types: dict[str, str | None]):
     ProcessLogger.SettingHandler(**Types)
 
 
-def ProcessLogs(Type: str | None = None, ThreadMode: bool = True):
+def ProcessLogs(Type: str | None = None, ThreadMode: bool = True) -> None:
+    """处理日志"""
+    return(None) # 有毛病，停用了先
     if ThreadMode:
         ProcessLogger.ThreadProcessLogs(Type=Type)
     else:

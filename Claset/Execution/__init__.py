@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from .CommandLine import CommandLineMain
-from .Tests import TestMain
+try:
+    from .CommandLine import CommandLineMain
+except ModuleNotFoundError:
+    CommandLine = None
+
+try:
+    from .Tests import TestMain
+except ModuleNotFoundError:
+    TestMain = None
 
 __all__ = ["CommandLineMain", "TestMain"]
 

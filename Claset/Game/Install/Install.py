@@ -6,7 +6,7 @@ from logging import getLogger
 from Claset import getDownloader
 from Claset.Utils import (
     DownloadManager, Configs,
-    loadFile, saveFile, dfCheck, moveFile, pathAdder
+    loadFile, saveFile, dfCheck, copyFile, pathAdder
 )
 from Claset.Game.Utils import (
     getVersionManifestDownloadTaskObject,
@@ -69,16 +69,13 @@ class GameInstaller():
         if self.WaitDownloader:
             self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
 
-        # 更新版本 Json
-        self.updateVersionJson()
-
         # 创建版本配置文件
         self.createConfig()
 
 
     def getVersionJson(self) -> dict:
         """获取对应版本的 Version json, 自动获取 Version Manifest"""
-        VersionManifestTask = getVersionManifestDownloadTaskObject()
+        VersionManifestTask = self.Downloader.fullTask(getVersionManifestDownloadTaskObject())
         if dfCheck(Path=VersionManifestTask["OutputPaths"], Type="f"):
             VersionManifestFileType = "OLD"
         else:
@@ -89,7 +86,7 @@ class GameInstaller():
 
         while True:
             try:
-                VersionTask = VersionManifest_To_Version(InitFile=VersionManifestFile, TargetVersion=self.MinecraftVersion)
+                VersionTask = self.Downloader.fullTask(VersionManifest_To_Version(InitFile=VersionManifestFile, TargetVersion=self.MinecraftVersion))
             except TargetVersionNotFound:
                 match VersionManifestFileType:
                     case "NEW":
@@ -107,8 +104,15 @@ class GameInstaller():
         self.VersionPath = pathAdder("$VERSION", self.VersionName, self.VersionName + ".json")
 
         dfCheck(Path=self.VersionPath, Type="fm")
-        moveFile(File=pathAdder(VersionTask["OutputPath"], VersionTask["FileName"]), To=self.VersionPath, Rename=True)
-        return(loadFile(Path=self.VersionPath, Type="json"))
+        copyFile(src=VersionTask["OutputPaths"], dst=self.VersionPath)
+        VersionJson = loadFile(Path=self.VersionPath, Type="json")
+        # 数据保持
+        VersionJson["id"] = self.VersionName
+        VersionJson["jar"] = self.VersionName
+        VersionJson["version"] = self.MinecraftVersion
+        saveFile(Path=self.VersionPath, FileContent=VersionJson, Type="json")
+
+        return(VersionJson)
 
 
     def getAssetIndexJson(self, VersionJson: dict, MainProjectID: int) -> dict:
@@ -118,12 +122,6 @@ class GameInstaller():
         self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
         return(loadFile(Path=AssetIndexTask["OutputPaths"], Type="json"))
 
-
-    def updateVersionJson(self, **About: dict[str: str]) -> None:
-        """更新 Version Json"""
-        self.VersionJson["id"] = self.VersionName
-        self.VersionJson["jar"] = self.VersionName
-        saveFile(Path=self.VersionPath, FileContent=self.VersionJson, Type="json")
 
     
     def createConfig(self) -> None:

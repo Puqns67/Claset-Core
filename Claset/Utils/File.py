@@ -5,11 +5,11 @@ from json import dumps, load
 from logging import getLogger
 from os import makedirs, remove
 from os.path import basename, dirname, exists, getsize, isdir, isfile
-from shutil import move
+from shutil import move, copy2 as copyFile
 
 from .Path import pathAdder, path as Pathmd
 
-__all__ = ["loadFile", "saveFile", "moveFile", "dfCheck"]
+__all__ = ["loadFile", "saveFile", "copyFile", "moveFile", "dfCheck"]
 Logger = getLogger(__name__)
 
 
@@ -20,9 +20,9 @@ def loadFile(Path: str, Type: str = "text") -> str | dict:
     * Type: 类型(json, bytes, text)
     """
 
-    Logger.debug("Path: \"%s\", Type: \"%s\"", Path, Type)
+    if "$" in Path: Path = Pathmd(Path, IsPath=True)
 
-    if "$" in Path: Path = Pathmd(Path)
+    Logger.debug("Path: \"%s\", Type: \"%s\"", Path, Type)
 
     match Type:
         case "json":
@@ -46,9 +46,10 @@ def saveFile(Path: str, FileContent: str | bytes, Type: str = "text") -> None:
     * Type: 类型(json, bytes, log, text)
     """
 
+    if "$" in Path: Path = Pathmd(Path, IsPath=True)
+
     Logger.debug("Path: \"%s\", Type: \"%s\", FileContent Type: %s", Path, Type, type(FileContent))
 
-    if "$" in Path: Path = Pathmd(Path, IsPath=True)
     dfCheck(Path=Path, Type="fm")
 
     match Type:

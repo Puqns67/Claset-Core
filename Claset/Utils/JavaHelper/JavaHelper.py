@@ -7,11 +7,12 @@ from subprocess import run
 from re import compile
 from platform import system
 
-from .Path import path as Pathmd, pathAdder
-from .File import dfCheck
-from .Others import fixType
+from ..Path import path as Pathmd, pathAdder
+from ..File import dfCheck
+from ..Others import fixType
 
-from .Exceptions import JavaHelper as Ex_JavaHelper, Claset as Ex_Claset
+from .Exceptions import MatchStringError
+from ..Exceptions import Claset as Ex_Claset
 
 Logger = getLogger(__name__)
 reMatchJavaInfos = compile(r"\s*os\.arch=\"(.+)\"\s*java\.version=\"(.+)\"\s*java\.vendor=\"(.+)\"\s*")
@@ -46,13 +47,17 @@ def getJavaInfo(Path: str | None) -> tuple[str]:
     """通过 Java 源文件获取 Java 版本"""
     Path = fixJavaPath(Path)
     JarPath = Pathmd("$EXEC/Utils/JavaHelper/GetJavaInfo.jar", IsPath=True)
+
+    if dfCheck(Path=JarPath, Type="f") == False:
+        Logger.error("Jar File: \"%s\" missing", JarPath)
+
     Return = run(args=[Path, "-jar", JarPath], capture_output=True)
     Logger.debug("Java from \"%s\" return: \"%s\"", Path, Return)
     DecodedReturn = Return.stdout.decode("utf-8")
     try:
         return(reMatchJavaInfos.match(DecodedReturn).groups())
     except AttributeError:
-        raise Ex_JavaHelper.MatchStringError(DecodedReturn)
+        raise MatchStringError(DecodedReturn)
 
 
 def fixJavaPath(Path: str) -> str:
@@ -91,7 +96,7 @@ def getJavaInfoList(PathList: list[str] | None = None) -> list[dict[str, str | t
     Outputs = list()
     for Path in PathList:
         try: Infos = getJavaInfo(Path)
-        except Ex_JavaHelper.MatchStringError: pass
+        except MatchStringError: continue
         Outputs.append({
             "Path": Path,
             "Arch": Infos[0],

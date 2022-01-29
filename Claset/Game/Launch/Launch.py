@@ -53,6 +53,7 @@ class GameLauncher():
     def launchGame(self) -> None:
         """启动游戏"""
         processNatives(VersionJson=self.VersionJson, ExtractTo=self.NativesPath, Features=self.Features)
+        Logger.info("Launch Game: %s", self.VersionName)
         Logger.debug("Run code: %s", self.RunCode)
         self.Game = Popen(args=[self.JavaPath] + self.RunCode, cwd=self.VersionDir)
         LaunchedGames.append(self)

@@ -5,7 +5,7 @@ from . import (
     Exceptions, Confs, JavaHelper
 )
 from .Logs import Logs
-from .File import loadFile, saveFile, moveFile, dfCheck
+from .File import loadFile, saveFile, moveFile, copyFile, dfCheck
 from .AdvancedPath import AdvancedPath
 from .Confs import ConfigIDs, ConfigInfos
 from .Configs import Configs
@@ -17,7 +17,7 @@ __all__ = [
     "Configs", "DownloadManager", "Logs",
     "AdvancedPath", "Exceptions", "Confs", "JavaHelper",
     "ConfigIDs", "ConfigInfos", "path", "pathAdder",
-    "loadFile", "saveFile", "moveFile", "dfCheck",
+    "loadFile", "saveFile", "copyFile", "moveFile", "dfCheck",
     "getValueFromDict", "fixType", "encodeBase64", "decodeBase64"
 ]
 

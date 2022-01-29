@@ -75,10 +75,20 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
 
+      - name: Copy files
+        shell: pwsh
+        run: |
+          Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\Run.py ${{ github.workspace }}\
+          Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\requirements_build.txt ${{ github.workspace }}\
+          Get-ChildItem -Path ${{ github.workspace }}\Claset\Execution\ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force
+
+
       - name: Setting Python Environment
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ '3.10.1' }}
+          # python-version: ${{ env.PYTHON_VERSION }}
+          # setup-python 无法获取 Windows 版本的 Python 3.10.2, 暂时强制使用 3.10.1
           architecture: ${{ env.PYTHON_ARCHITECTURE }}
 
 
@@ -93,11 +103,6 @@ jobs:
         # if: github.event.inputs.use_nuitka_develop_version  == 'true'
         shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
-
-
-      - name: Copy start file
-        shell: pwsh
-        run: Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\Run.py ${{ github.workspace }}\
 
 
       - name: Show Environment
@@ -173,6 +178,14 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
 
+      - name: Copy files
+        shell: pwsh
+        run: |
+          Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/Run.py ${{ github.workspace }}/
+          Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/requirements_build.txt ${{ github.workspace }}/
+          Get-ChildItem -Path ${{ github.workspace }}/Claset/Execution/ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force
+
+
       - name: Setting Python Environment
         uses: actions/setup-python@v2
         with:
@@ -191,11 +204,6 @@ jobs:
         # if: github.event.inputs.use_nuitka_develop_version  == 'true'
         shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
-
-
-      - name: Copy start file
-        shell: pwsh
-        run: Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/Run.py ${{ github.workspace }}/
 
 
       - name: Show Environment

@@ -8,13 +8,14 @@
 
 ## 引用/Requirements
 
-| 库/Libraries                                            | 版本/Version |
-|---------------------------------------------------------|-------------|
-|[Python](https://github.com/python/cpython)              |3.10.2       |
-|[requests](https://github.com/psf/requests)              |2.27.1       |
-|[cmd2](https://github.com/python-cmd2/cmd2)              |2.3.3        |
-|[rich](https://github.com/Textualize/rich)*              |11.0.0       |
-|[Nuitka](https://github.com/Nuitka/Nuitka)**             |0.6.20rc4    |
+| 库/Libraries                                              | 版本/Version |
+|-----------------------------------------------------------|-------------|
+|[Python](https://github.com/python/cpython)                |3.10.2       |
+|[requests](https://github.com/psf/requests)                |2.27.1       |
+|[cmd2](https://github.com/python-cmd2/cmd2)                |2.3.3        |
+|[rich](https://github.com/Textualize/rich)*                |11.0.0       |
+|[Nuitka](https://github.com/Nuitka/Nuitka)**               |0.6.20rc4    |
+|[zstandard](https://github.com/indygreg/python-zstandard)**|0.16.0       |
 *: 可选
 **: 用于编译为可执行程序
 
