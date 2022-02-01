@@ -2,12 +2,12 @@
 
 from . import Exceptions
 from .JavaHelper import (
-    getJavaPath, getJavaInfo, versionFormater,
-    getJavaInfoList, fixJavaPath, genJarFile, reMatchJavaInfos
+    getJavaPath, getJavaInfo, versionFormater, autoPickJava,
+    getJavaInfoList, fixJavaPath, genJarFile, reMatchJavaInfos, JavaInfo
 )
 
 __all__ = [
-    "Exceptions", "getJavaPath", "getJavaInfo", "versionFormater",
-    "getJavaInfoList", "fixJavaPath", "genJarFile", "reMatchJavaInfos"
+    "Exceptions", "getJavaPath", "getJavaInfo", "versionFormater", "autoPickJava",
+    "getJavaInfoList", "fixJavaPath", "genJarFile", "reMatchJavaInfos", "JavaInfo"
 ]
 

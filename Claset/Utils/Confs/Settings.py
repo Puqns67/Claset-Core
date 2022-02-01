@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 3
+LastVersion = 4
 
 
 File = {
@@ -11,7 +11,7 @@ File = {
         "MemoryMax": 1024,
         "WindowWidth": 854,
         "WindowHeight": 480,
-        "JavaPath": "java.exe",
+        "JavaPath": "AUTOPICK",
         "NotCheckGame": False,
         "NotCheckJvm": False
     }
@@ -19,6 +19,9 @@ File = {
 
 
 Difference = {
+    "3->4": [
+        "REPLACE:[GlobalConfig, JavaPath]->AUTOPICK"
+    ],
     "2->3": [
         "REPLACE:[GlobalConfig, MemoryMin]->512",
         "REPLACE:[GlobalConfig, MemoryMax]->1024"

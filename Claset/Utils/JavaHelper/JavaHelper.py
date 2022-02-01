@@ -3,6 +3,7 @@
 
 from logging import getLogger
 from os import getenv
+import re
 from subprocess import run
 from re import compile
 from platform import system
@@ -11,12 +12,12 @@ from ..Path import path as Pathmd, pathAdder
 from ..File import saveFile, dfCheck
 from ..Others import fixType
 
-from .Exceptions import MatchStringError
+from .Exceptions import MatchStringError, JavaNotFound
 from ..Exceptions import Claset as Ex_Claset
 
 Logger = getLogger(__name__)
 reMatchJavaInfos = compile(r"\s*os\.arch=\"(.+)\"\s*java\.version=\"(.+)\"\s*java\.vendor=\"(.+)\"\s*")
-__all__ = ["getJavaPath", "getJavaInfo", "versionFormater", "getJavaInfoList", "reMatchJavaInfos", "fixJavaPath", "genJarFile"]
+JavaInfo = dict[str, str | tuple[int]]
 
 
 def getJavaPath() -> list[str]:
@@ -86,7 +87,7 @@ def versionFormater(Version: str) -> list:
     return(Version)
 
 
-def getJavaInfoList(PathList: list[str] | None = None) -> list[dict[str, str | tuple[int]]]:
+def getJavaInfoList(PathList: list[str] | None = None) -> list[JavaInfo]:
     """
     通过版本列表获取字典形式的 Java 信息，如输入为空则通过 Claset.Utils.JavaHelper.getJavaPath() 获取\n
     如获取过程中出现 JavaHelper.MatchStringError 将不在输出中附上出错的信息
@@ -103,6 +104,37 @@ def getJavaInfoList(PathList: list[str] | None = None) -> list[dict[str, str | t
             "From": Infos[2]
         })
     return(Outputs)
+
+
+def autoPickJava(recommendVersion: int, JavaInfoList: list[JavaInfo] | None = None) -> JavaInfo:
+    # 如 JavaInfoList 为空则通过 getJavaInfoList() 获取
+    if JavaInfoList == None:
+        JavaInfoList = getJavaInfoList()
+
+    # 如 JavaInfoList 为中单位数量为零则抛出 JavaNotFound 异常
+    if len(JavaInfoList) == 0:
+        raise JavaNotFound
+
+    for i in JavaInfoList:
+        if i["Version"][0] == recommendVersion:
+            return(i)
+
+    if recommendVersion <= 16 and recommendVersion >= 8:
+        for i in JavaInfoList: # 优先使用 LTS 版本
+            if i["Version"][0] in [8, 11, 16]:
+                return(i)
+        for i in JavaInfoList:
+            if i["Version"][0] <= 16 and i["Version"][0] >= 8:
+                return(i)
+    elif recommendVersion >= 17:
+        for i in JavaInfoList:
+            if i["Version"][0] == 17:
+                return(i)
+        for i in JavaInfoList:
+            if i["Version"][0] >= 17:
+                return(i)
+
+    return(JavaInfoList[0])
 
 
 def genJarFile(FileName: str, Overwrite: bool = False) -> None:

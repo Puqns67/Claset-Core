@@ -4,12 +4,12 @@
 from logging import getLogger
 from re import compile as reCompile
 from typing import Any
-from subprocess import Popen
+from subprocess import Popen, DEVNULL
 
 from Claset import __fullversion__, __productname__, LaunchedGames
-from Claset.Utils import Configs, JavaHelper, pathAdder, loadFile, dfCheck, path, getValueFromDict
-
-from ..Utils import ResolveRule, getClassPath, processNatives
+from Claset.Utils import Configs, pathAdder, loadFile, dfCheck, path, getValueFromDict
+from Claset.Utils.JavaHelper import autoPickJava, fixJavaPath, getJavaInfoList, JavaInfo
+from Claset.Game.Utils import ResolveRule, getClassPath, processNatives
 
 from .Exceptions import *
 
@@ -46,16 +46,19 @@ class GameLauncher():
         # Natives
         self.NativesPath = pathAdder(self.VersionDir, self.getConfig(["NativesDir"]))
 
-        self.JavaPath, self.JavaInfo = self.setJava()
-        self.RunCode = self.getRunCode()
 
-
-    def launchGame(self) -> None:
+    def launchGame(self, PrintToTerminal: bool = True) -> None:
         """启动游戏"""
+        RunArgs = self.getRunArgs()
+        self.PickedJava = self.getJavaPathAndInfo()
+
         processNatives(VersionJson=self.VersionJson, ExtractTo=self.NativesPath, Features=self.Features)
         Logger.info("Launch Game: %s", self.VersionName)
-        Logger.debug("Run code: %s", self.RunCode)
-        self.Game = Popen(args=[self.JavaPath] + self.RunCode, cwd=self.VersionDir)
+        Logger.debug("Run code: %s", RunArgs)
+        if PrintToTerminal:
+            self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionDir)
+        else:
+            self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionDir, stdout=DEVNULL)
         LaunchedGames.append(self)
 
 
@@ -69,7 +72,7 @@ class GameLauncher():
             self.Game.terminate()
 
 
-    def getRunCode(self) -> dict:
+    def getRunArgs(self) -> list[str]:
         return(self.processRunArgsList(self.getRunArgsList()))
 
 
@@ -77,7 +80,14 @@ class GameLauncher():
         match self.VersionJson["complianceLevel"]:
             case 0:
                 return(
-                    ["${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}", "${MEMMAX}", "${JVMEND}", "${MAINCLASS}", "${GAMEARGSPREFIX}"] + self.VersionJson["minecraftArguments"].split() + ["${GAMEARGSEND}"]
+                    [
+                        "${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}", "${MEMMAX}", "${JVMEND}",
+                        "-Djava.library.path=${natives_directory}",
+                        "-Dminecraft.launcher.brand=${launcher_name}",
+                        "-Dminecraft.launcher.version=${launcher_version}",
+                        "-cp", "${classpath}",
+                        "${MAINCLASS}", "${GAMEARGSPREFIX}"
+                    ] + self.VersionJson["minecraftArguments"].split() + ["${GAMEARGSEND}"]
                 )
             case 1:
                 Arguments = list()
@@ -177,13 +187,17 @@ class GameLauncher():
         else: return(getValueFromDict(Keys=Keys, Dict=self.VersionConfig["UnableGlobal"]))
 
 
-    def setJava(self) -> tuple[str]:
-        JavaPath = JavaHelper.fixJavaPath(self.getConfig(["JavaPath"]))
-        JavaInfo = JavaHelper.getJavaInfoList(PathList=[JavaPath])[0]
-        recommendJavaVersion = self.VersionJson["javaVersion"]["majorVersion"]
-        if recommendJavaVersion > JavaInfo["Version"][0]:
-            Logger.warning("Java version %s too old, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
-        elif recommendJavaVersion < JavaInfo["Version"][0]:
-            Logger.warning("Java version %s too new, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
-        return((JavaPath,JavaInfo,))
+    def getJavaPathAndInfo(self) -> JavaInfo:
+        JavaPath = self.getConfig(["JavaPath"])
+        recommendJavaVersion: int = self.VersionJson["javaVersion"]["majorVersion"]
+        if JavaPath == "AUTOPICK":
+            return(autoPickJava(recommendVersion=recommendJavaVersion))
+        else:
+            JavaPath = fixJavaPath(JavaPath)
+            JavaInfo = getJavaInfoList(PathList=[JavaPath])[0]
+            if recommendJavaVersion > JavaInfo["Version"][0]:
+                Logger.warning("Java version %s too old, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
+            elif recommendJavaVersion < JavaInfo["Version"][0]:
+                Logger.warning("Java version %s too new, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
+            return(JavaInfo)
 

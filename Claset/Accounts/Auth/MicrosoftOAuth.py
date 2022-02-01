@@ -29,8 +29,12 @@ class MicrosoftOAuth():
         self.AccessToken, self.RefreshToken = self.getTokens()
 
 
-    def refresh(self):
-        if self.RefreshToken == None: raise ValueError
+    def refresh(self, RefreshToken: str | None = None):
+        if RefreshToken != None:
+            self.RefreshToken = RefreshToken
+        elif self.RefreshToken == None:
+            raise ValueError
+
         self.AccessToken, self.RefreshToken = self.refreshAccessTokens()
 
 

@@ -27,7 +27,7 @@ class GameInstaller():
     * Version: 游戏版本号
     * Downloader: 下载器，不定义则使用全局下载器
     """
-    def __init__(self, VersionName: str, MinecraftVersion: str, Downloader: DownloadManager | None = None, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
+    def __init__(self, VersionName: str, MinecraftVersion: str | None = None, Downloader: DownloadManager | None = None, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
         self.VersionName = VersionName
         self.MinecraftVersion = MinecraftVersion
         self.WaitDownloader = WaitDownloader
@@ -66,6 +66,7 @@ class GameInstaller():
         # 下载
         Logger.info("Downloading Minecraft Vanilla Verison \"%s\", from mirror \"%s\"", self.VersionName, self.MinecraftVersion)
         self.Downloader.addTasks(InputTasks=DownloadList, MainProjectID=self.MainDownloadProject)
+
         if self.WaitDownloader:
             self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
 

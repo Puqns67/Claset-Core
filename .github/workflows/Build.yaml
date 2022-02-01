@@ -75,9 +75,10 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
 
-      - name: Copy & delete files
+      - name: Setting Build Environment
         shell: pwsh
         run: |
+          Write-Output "Copy & delete files"
           Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\Run.py ${{ github.workspace }}\ -Verbose
           Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\requirements_build.txt ${{ github.workspace }}\ -Verbose
           Get-ChildItem -Path ${{ github.workspace }}\Claset\Execution\ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force -Verbose
@@ -166,6 +167,15 @@ jobs:
             ${{ runner.os }}-cache-python-pip-
 
 
+      - name: Nuitka Cache
+        if: ${{ env.CACHE_NUITKA_GCC }}
+        uses: actions/cache@v2
+        with:
+          path: ~/.local/share/Nuitka
+          key: ${{ runner.os }}-cache-nuitka
+          restore-keys: ${{ runner.os }}-cache-nuitka
+
+
       - name: Build Cache
         if: ${{ env.CACHE_BUILD }}
         uses: actions/cache@v2
@@ -178,12 +188,15 @@ jobs:
           restore-keys: ${{ runner.os }}-cache-nuitka-build-
 
 
-      - name: Copy & delete files
+      - name: Setting Build Environment
         shell: pwsh
         run: |
+          Write-Output "Copy & delete files"
           Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/Run.py ${{ github.workspace }}/ -Verbose
           Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/requirements_build.txt ${{ github.workspace }}/ -Verbose
           Get-ChildItem -Path ${{ github.workspace }}/Claset/Execution/ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force -Verbose
+          Write-Output "Install build tools"
+          apt install patchelf ccache
 
 
       - name: Setting Python Environment

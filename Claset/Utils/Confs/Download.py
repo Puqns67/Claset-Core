@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 5
+LastVersion = 6
 
 
 File = {
@@ -14,7 +14,7 @@ File = {
     "ErrorByStatusCode": True,
     "SSLVerify": True,
     "Headers": {
-        "user-agent": "Claset/0.2.1"
+        "user-agent": "Claset/0.2.2"
     },
     "Timeouts": {
         "Connect": 5,
@@ -24,6 +24,9 @@ File = {
 
 
 Difference = {
+    "5->6": [
+        "REPLACE:[Headers, user-agent]->Claset/0.2.2"
+    ],
     "4->5": [
         "DELETE:Proxies",
         "REPLACE:ProxyLink->Null",

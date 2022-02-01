@@ -19,8 +19,11 @@ def Versionmanifest_VersionList(InitFile: dict, Recommend: str | None = None) ->
     return(OutputList)
 
 
-def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> dict:
+def VersionManifest_To_Version(InitFile: dict, TargetVersion: str | None) -> dict:
     """从 VersionManifest Json 提取 Version Json 的相关信息并转化为 DownloadManager Task"""
+    if TargetVersion == None:
+        TargetVersion = InitFile["latest"]["release"]
+
     for Version in InitFile["versions"]:
         if Version["id"] == TargetVersion:
             return({
@@ -29,6 +32,7 @@ def VersionManifest_To_Version(InitFile: dict, TargetVersion: str) -> dict:
                 "FileName": baseName(Version["url"]),
                 "Overwrite": False,
             })
+
     raise TargetVersionNotFound(TargetVersion)
 
 
