@@ -196,7 +196,7 @@ jobs:
           Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/requirements_build.txt ${{ github.workspace }}/ -Verbose
           Get-ChildItem -Path ${{ github.workspace }}/Claset/Execution/ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force -Verbose
           Write-Output "Install build tools"
-          apt install patchelf ccache
+          sudo apt-get install patchelf ccache
 
 
       - name: Setting Python Environment
