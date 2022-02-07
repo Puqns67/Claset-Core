@@ -4,8 +4,9 @@
 from logging import getLogger
 from re import compile as reCompile
 from typing import Any
+from json import JSONDecodeError
 
-from .File import loadFile, saveFile, dfCheck
+from .File import loadFile, saveFile, dfCheck, removeFile
 from .Others import getValueFromDict, fixType
 
 from .Confs import ConfigIDs, ConfigInfos
@@ -74,9 +75,17 @@ class Configs():
     def getConfig(self) -> dict:
         """取得配置文件"""
         # 判断配置文件是否存在, 存在则查看是否需要检查更新, 不存在则生成配置文件
-        if dfCheck(Path=self.FilePath, Type="f") == False: self.genConfig(OverWrite=False)
+        if dfCheck(Path=self.FilePath, Type="f") == False:
+            self.genConfig(OverWrite=False)
         # 读取文件并返回数据
-        return(loadFile(Path=self.FilePath, Type="json"))
+        try:
+            TheConfig = loadFile(Path=self.FilePath, Type="json")
+        except JSONDecodeError:
+            Logger.warning("Decode Config \"%s\" error, delete it", self.ID)
+            removeFile(self.FilePath)
+            TheConfig = loadFile(Path=self.FilePath, Type="json")
+        finally:
+            return(TheConfig)
 
 
     def checkUpdate(self, Type: str = "!=") -> bool:
@@ -118,7 +127,10 @@ class Configs():
     def updateConfig(self, TargetVersion: int | None = None, Differences: list | None = None) -> None:
         """更新或降级配置文件版本至目标版本(TargetVersion)"""
         # 处理版本数据
-        Logger.info("Update Config (%s) From Version %s to Version %s", self.ID, self.NowVersion, TargetVersion)
+        if TargetVersion:
+            Logger.info("Update Config (%s) From Version %s to Version %s", self.ID, self.NowVersion, TargetVersion)
+        else:
+            Logger.info("Update Config (%s) From Version %s to last Version", self.ID, self.NowVersion)
 
         if Differences != None:
             DifferenceS = Differences

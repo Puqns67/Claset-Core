@@ -2,9 +2,9 @@
 """日志相关的处理方案"""
 
 from logging import Logger, Formatter, StreamHandler, FileHandler, getLevelName
+from msilib.schema import RemoveFile
 from os import listdir, remove
 from re import compile as reCompile
-from shutil import make_archive, unpack_archive, rmtree
 from time import localtime, strftime
 from threading import Thread
 
@@ -13,7 +13,7 @@ try:
 except ModuleNotFoundError:
     RichHandler = None
 
-from .File import dfCheck, moveFile
+from .File import dfCheck, removeFile, makeArchive, addFileIntoArchive
 from .Configs import Configs
 from .Path import path as Pathmd, pathAdder
 
@@ -117,7 +117,7 @@ class Logs():
                 if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): return(None)
 
                 for FileName in LogFileList:
-                    remove(self.LogPath + "/" + FileName)
+                    removeFile(self.LogPath + "/" + FileName)
                     self.TheLogger.info("Deleted old log file: \"%s\"", FileName)
                     LogFileList.remove(FileName)
                     if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): break
@@ -125,32 +125,25 @@ class Logs():
             # 进行存档
             case "Archive":
                 TypeConfigs = self.Configs["ProcessOldLog"]["TypeSettings"]["Archive"]
+                NeedArchivePaths = list()
                 # 若不满足情况则直接返回
                 if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): return(None)
 
                 ArchiveFilePath = pathAdder(self.LogPath, TypeConfigs["ArchiveFileName"])
-                TempDir = pathAdder("$CACHE", TypeConfigs["TempDirName"])
-                dfCheck(Path=TempDir, Type="dm")
-
-                if (dfCheck(Path=ArchiveFilePath + ".tar.xz", Type="f")):
-                    try:
-                        unpack_archive(filename=ArchiveFilePath + ".tar.xz", extract_dir=TempDir, format="xztar")
-                    except EOFError:
-                        self.TheLogger.error("Archive File (%s) EOF!", ArchiveFilePath)
-                        remove(ArchiveFilePath + ".tar.xz")
 
                 for LogFileName in LogFileList:
-                    LogFilePath = pathAdder(self.LogPath, LogFileName)
-                    moveFile(File=LogFilePath, To=TempDir)
-                    self.TheLogger.info("Archived old log file: \"%s\"", LogFileName)
+                    self.TheLogger.info("Archiveing old log file: \"%s\"", LogFileName)
+                    NeedArchivePaths.append(pathAdder(self.LogPath, LogFileName))
                     LogFileList.remove(LogFileName)
                     if (len(LogFileList) <= TypeConfigs["MaxKeepFile"]): break
 
-                try:
-                    make_archive(base_name=ArchiveFilePath, format="xztar", root_dir=TempDir, base_dir=None)
-                except PermissionError:
-                    self.TheLogger.error("Make archive error")
-                rmtree(path=TempDir)
+                if not dfCheck(Path=ArchiveFilePath, Type="f"):
+                    makeArchive(From=NeedArchivePaths.pop(), As=ArchiveFilePath, ArchiveType="Zstandard")
+
+                if len(NeedArchivePaths) >= 1:
+                    addFileIntoArchive(ArchivePath=ArchiveFilePath, SourcePaths=NeedArchivePaths, ArchiveType="Zstandard")
+                    for i in NeedArchivePaths:
+                        removeFile(path=i)
 
             case _: self.TheLogger.warning("Unsupport Type: %s", self.Configs["ProcessOldLog"]["Type"])
 

@@ -10,17 +10,22 @@ from .Confs.Paths import File
 from .Exceptions import Path as Ex_Path
 
 PathRegex = ReCompile(r"(.*)\$([a-zA-Z]*)(.*)")
+PathConfigs = None
+PathConfigKeys = None
 
 
 def path(Input: str, IsPath: bool = False) -> str:
     """格式化路径"""
-    try:
-        with open(getcwd() + "/Claset/Paths.json") as ConfigFile:
-            Config = load(ConfigFile)["Prefixs"]
-    except FileNotFoundError:
-        Config = File["Prefixs"]
+    global PathConfigs
+    global PathConfigKeys
 
-    ConfigKeys = Config.keys()
+    if PathConfigs == None:
+        try:
+            with open(getcwd() + "/Claset/Paths.json") as ConfigFile:
+                PathConfigs = load(ConfigFile)["Prefixs"]
+        except FileNotFoundError:
+            PathConfigs = File["Prefixs"]
+        PathConfigKeys = PathConfigs.keys()
 
     while "$" in Input:
         Match = PathRegex.search(Input)
@@ -28,7 +33,7 @@ def path(Input: str, IsPath: bool = False) -> str:
         Groups = list(Match.groups())
         if Groups[1] == None: raise Ex_Path.SearchError
         elif Groups[1] == "PREFIX": Groups[1] = getcwd()
-        elif Groups[1] in ConfigKeys: Groups[1] = Config[Groups[1]]
+        elif Groups[1] in PathConfigKeys: Groups[1] = PathConfigs[Groups[1]]
         else: raise Ex_Path.PrefixsMissingKey(Groups[1])
         Input = str().join(Groups)
 

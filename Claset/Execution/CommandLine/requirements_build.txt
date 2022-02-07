@@ -6,3 +6,4 @@ nuitka   >=0.6.19
 zstandard>=0.17.0
 cmd2     >=2.3.3
 rich     >=11.0.0
+PySocks  >=1.7.1

@@ -166,6 +166,8 @@ class DownloadManager():
                         raise Ex_Download.FileExist
                     else:
                         Logger.warning("File: \"%s\" sha1 verify Error! ReDownload it")
+                else:
+                    raise Ex_Download.FileExist
 
         if self.Configs["UseGobalRequestsSession"] == True:
             UsedSession = self.RequestsSession

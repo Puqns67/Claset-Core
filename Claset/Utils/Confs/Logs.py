@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 3
+LastVersion = 4
 
 
 File = {
@@ -24,8 +24,7 @@ File = {
             },
             "Archive": {
                 "MaxKeepFile": 3,
-                "ArchiveFileName": "Claset-Log-Archive",
-                "TempDirName": "ArchivedLog"
+                "ArchiveFileName": "Claset-Log-Archive.tar.zst",
             }
         }
     }
@@ -33,6 +32,10 @@ File = {
 
 
 Difference = {
+    "3->4": [
+        "REPLACE:[ProcessOldLog, TypeSettings, Archive, ArchiveFileName]->Claset-Log-Archive.tar.zst",
+        "DELETE:[ProcessOldLog, TypeSettings, Archive, TempDirName]",
+    ],
     "2->3": [
         "REPLACE:UseRich->True"
     ],

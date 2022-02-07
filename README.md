@@ -13,9 +13,10 @@
 |[Python](https://github.com/python/cpython)                |3.10.2       |
 |[requests](https://github.com/psf/requests)                |2.27.1       |
 |[cmd2](https://github.com/python-cmd2/cmd2)                |2.3.3        |
+|[zstandard](https://github.com/indygreg/python-zstandard)  |0.17.0       |
 |[rich](https://github.com/Textualize/rich)*                |11.0.0       |
-|[Nuitka](https://github.com/Nuitka/Nuitka)**               |0.6.20rc4    |
-|[zstandard](https://github.com/indygreg/python-zstandard)**|0.17.0       |
+|[Nuitka](https://github.com/Nuitka/Nuitka)**               |0.6.20rc6    |
+|[PySocks](https://github.com/Anorov/PySocks)**             |1.7.1        |
 
 *: 可选
 **: 用于编译为可执行程序

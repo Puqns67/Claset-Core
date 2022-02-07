@@ -7,7 +7,7 @@
 __author__ = "Puqns67"
 __productname__ = "Claset"
 __version__ = "0.1.0"
-__build__ = 135
+__build__ = 137
 __fullversion__ = __version__ + "_" + str(__build__)
 __all__ = [
     "Accounts", "Execution", "Utils", "Game",
@@ -62,7 +62,7 @@ def setLoggerHandler(**Types: dict[str, str | None]):
 
 def ProcessLogs(Type: str | None = None, ThreadMode: bool = True) -> None:
     """处理日志"""
-    return(None) # 有毛病，停用了先
+    # return(None) # 有毛病，停用了先
     if ThreadMode:
         ProcessLogger.ThreadProcessLogs(Type=Type)
     else:
