@@ -9,7 +9,7 @@ import Claset
 
 
 def testInstallAndRun():
-    GameInstaller = Claset.Game.Install.GameInstaller(VersionName="Test", MinecraftVersion="1.18.1")
+    GameInstaller = Claset.Game.Install.GameInstaller(VersionName="Test")
     try:
         GameInstaller.InstallVanilla()
     except KeyboardInterrupt:
@@ -30,7 +30,9 @@ def testMicrosoftOAuth():
     Logger = Claset.getLogger()
     OAuth = Claset.Accounts.Auth.MicrosoftOAuth()
     OAuth.auth()
-    Logger.info("Microsoft Account Keys: \"%s\", \"%s\"", OAuth.AccessToken, OAuth.RefreshToken)
+    Logger.info("Microsoft Account Keys: \"%s\", \"%s\"", OAuth.MicrosoftAccountAccessToken, OAuth.MicrosoftAccountRefreshToken)
+    OAuth.getMinecraftAccountInfos()
+    Logger.info("Account Infos: \n%s", OAuth.MinecraftAccessToken)
 
 
 def Main():

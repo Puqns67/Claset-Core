@@ -62,6 +62,8 @@ class DownloadManager():
                 post(self.Configs["ProxyLink"])
             except Ex_Requests.ConnectionError:
                 Logger.warning("Unable to connect to the proxy server: \"%s\", Disable it", self.Configs["ProxyLink"])
+            except Ex_Requests.InvalidSchema:
+                Logger.warning("Proxy server url schema error: \"%s\", Disable it", self.Configs["ProxyLink"])
             else:
                 TheSession.proxies = {"http": self.Configs["ProxyLink"], "https": self.Configs["ProxyLink"]}
                 # 使用代理时将强制禁用 SSL 验证与使用系统代理

@@ -9,7 +9,7 @@ from subprocess import Popen, DEVNULL
 from Claset import __fullversion__, __productname__, LaunchedGames
 from Claset.Utils import Configs, pathAdder, loadFile, dfCheck, path, getValueFromDict
 from Claset.Utils.JavaHelper import autoPickJava, fixJavaPath, getJavaInfoList, JavaInfo
-from Claset.Game.Utils import ResolveRule, getClassPath, processNatives
+from Claset.Game.Utils import ResolveRule, getClassPath, processNatives, getLog4j2Infos
 
 from .Exceptions import *
 
@@ -81,13 +81,13 @@ class GameLauncher():
             case 0:
                 return(
                     [
-                        "${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}", "${MEMMAX}", "${JVMEND}",
+                        "${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}", "${MEMMAX}", "${LOG4J2_CONFIG}", "${JVMEND}",
                         "-Djava.library.path=${natives_directory}",
                         "-Dminecraft.launcher.brand=${launcher_name}",
                         "-Dminecraft.launcher.version=${launcher_version}",
                         "-cp", "${classpath}",
                         "${MAINCLASS}", "${GAMEARGSPREFIX}"
-                    ] + self.VersionJson["minecraftArguments"].split() + ["${GAMEARGSEND}"]
+                    ].extend(self.VersionJson["minecraftArguments"].split() + ["${GAMEARGSEND}"])
                 )
             case 1:
                 Arguments = list()
@@ -98,7 +98,7 @@ class GameLauncher():
                         Arguments.extend(self.VersionJson["arguments"]["game"])
                     case None:
                         Arguments.extend(self.VersionJson["arguments"]["jvm"])
-                        Arguments.extend(("${JVMEND}", "${MAINCLASS}", "${GAMEARGSPREFIX}",))
+                        Arguments.extend(("${LOG4J2_CONFIG}", "${JVMEND}", "${MAINCLASS}", "${GAMEARGSPREFIX}",))
                         Arguments.extend(self.VersionJson["arguments"]["game"])
                     case _: ValueError(Type)
 
@@ -138,7 +138,7 @@ class GameLauncher():
                 Output.append(str().join(MatchedGroups))
             elif type(Replaced) in (type(tuple()), type(list()),):
                 if len(Replaced) != 0:
-                    for i in Replaced: Output.append(i)
+                    Output.extend(Replaced)
             elif type(Replaced) in (type(int()), type(float()),):
                 Output.append(str(Replaced))
         return(Output)
@@ -154,6 +154,7 @@ class GameLauncher():
             case "GAMEARGSEND": return(self.VersionConfig["UnableGlobal"]["PrefixAndEnds"]["GameEnd"])
             case "MEMMIN": return("-Xms" + str(self.getConfig(["MemoryMin"])) + "M")
             case "MEMMAX": return("-Xmx" + str(self.getConfig(["MemoryMax"])) + "M")
+            case "LOG4J2_CONFIG": return(getLog4j2Infos(InitFile=self.VersionJson, Type="Argument"))
             case "MAINCLASS": return(self.VersionJson["mainClass"])
             case "launcher_name": return(__productname__)
             case "launcher_version": return(__fullversion__)

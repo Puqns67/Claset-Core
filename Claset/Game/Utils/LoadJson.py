@@ -43,8 +43,8 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
     Client = InitFile["downloads"]["client"]
     Tasks.append({
         "URL": Client["url"],
-        "Sha1": Client["sha1"],
         "Size": Client["size"],
+        "Sha1": Client["sha1"],
         "OutputPaths": pathAdder("$VERSION", Name, Name + ".jar"),
         "Overwrite": False
     })
@@ -60,7 +60,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
                 "URL": Natives["url"],
                 "Size": Natives["size"],
                 "Sha1": Natives["sha1"],
-                "OutputPath": pathAdder("$LIBRERIES/", Natives["path"]),
+                "OutputPaths": pathAdder("$LIBRERIES/", Natives["path"]),
                 "Overwrite": False,
                 "FileName": None
             })
@@ -71,11 +71,16 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
                 "URL": Artifact["url"],
                 "Size": Artifact["size"],
                 "Sha1": Artifact["sha1"],
-                "OutputPath": pathAdder("$LIBRERIES/", Artifact["path"]),
+                "OutputPaths": pathAdder("$LIBRERIES/", Artifact["path"]),
                 "Overwrite": False,
                 "FileName": None
             })
         except KeyError: pass
+
+    # Log4j2 config
+    Log4j2Config = getLog4j2Infos(InitFile=InitFile, Type="DownloadTask")
+    if Log4j2Config != None:
+        Tasks.append(Log4j2Config)
 
     return(Tasks)
 
@@ -137,4 +142,28 @@ def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None =
             Output += Temp + ";"
     Output += VersionJarPath
     return(Output)
+
+
+def getLog4j2Infos(InitFile: dict, Type: str, Platform: str | None = None) -> dict | str | None:
+    if Platform == None:
+        Platform = "client"
+
+    try:
+        Target = InitFile["logging"][Platform]
+    except KeyError:
+        return None
+
+    FilePath = pathAdder("$ASSETS", "log_configs", Target["file"]["id"])
+
+    match Type:
+        case "DownloadTask":
+            return({
+                "URL": Target["file"]["url"],
+                "Size": Target["file"]["size"],
+                "Sha1": Target["file"]["sha1"],
+                "OutputPaths": FilePath,
+                "Overwrite": False
+            })
+        case "Argument":
+            return(Target["argument"].replace("${path}", FilePath))
 

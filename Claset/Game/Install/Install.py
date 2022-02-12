@@ -25,7 +25,7 @@ class GameInstaller():
     游戏安装器
     * Name: 游戏版本名
     * Version: 游戏版本号
-    * Downloader: 下载器，不定义则使用全局下载器
+    * Downloader: 下载器, 不定义则使用全局下载器
     """
     def __init__(self, VersionName: str, MinecraftVersion: str | None = None, Downloader: DownloadManager | None = None, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
         self.VersionName = VersionName
@@ -55,7 +55,10 @@ class GameInstaller():
 
     def InstallVanilla(self) -> None:
         """下载并安装游戏"""
-        Logger.info("Start installation name \"%s\" from Vanilla Verison \"%s\"", self.VersionName, self.MinecraftVersion)
+        if self.MinecraftVersion == None:
+            Logger.info("Start installation name \"%s\" from latest Vanilla stable Verison", self.VersionName)
+        else:
+            Logger.info("Start installation name \"%s\" from Vanilla Verison \"%s\"", self.VersionName, self.MinecraftVersion)
         self.VersionJson = self.getVersionJson()
         self.AssetIndexJson = self.getAssetIndexJson(VersionJson=self.VersionJson, MainProjectID=self.MainDownloadProject)
 
@@ -84,6 +87,10 @@ class GameInstaller():
             self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
             VersionManifestFileType = "NEW"
         VersionManifestFile = loadFile(Path=VersionManifestTask["OutputPaths"], Type="json")
+
+        # 如版本号为空, 则使用最新的稳定版 Minecraft
+        if self.MinecraftVersion == None:
+            self.MinecraftVersion = VersionManifestFile["latest"]["release"]
 
         while True:
             try:

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """管理账户"""
 
-from Claset.Utils import Configs, encodeBase64, decodeBase64
+from Claset.Utils import Configs
 
-from .Auth import MicrosoftOAuth, Exceptions as Ex_Auth
+from .Auth import MicrosoftOAuth
 
 from .Exceptions import *
 
-ACCOUNT_TYPES = ("OFFLINE", "MICROSOFT", "MOJANG",)
+ACCOUNT_TYPES = ("OFFLINE", "MICROSOFT")
 
 
 class AccountManager():
@@ -16,7 +16,7 @@ class AccountManager():
         self.Configs = Configs(ID="Accounts")
 
 
-    def create(self, Type: str = "OFFLINE", Name: str | None = None, Password: str | None = None) -> None:
+    def create(self, Type: str = "OFFLINE", Name: str | None = None) -> None:
         """创建账户"""
         NewAccount = {"Type": Type}
         match Type:
@@ -25,17 +25,11 @@ class AccountManager():
                     raise ValueError("OFFLINE type Account Name cannot be None")
                 else:
                     NewAccount["Name"] = Name
-                    NewAccount["Password"] = None
             case "MICROSOFT":
                 MicrosoftOAuthTask = MicrosoftOAuth()
                 MicrosoftOAuthTask.auth()
-                NewAccount["MicrosoftAccountAccessToken"] = MicrosoftOAuthTask.AccessToken
-                NewAccount["MicrosoftAccountRefreshToken"] = MicrosoftOAuthTask.RefreshToken
-            case "MOJANG":
-                if Name == None: raise ValueError("OFFLINE type Account Name cannot be None")
-                if Password == None: raise ValueError("Password is None")
-                NewAccount["Name"] = Name
-                NewAccount["Password"] = encodeBase64(Password)
+                NewAccount["MicrosoftAccountAccessToken"] = MicrosoftOAuthTask.MicrosoftAccountAccessToken
+                NewAccount["MicrosoftAccountRefreshToken"] = MicrosoftOAuthTask.MicrosoftAccountRefreshToken
             case _: UnsupportedAccountType(Type)
         self.Configs["Accounts"].append(NewAccount)
 
@@ -62,13 +56,25 @@ class AccountManager():
         self.Configs["DefaultAccount"] = ID
 
 
-    def refreshMicrosoftToken(self, ID: int) -> None:
+    def refreshMicrosoftToken(self, ID: int) -> MicrosoftOAuth:
         """刷新Microsoft账户访问Token"""
         if self.Configs["Accounts"][ID]["Type"] != "MICROSOFT":
             raise UnsupportedAccountType(self.Configs["Accounts"][ID]["Type"])
 
         MicrosoftOAuthTask = MicrosoftOAuth(RefreshToken=self.Configs["Accounts"][ID]["MicrosoftAccountRefreshToken"])
         MicrosoftOAuthTask.refresh()
-        self.Configs["Accounts"][ID]["MicrosoftAccountAccessToken"] = MicrosoftOAuthTask.AccessToken
-        self.Configs["Accounts"][ID]["MicrosoftAccountRefreshToken"] = MicrosoftOAuthTask.RefreshToken
+        self.Configs["Accounts"][ID]["MicrosoftAccountAccessToken"] = MicrosoftOAuthTask.MicrosoftAccountAccessToken
+        self.Configs["Accounts"][ID]["MicrosoftAccountRefreshToken"] = MicrosoftOAuthTask.MicrosoftAccountRefreshToken
+
+        return(MicrosoftOAuthTask)
+
+
+    def getMinectaftAccessToken(self, ID: int) -> str:
+        match self.Configs["Accounts"][ID]["Type"]:
+            case "MICROSOFT":
+                MicrosoftOAuthTask = self.refreshMicrosoftToken(ID=ID)
+                MicrosoftOAuthTask.getMinecraftAccountInfos()
+                return(MicrosoftOAuthTask.MinecraftAccessToken)
+            case _:
+                raise UnsupportedAccountType(self.Configs["Accounts"][ID]["Type"])
 

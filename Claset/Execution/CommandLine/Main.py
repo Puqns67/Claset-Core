@@ -9,12 +9,21 @@ import Claset
 
 # ArgumentParsers
 AP_InstallGame = Cmd2ArgumentParser()
-AP_InstallGame.add_argument("-v", "--Version", help="游戏版本, 不指定时使用最新的正式版")
+AP_InstallGame.add_argument("-V", "--Version", help="游戏版本, 不指定时使用最新的正式版")
 AP_InstallGame.add_argument("GameName", help="游戏实例名")
 
 AP_LaunchGame = Cmd2ArgumentParser()
-AP_LaunchGame.add_argument("-S", "--ShowGameLogs", action='store_true', help="输出运行日志至终端")
-AP_LaunchGame.add_argument("GameNames", nargs="+", help="游戏实例名")
+AP_LaunchGame.add_argument("-S", "--ShowGameLogs", action="store_true", help="输出运行日志至终端")
+AP_LaunchGame.add_argument("GameName", help="游戏实例名")
+
+AP_CreateAccount = Cmd2ArgumentParser()
+AP_CreateAccount.add_argument("-N", "--AccountName", help="账户名称, 此选项仅可使用在账户类型为离线时")
+AP_CreateAccount.add_argument("Type", help="账户类型")
+
+AP_RemoveAccount = Cmd2ArgumentParser()
+AP_RemoveAccount.add_argument("-I", "--AccountID", help="指定账户ID")
+AP_RemoveAccount.add_argument("-N", "--AccountName", help="指定账户的名称")
+AP_RemoveAccount.add_argument("-T", "--AccountType", help="指定账户类型")
 
 
 class Main(Cmd):
@@ -37,16 +46,28 @@ class Main(Cmd):
     @with_argparser(AP_LaunchGame)
     def do_LaunchGame(self, init: Namespace):
         """启动游戏"""
-        for i in init.GameNames:
-            GameLauncher = Claset.Game.GameLauncher(i)
-            GameLauncher.launchGame(PrintToTerminal=init.ShowGameLogs)
+        GameLauncher = Claset.Game.GameLauncher(init.GameName)
+        GameLauncher.launchGame(PrintToTerminal=init.ShowGameLogs)
 
 
-    def do_exit(self, _: Namespace):
+    @with_argparser(AP_CreateAccount)
+    def do_CreateAccount(self, init: Namespace):
+        """创建新账户"""
+
+
+    def do_ListAccount(self, _: Namespace):
+        """列出所有账户"""
+
+
+    @with_argparser(AP_RemoveAccount)
+    def do_RemoveAccount(self, init: Namespace):
+        """删除指定的账户"""
+
+
+    def do_Exit(self, _: Namespace):
         """退出程序"""
         Claset.stopALLDownloader()
         Claset.waitALLGames()
         raise SystemExit
-    do_quit = do_exit
-    do_stop = do_exit
+    do_exit = do_Exit
 
