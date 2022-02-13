@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 5
+LastVersion = 6
 
 
 File = {
@@ -11,6 +11,7 @@ File = {
         "EXEC": "$PREFIX/Claset",
         "CACHE": "$EXEC/Cache",
         "CONFIG": "$EXEC",
+        "JARS": "$CACHE/Jars",
         "MINECRFT": "$PREFIX/.minecraft",
         "ASSETS": "$MINECRFT/assets",
         "VERSION": "$MINECRFT/versions",
@@ -24,6 +25,9 @@ File = {
 
 
 Difference = {
+    "5->6": [
+        "REPLACE:[Prefixs, JARS]->$CACHE/Jars"
+    ],
     "4->5": [
         "REPLACE:[Prefixs, VERSION]->$MINECRFT/versions"
     ],

@@ -3,7 +3,7 @@
 from logging import getLogger
 from time import sleep
 
-from requests import Session
+from Claset.Utils import getSession
 
 from .Exceptions import MicrosoftOAuthDeclined, MicrosoftOAuthTimeOut
 
@@ -18,10 +18,9 @@ MINECRAFT_AUTH_SERVICES_URL = "https://api.minecraftservices.com/authentication/
 Logger = getLogger(__name__)
 
 
-class MicrosoftOAuth():
+class Auth():
     def __init__(self, MicrosoftAccountRefreshToken: str | None = None):
-        self.RequestsSession = Session()
-        self.RequestsSession.trust_env = False
+        self.RequestsSession = getSession()
 
         self.MicrosoftAccountRefreshToken = MicrosoftAccountRefreshToken
 
@@ -58,10 +57,9 @@ class MicrosoftOAuth():
 
 
     def refresh(self, MicrosoftAccountRefreshToken: str | None = None):
-        if MicrosoftAccountRefreshToken != None:
-            self.MicrosoftAccountRefreshToken = MicrosoftAccountRefreshToken
-        elif self.MicrosoftAccountRefreshToken == None:
-            raise ValueError
+        if MicrosoftAccountRefreshToken == None:
+            if self.MicrosoftAccountRefreshToken == None: raise ValueError
+            MicrosoftAccountRefreshToken = self.MicrosoftAccountRefreshToken
 
         self.MicrosoftAccountAccessToken, self.MicrosoftAccountRefreshToken = self.refreshAccessTokens()
 
@@ -84,8 +82,15 @@ class MicrosoftOAuth():
         return((RefreshRequestReturned["access_token"], RefreshRequestReturned["refresh_token"],))
 
 
-    def getMinecraftAccountInfos(self) -> None:
-        # 获取来自 XBox Live 的 Token
+    def authToMinectaft(self) -> None:
+        """登录至 Minecraft, 需先获取 Microsoft Account 的 Access Token"""
+        self.getToken_XBoxLive()
+        self.getToken_XBoxXSTS()
+        self.getToken_Minecreaft()
+
+
+    def getToken_XBoxLive(self) -> None:
+        """获取来自 XBox Live 的 Token, 需先获取 Microsoft Account 的 Access Token"""
         XboxReturned = self.RequestsSession.post(
             url=XBOX_LIVE_AUTH_URL,
             headers={"content-type": "application/json", "charset": "UTF-8"},
@@ -95,14 +100,16 @@ class MicrosoftOAuth():
                 "Properties": {
                     "AuthMethod": "RPS",
                     "SiteName": "user.auth.xboxlive.com",
-                    "RpsTicket": f"d={self.AccessToken}"
+                    "RpsTicket": f"d={self.MicrosoftAccountAccessToken}"
                 }
             }
         ).json()
 
         self.XboxLiveToken = XboxReturned["Token"]
 
-        # 获取来自 XBox XSTS 的 Token
+
+    def getToken_XBoxXSTS(self) -> None:
+        """获取来自 XBox XSTS 的 Token, 需先获取 XBox Live 的 Access Token"""
         MinecraftXstsReturned = self.RequestsSession.post(
             url=XBOX_XSTS_AUTH_URL,
             headers={"content-type": "application/json", "charset": "UTF-8"},
@@ -119,7 +126,9 @@ class MicrosoftOAuth():
         self.XboxXstsToken = MinecraftXstsReturned["Token"]
         self.XboxXstsUserHash = MinecraftXstsReturned["DisplayClaims"]["xui"][0]["uhs"]
 
-        # 获取来自 Minecraft 的 Token
+
+    def getToken_Minecreaft(self) -> None:
+        """获取来自 Mojang 的 Minecraft Access Token, 需先获取 XBox XSTS 的 Access Token"""
         MinecraftRespons = self.RequestsSession.post(
             url=MINECRAFT_AUTH_SERVICES_URL,
             headers={"content-type": "application/json", "charset": "UTF-8"},

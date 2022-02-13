@@ -192,7 +192,6 @@ def makeArchive(From: str, As: str, ArchiveType: str = "Zstandard", CompressLeve
     As = Pathmd(As, IsPath=True)
     From = basename(FullFrom)
     TempFilePath = As + ".TempTarFile"
-    print(From, TempFilePath, FullFrom, As)
 
     if dfCheck(Path=TempFilePath, Type="f"):
         removeFile(TempFilePath)

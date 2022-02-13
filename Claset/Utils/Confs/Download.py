@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 6
+LastVersion = 7
 
 
 File = {
     "MaxThread": 32,
     "SleepTime": 0.1,
     "Retry": 5,
+    "Overwrite": True,
     "UseGobalRequestsSession": True,
     "UseSystemProxy": True,
     "ProxyLink": None,
     "ErrorByStatusCode": True,
     "SSLVerify": True,
     "Headers": {
-        "user-agent": "Claset/0.2.2"
+        "user-agent": "Claset/{ClasetVersion}"
     },
     "Timeouts": {
         "Connect": 5,
@@ -24,6 +25,10 @@ File = {
 
 
 Difference = {
+    "6->7": [
+        "REPLACE:[Headers, user-agent]->Claset/{ClasetVersion}",
+        "REPLACE:Overwrite->True"
+    ],
     "5->6": [
         "REPLACE:[Headers, user-agent]->Claset/0.2.2"
     ],

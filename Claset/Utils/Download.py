@@ -9,7 +9,9 @@ from os.path import basename as baseName, split as splitPath
 from random import randint
 from re import search
 from time import sleep
+from typing import Any
 
+from Claset import __fullversion__
 from requests import (
     __version__ as RequestsVersion, Session, post,
     exceptions as Ex_Requests, packages as requestsPackages
@@ -19,9 +21,105 @@ from urllib3 import __version__ as Urllib3Version
 from .Configs import Configs
 from .Exceptions import Download as Ex_Download
 from .File import dfCheck, loadFile, saveFile
-from .Path import path as Pathmd, pathAdder
+from .Path import pathAdder, path as Pathmd
 
 Logger = getLogger(__name__)
+DownloadConfigs = Configs(ID="Download")
+
+
+def getSession(TheSession: Session | None = None) -> Session:
+    """设置/获取 Session"""
+    if TheSession == None: TheSession = Session()
+
+    TheSession.stream = True
+    TheSession.trust_env = DownloadConfigs["UseSystemProxy"]
+    TheSession.verify = DownloadConfigs["SSLVerify"]
+
+    # 设置代理
+    if DownloadConfigs["SSLVerify"] == False:
+        requestsPackages.urllib3.disable_warnings()
+
+    if DownloadConfigs["ProxyLink"] != None:
+        try:
+            post(DownloadConfigs["ProxyLink"])
+        except Ex_Requests.ConnectionError:
+            Logger.warning("Unable to connect to the proxy server: \"%s\", Disable it", DownloadConfigs["ProxyLink"])
+        except Ex_Requests.InvalidSchema:
+            Logger.warning("Proxy server url schema error: \"%s\", Disable it", DownloadConfigs["ProxyLink"])
+        else:
+            TheSession.proxies = {"http": DownloadConfigs["ProxyLink"], "https": DownloadConfigs["ProxyLink"]}
+            # 使用代理时将强制禁用 SSL 验证与使用系统代理
+            requestsPackages.urllib3.disable_warnings()
+            TheSession.verify = False
+            TheSession.trust_env = False
+
+    # 设置 Headers
+    SourceHeaders: dict = DownloadConfigs['Headers']
+    SourceHeaders["user-agent"] = SourceHeaders["user-agent"].format(ClasetVersion=__fullversion__)
+    TheSession.headers = SourceHeaders
+
+    return(TheSession)
+
+
+class DownloadTask():
+    def __init__(
+        self, URL: str, FileName: str | None = None, OutputPath: str | None = None, OutputPaths: str | None = None,
+        Size: int | None = None, ProjectID: int | None = None, Overwrite: bool = True, Sha1: str | None = None,
+        ConnectTimeout: int | None = None, ReadTimeout: int | None = None, Retry: int | None = None, Next: Any | None = None
+        ) -> None:
+        self.URL = URL
+        self.FileName = FileName
+        self.OutputPath = OutputPath
+        self.OutputPaths = OutputPaths
+        self.Size = Size
+        self.ProjectID = ProjectID
+        self.Overwrite = Overwrite
+        self.Sha1 = Sha1
+        self.ConnectTimeout = ConnectTimeout
+        self.ReadTimeout = ReadTimeout
+        self.Retry = Retry
+        self.Next = Next
+        self.ISFULL = False
+
+
+    def full(self) -> None:
+        """完善本 Task"""
+        # 处理缺失的项目
+        if ((self.OutputPaths == None) or (self.OutputPaths == str())):
+            # 如不存在 OutputPath 或 OutputPath 为空, 则使用当前位置
+            if ((self.OutputPath == None) or (self.OutputPath == str())):
+                self.OutputPath = "$PREFIX"
+
+            # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
+            if self.FileName == None:
+                self.FileName = baseName(self.URL)
+                if self.FileName == str():
+                    self.FileName = baseName(self.OutputPath)
+            if self.FileName == None:
+                self.FileName = baseName(self.OutputPath)
+                if self.FileName == str():
+                    self.FileName = baseName(self.URL)
+            if self.FileName == str():
+                self.FileName = "NoName"
+
+            # 从 OutputPath 中去除重复的文件名
+            if ((self.FileName in self.OutputPath) and ((search(self.FileName + "$", self.OutputPath)) != None)):
+                self.OutputPath = search("^(.*)" + self.FileName + "$", self.OutputPath).groups()[0]
+
+            self.OutputPaths = pathAdder(self.OutputPath, self.FileName)
+        else:
+            try:
+                self.OutputPath, self.FileName = splitPath(self.OutputPaths)
+            except Exception:
+                raise Ex_Download.UnpackOutputPathsError
+
+        # 解析 Paths
+        if "$" in self.URL:
+            self.URL = Pathmd(self.URL)
+        if "$" in self.OutputPaths:
+            self.OutputPaths = Pathmd(self.OutputPaths, IsPath=True)
+
+        self.ISFULL = True
 
 
 class DownloadManager():
@@ -32,55 +130,21 @@ class DownloadManager():
     Stopping = False
 
     def __init__(self):
-        self.Configs = Configs(ID="Download")
-
         # 线程池(ThreadPool)
-        self.ThreadPool = ThreadPoolExecutor(max_workers=self.Configs["MaxThread"], thread_name_prefix="DownloadTask")
+        self.ThreadPool = ThreadPoolExecutor(max_workers=DownloadConfigs["MaxThread"], thread_name_prefix="DownloadTask")
 
         # 定义全局 Requests Session
-        if self.Configs["UseGobalRequestsSession"] == True:
-            self.RequestsSession = self.setSession()
+        if DownloadConfigs["UseGobalRequestsSession"] == True:
+            self.RequestsSession = getSession()
 
         Logger.debug("urllib3 Version: %s", Urllib3Version)
         Logger.debug("requests Version: %s", RequestsVersion)
 
 
-    def setSession(self, TheSession: Session | None = None) -> Session:
-        """设置/获取 Session"""
-        if TheSession == None: TheSession = Session()
-
-        TheSession.stream = True
-        TheSession.headers = self.Configs['Headers']
-        TheSession.trust_env = self.Configs["UseSystemProxy"]
-        TheSession.verify = self.Configs["SSLVerify"]
-
-        if self.Configs["SSLVerify"] == False:
-            requestsPackages.urllib3.disable_warnings()
-
-        if self.Configs["ProxyLink"] != None:
-            try:
-                post(self.Configs["ProxyLink"])
-            except Ex_Requests.ConnectionError:
-                Logger.warning("Unable to connect to the proxy server: \"%s\", Disable it", self.Configs["ProxyLink"])
-            except Ex_Requests.InvalidSchema:
-                Logger.warning("Proxy server url schema error: \"%s\", Disable it", self.Configs["ProxyLink"])
-            else:
-                TheSession.proxies = {"http": self.Configs["ProxyLink"], "https": self.Configs["ProxyLink"]}
-                # 使用代理时将强制禁用 SSL 验证与使用系统代理
-                requestsPackages.urllib3.disable_warnings()
-                TheSession.verify = False
-                TheSession.trust_env = False
-
-        return(TheSession)
-
-
-    def Download(self, Task: dict) -> dict:
+    def Download(self, Task: DownloadTask) -> DownloadTask:
         """简易下载器 (Download) 的代理运行器"""
-        if not Task.get("ISFULL"):
-            Task = self.fullTask(Task)
-
-        if not "URL" in Task:
-            raise Ex_Download.TaskMissingURL
+        if not Task.ISFULL:
+            Task.full()
 
         Retry = True
         while Retry:
@@ -88,77 +152,86 @@ class DownloadManager():
             Errored = False
             StopType = "Downloaded"
             try:
-                self.download(**Task)
+                self.download(
+                    URL=Task.URL,
+                    OutputPaths=Task.OutputPaths,
+                    Size=Task.Size,
+                    Sha1=Task.Sha1,
+                    Overwrite=Task.Overwrite,
+                    ConnectTimeout=Task.ConnectTimeout,
+                    ReadTimeout=Task.ReadTimeout
+                )
             # 错误处理
             except Ex_Download.Stopping:
                 StopType = "Stopping"
             except Ex_Download.SizeError:
                 Errored = True
-                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"%s\" Download failure, By SizeError, From \"%s\"", Task["FileName"], Task["URL"])
+                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                Logger.warning("File \"%s\" Download failure, By SizeError, From \"%s\"", Task.FileName, Task.URL)
             except Ex_Download.FileExist:
                 StopType = "FileExist"
             except Ex_Download.SchemaError:
                 Errored = True
-                self.addJobToProject(Task["ProjectID"], ErrorTasksCount=1)
-                Logger.error("URL \"%s\" Formart Error", Task["URL"])
+                self.addJobToProject(Task.ProjectID, ErrorTasksCount=1)
+                Logger.error("URL \"%s\" Formart Error", Task.URL)
             except Ex_Download.HashError:
                 Errored = True
-                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"%s\" hash verification failed", Task["FileName"])
+                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                Logger.warning("File \"%s\" hash verification failed", Task.FileName)
             except Ex_Download.ReadTimeout:
                 Errored = True
-                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"%s\" Download timeout,  From \"%s\"", Task["FileName"], Task["URL"])
+                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                Logger.warning("File \"%s\" Download timeout,  From \"%s\"", Task.FileName, Task.URL)
             except Ex_Download.ConnectTimeout:
                 Errored = True
-                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"%s\" Connect timeout, From \"%s\"", Task["FileName"], Task["URL"])
+                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                Logger.warning("File \"%s\" Connect timeout, From \"%s\"", Task.FileName, Task.URL)
             except Ex_Download.DownloadExceptions:
                 Errored = True
-                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
-                Logger.warning("File \"%s\" Download failure, By ConnectionError, From \"%s\"", Task["FileName"], Task["URL"])
+                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                Logger.warning("File \"%s\" Download failure, By ConnectionError, From \"%s\"", Task.FileName, Task.URL)
             except Exception:
                 Errored = True
-                self.addJobToProject(Task["ProjectID"], FailuredTasksCount=1)
+                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
                 Logger.warning("Unknown Error:", exc_info=True)
 
             if Errored == True:
-                if Task["Retry"] > 0:
-                    Task["Retry"] -= 1
+                if Task.Retry > 0:
+                    Task.Retry -= 1
                     Retry = True
                     continue
                 else:
-                    Logger.error("File \"%s\" Retry Count Max", Task["FileName"])
-                    self.addJobToProject(Task["ProjectID"], ErrorTasksCount=1)
+                    Logger.error("File \"%s\" Retry Count Max", Task.FileName)
+                    self.addJobToProject(Task.ProjectID, ErrorTasksCount=1)
                     raise Ex_Download.DownloadExceptions
             else:
-                self.addJobToProject(Task["ProjectID"], CompletedTasksCount=1)
-                # 没有出现下载错误之后尝试执行 Task["Next"]
-                if Task["Next"] != None:
+                self.addJobToProject(Task.ProjectID, CompletedTasksCount=1)
+                # 没有出现下载错误之后尝试执行 Task.Next
+                if Task.Next != None:
                     try:
-                        Task["Next"](Task)
+                        Task.Next(Task)
                     except Exception:
-                        Logger.warning("Next Error: ",exc_info=True)
+                        Logger.warning("Next Error: ", exc_info=True)
 
                 match StopType:
-                    case "Downloaded": Logger.info("File \"%s\" Downloaded", Task["FileName"])
+                    case "Downloaded": Logger.info("File \"%s\" Downloaded", Task.FileName)
                     case "Stopping": pass
-                    case "FileExist": Logger.info("File \"%s\" is Exist, Skipping", Task["FileName"])
+                    case "FileExist": Logger.info("File \"%s\" is Exist, Skipping", Task.FileName)
+                    case _: raise ValueError(StopType)
 
-                return(Task)
+                if StopType != "Stopping":
+                    return(Task)
 
 
     def download(
         self,
         URL:            str, # 链接地址
         OutputPaths:    str, # 输出路径
-        Size:           int, # 文件大小(字节)
-        Overwrite:     bool, # 覆盖已有的文件
-        Sha1:           str, # 使用sha1验证下载结果
-        ConnectTimeout: int, # 连接超时(若为空则使用全局设置)
-        ReadTimeout:    int, # 下载超时(若为空则使用全局设置)
-        **_
+        Size:           int | None = None, # 文件大小(字节)
+        Overwrite:     bool | None = None, # 覆盖已有的文件
+        Sha1:           str | None = None, # 使用sha1验证下载结果
+        ConnectTimeout: int | None = None, # 连接超时(若为空则使用全局设置)
+        ReadTimeout:    int | None = None  # 下载超时(若为空则使用全局设置)
         ) -> None:
         """简易下载器"""
         if dfCheck(Path=OutputPaths, Type="f"):
@@ -171,7 +244,12 @@ class DownloadManager():
                 else:
                     raise Ex_Download.FileExist
 
-        if self.Configs["UseGobalRequestsSession"] == True:
+        if ConnectTimeout == None:
+            ConnectTimeout = DownloadConfigs["Timeouts"]["Connect"]
+        if ReadTimeout == None:
+            ReadTimeout = DownloadConfigs["Timeouts"]["Read"]
+
+        if DownloadConfigs["UseGobalRequestsSession"] == True:
             UsedSession = self.RequestsSession
         else:
             UsedSession = self.setSession()
@@ -182,7 +260,7 @@ class DownloadManager():
         try:
             with UsedSession.get(URL, timeout=(ConnectTimeout, ReadTimeout,)) as Request:
                 StatusCode = str(Request.status_code)
-                if self.Configs["ErrorByStatusCode"] and (StatusCode[0] in ["4", "5"]): Request.raise_for_status()
+                if DownloadConfigs["ErrorByStatusCode"] and (StatusCode[0] in ["4", "5"]): Request.raise_for_status()
                 while True:
                     Temp = Request.raw.read(1024)
                     if self.Stopping == True: raise Ex_Download.Stopping
@@ -210,61 +288,11 @@ class DownloadManager():
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
 
 
-    def fullTask(self, Task: dict = dict()) -> dict:
-        """完善 Task"""
-        # 处理缺失的项目
-        if "Size"           not in Task: Task["Size"]           = None
-        if "ProjectID"      not in Task: Task["ProjectID"]      = None
-        if "Overwrite"      not in Task: Task["Overwrite"]      = True
-        if "Sha1"           not in Task: Task["Sha1"]           = None
-        if "ConnectTimeout" not in Task: Task["ConnectTimeout"] = self.Configs["Timeouts"]["Connect"]
-        if "ReadTimeout"    not in Task: Task["ReadTimeout"]    = self.Configs["Timeouts"]["Read"]
-        if "Retry"          not in Task: Task["Retry"]          = self.Configs["Retry"]
-        if "Next"           not in Task: Task["Next"]           = None
-
-        if (("OutputPaths" not in Task) or (Task["OutputPaths"] == None) or (Task["OutputPaths"] == str())):
-            # 如不存在 OutputPath 或 OutputPath 为空, 则使用当前位置
-            if ((not "OutputPath" in Task) or ("OutputPath" == None)):
-                Task["OutputPath"] = "$PREFIX"
-
-            # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
-            if "FileName" not in Task:
-                Task["FileName"] = baseName(Task["URL"])
-                if Task["FileName"] == str():
-                    Task["FileName"] = baseName(Task["OutputPath"])
-            if Task["FileName"] == None:
-                Task["FileName"] = baseName(Task["OutputPath"])
-                if Task["FileName"] == str():
-                    Task["FileName"] = baseName(Task["URL"])
-            if Task["FileName"] == str():
-                Task["FileName"] = "NoName"
-
-            # 从 OutputPath 中去除重复的文件名
-            if ((Task["FileName"] in Task["OutputPath"]) and ((search(Task["FileName"] + "$", Task["OutputPath"])) != None)):
-                Task["OutputPath"] = search("^(.*)" + Task["FileName"] + "$", Task["OutputPath"]).groups()[0]
-
-            Task["OutputPaths"] = pathAdder(Task["OutputPath"], Task["FileName"])
-        else:
-            try:
-                Task["OutputPath"], Task["FileName"] = splitPath(Task["OutputPaths"])
-            except Exception:
-                raise Ex_Download.UnpackOutputPathsError
-
-        # 解析 Paths
-        if "$" in Task["URL"]:
-            Task["URL"] = Pathmd(Task["URL"])
-        if "$" in Task["OutputPaths"]:
-            Task["OutputPaths"] = Pathmd(Task["OutputPaths"], IsPath=True)
-
-        Task["ISFULL"] = True
-        return(Task)
-
-
-    def addTasks(self, InputTasks: list[dict], MainProjectID: int | None = None) -> int | None:
+    def addTasks(self, InputTasks: list[DownloadTask], MainProjectID: int | None = None) -> int | None:
         """添加多个任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         # 如果正在添加任务则不等待添加完成
         while self.Adding:
-            sleep(self.Configs["SleepTime"])
+            sleep(DownloadConfigs["SleepTime"])
         self.Adding = True
 
         if self.Stopping == True: raise Ex_Download.Stopping
@@ -278,8 +306,7 @@ class DownloadManager():
         Logger.debug("Adding %s tasks to Project %s", JobTotal, MainProjectID)
 
         for InputTask in InputTasks:
-            InputTask["ProjectID"] = MainProjectID
-            InputTask["ListID"] = len(self.DownloadsTasks)
+            InputTask.ProjectID = MainProjectID
             self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
         self.Adding = False
@@ -287,11 +314,11 @@ class DownloadManager():
         if InputProjectID == False: return(MainProjectID)
 
 
-    def addTask(self, InputTask: dict, ProjectID: int | None = None) -> int | None:
+    def addTask(self, InputTask: DownloadTask, ProjectID: int | None = None) -> int | None:
         """添加单个 dict 任务对象至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         # 如果正在添加任务则不等待添加完成
         while self.Adding:
-            sleep(self.Configs["SleepTime"])
+            sleep(DownloadConfigs["SleepTime"])
         self.Adding = True
 
         if self.Stopping == True: raise Ex_Download.Stopping
@@ -303,8 +330,7 @@ class DownloadManager():
             self.addJobToProject(ProjectID=ProjectID, AllTasksCount=1)
         Logger.debug("Adding 1 tasks to Project %s", ProjectID)
 
-        InputTask["ProjectID"] = ProjectID
-        InputTask["ListID"] = len(self.DownloadsTasks)
+        InputTask.ProjectID = ProjectID
         self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
         self.Adding = False
@@ -370,7 +396,7 @@ class DownloadManager():
         ErrorTasksCount = int()
         for ProjectID in ProjectIDs:
             while ((self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) != self.Projects[ProjectID]["AllTasksCount"]):
-                sleep(self.Configs["SleepTime"])
+                sleep(DownloadConfigs["SleepTime"])
             ErrorTasksCount += self.Projects[ProjectID]["ErrorTasksCount"]
 
         if len(ProjectIDs) > 1:

@@ -12,16 +12,16 @@ from .File import (
 from .AdvancedPath import AdvancedPath
 from .Confs import ConfigIDs, ConfigInfos
 from .Configs import Configs
-from .Download import DownloadManager
+from .Download import DownloadManager, DownloadTask, getSession
 from .Path import path, pathAdder
 from .Others import getValueFromDict, fixType, encodeBase64, decodeBase64
 
 __all__ = [
-    "Configs", "DownloadManager", "Logs",
+    "Configs", "DownloadManager", "DownloadTask", "Logs",
     "AdvancedPath", "Exceptions", "Confs", "JavaHelper",
     "ConfigIDs", "ConfigInfos", "path", "pathAdder",
     "loadFile", "saveFile", "copyFile", "moveFile", "dfCheck", "removeFile",
     "compressFile", "decompressFile", "makeArchive", "addFileIntoArchive",
-    "getValueFromDict", "fixType", "encodeBase64", "decodeBase64"
+    "getValueFromDict", "fixType", "encodeBase64", "decodeBase64", "getSession"
 ]
 

@@ -3,12 +3,12 @@
 from platform import system, machine, version
 from re import match
 
-from Claset.Utils import AdvancedPath
+from Claset.Utils import AdvancedPath, DownloadTask
 
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
 
 
-def getVersionManifestDownloadTaskObject(Ver: int = 1, Path: str | None = None) -> dict:
+def getVersionManifestTask(Ver: int = 1, Path: str | None = None) -> DownloadTask:
     """获取对应版本的 Manifest URL"""
     APath = AdvancedPath(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
     match Ver:
@@ -20,8 +20,8 @@ def getVersionManifestDownloadTaskObject(Ver: int = 1, Path: str | None = None) 
             URL = APath.path("$LauncherMeta/mc/game/version_manifest_v2.json")
         case _:
             raise ValueError("Unknown Ver")
-    if Path == None: Path = APath.path("$MCVersionManifest/", IsPath=True)
-    return({"URL": URL, "OutputPaths": APath.pathAdder(Path, FileName)})
+    if Path == None: Path = "$MCVersionManifest/"
+    return(DownloadTask(URL=URL, OutputPaths=APath.pathAdder(Path, FileName)))
 
 
 def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:

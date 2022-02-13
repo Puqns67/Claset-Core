@@ -9,7 +9,7 @@ from Claset.Utils import (
     loadFile, saveFile, dfCheck, copyFile, pathAdder
 )
 from Claset.Game.Utils import (
-    getVersionManifestDownloadTaskObject,
+    getVersionManifestTask,
     Version_Client_DownloadList, AssetIndex_DownloadList,
     VersionManifest_To_Version, Version_To_AssetIndex
 )
@@ -79,14 +79,15 @@ class GameInstaller():
 
     def getVersionJson(self) -> dict:
         """获取对应版本的 Version json, 自动获取 Version Manifest"""
-        VersionManifestTask = self.Downloader.fullTask(getVersionManifestDownloadTaskObject())
-        if dfCheck(Path=VersionManifestTask["OutputPaths"], Type="f"):
+        VersionManifestTask = getVersionManifestTask()
+        VersionManifestTask.full()
+        if dfCheck(Path=VersionManifestTask.OutputPaths, Type="f"):
             VersionManifestFileType = "OLD"
         else:
             self.Downloader.addTask(InputTask=VersionManifestTask, ProjectID=self.MainDownloadProject)
             self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
             VersionManifestFileType = "NEW"
-        VersionManifestFile = loadFile(Path=VersionManifestTask["OutputPaths"], Type="json")
+        VersionManifestFile = loadFile(Path=VersionManifestTask.OutputPaths, Type="json")
 
         # 如版本号为空, 则使用最新的稳定版 Minecraft
         if self.MinecraftVersion == None:
@@ -94,7 +95,7 @@ class GameInstaller():
 
         while True:
             try:
-                VersionTask = self.Downloader.fullTask(VersionManifest_To_Version(InitFile=VersionManifestFile, TargetVersion=self.MinecraftVersion))
+                VersionTask = VersionManifest_To_Version(InitFile=VersionManifestFile, TargetVersion=self.MinecraftVersion)
             except TargetVersionNotFound:
                 match VersionManifestFileType:
                     case "NEW":
@@ -102,17 +103,17 @@ class GameInstaller():
                     case "OLD":
                         self.Downloader.addTask(InputTask=VersionManifestTask, ProjectID=self.MainDownloadProject)
                         self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
-                        VersionManifestFile = loadFile(Path=VersionManifestTask["OutputPaths"], Type="json")
+                        VersionManifestFile = loadFile(Path=VersionManifestTask.OutputPaths, Type="json")
                         VersionManifestFileType = "NEW"
             else: break
-
+        VersionTask.full()
         self.Downloader.addTask(InputTask=VersionTask, ProjectID=self.MainDownloadProject)
         self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
 
         self.VersionPath = pathAdder("$VERSION", self.VersionName, self.VersionName + ".json")
 
         dfCheck(Path=self.VersionPath, Type="fm")
-        copyFile(src=VersionTask["OutputPaths"], dst=self.VersionPath)
+        copyFile(src=VersionTask.OutputPaths, dst=self.VersionPath)
         VersionJson = loadFile(Path=self.VersionPath, Type="json")
         # 数据保持
         VersionJson["id"] = self.VersionName
@@ -125,24 +126,17 @@ class GameInstaller():
 
     def getAssetIndexJson(self, VersionJson: dict, MainProjectID: int) -> dict:
         """获取对应版本的 AssetIndex json"""
-        AssetIndexTask = self.Downloader.fullTask(Version_To_AssetIndex(InitFile=VersionJson))
+        AssetIndexTask = Version_To_AssetIndex(InitFile=VersionJson)
+        AssetIndexTask.full()
         self.Downloader.addTask(InputTask=AssetIndexTask, ProjectID=MainProjectID)
         self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
-        return(loadFile(Path=AssetIndexTask["OutputPaths"], Type="json"))
+        return(loadFile(Path=AssetIndexTask.OutputPaths, Type="json"))
 
 
     def createConfig(self) -> None:
         """创建版本配置文件"""
         ProcessList = ["REPLACE:[UnableGlobal, NativesDir]->natives"]
         Configs(ID="Game", FilePath=pathAdder("$VERSION", self.VersionName, "ClasetVersionConfig.json"), ProcessList=ProcessList)
-
-
-    def InstallForge(self):
-        """安装Forge"""
-
-
-    def InstallFabric(self):
-        """安装Fabric"""
 
 
     def __del__(self):
