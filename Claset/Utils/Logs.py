@@ -2,8 +2,7 @@
 """日志相关的处理方案"""
 
 from logging import Logger, Formatter, StreamHandler, FileHandler, getLevelName
-from msilib.schema import RemoveFile
-from os import listdir, remove
+from os import listdir
 from re import compile as reCompile
 from time import localtime, strftime
 from threading import Thread
