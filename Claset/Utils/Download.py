@@ -244,18 +244,19 @@ class DownloadManager():
                 else:
                     raise Ex_Download.FileExist
 
-        if ConnectTimeout == None:
+        if ConnectTimeout is None:
             ConnectTimeout = DownloadConfigs["Timeouts"]["Connect"]
-        if ReadTimeout == None:
+        if ReadTimeout is None:
             ReadTimeout = DownloadConfigs["Timeouts"]["Read"]
 
-        if DownloadConfigs["UseGobalRequestsSession"] == True:
+        if DownloadConfigs["UseGobalRequestsSession"]:
             UsedSession = self.RequestsSession
         else:
-            UsedSession = self.setSession()
+            UsedSession = getSession()
 
         File = BytesIO()
-        if self.Stopping == True: raise Ex_Download.Stopping
+        if self.Stopping:
+            raise Ex_Download.Stopping
 
         try:
             with UsedSession.get(URL, timeout=(ConnectTimeout, ReadTimeout,)) as Request:
@@ -263,7 +264,7 @@ class DownloadManager():
                 if DownloadConfigs["ErrorByStatusCode"] and (StatusCode[0] in ["4", "5"]): Request.raise_for_status()
                 while True:
                     Temp = Request.raw.read(1024)
-                    if self.Stopping == True: raise Ex_Download.Stopping
+                    if self.Stopping: raise Ex_Download.Stopping
                     if Temp == bytes(): break
                     File.write(Temp)
         except Ex_Requests.ConnectTimeout:

@@ -5,11 +5,13 @@ from logging import getLogger
 from re import compile as reCompile
 from typing import Any
 from subprocess import Popen, DEVNULL
+from uuid import uuid4
 
 from Claset import __fullversion__, __productname__, LaunchedGames
+from Claset.Accounts import AccountManager, Account
+from Claset.Game.Utils import ResolveRule, getClassPath, processNatives, getLog4j2Infos
 from Claset.Utils import Configs, pathAdder, loadFile, dfCheck, path, getValueFromDict
 from Claset.Utils.JavaHelper import autoPickJava, fixJavaPath, getJavaInfoList, JavaInfo
-from Claset.Game.Utils import ResolveRule, getClassPath, processNatives, getLog4j2Infos
 
 from .Exceptions import *
 
@@ -22,8 +24,13 @@ class GameLauncher():
     Features: dict[str, bool] = {"is_demo_user": False, "has_custom_resolution": True}
     ClasetJvmHeader: list[str] = ["-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=16m", "-XX:-UseAdaptiveSizePolicy", "-XX:-OmitStackTraceInFastThrow", "-XX:-DontCompileHugeMethods"]
 
-    def __init__(self, VersionName: str):
+    def __init__(self, VersionName: str, Account: Account | None = None):
         self.VersionName = VersionName
+        if Account == None:
+            self.AccountObject = AccountManager().getAccountObject()
+        else:
+            self.AccountObject = Account
+
         self.VersionDir = pathAdder("$VERSION", VersionName)
         self.VersionJarPath = pathAdder(self.VersionDir, self.VersionName + ".jar")
 
@@ -81,13 +88,14 @@ class GameLauncher():
             case 0:
                 return(
                     [
-                        "${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}", "${MEMMAX}", "${LOG4J2_CONFIG}", "${JVMEND}",
+                        "${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}",
+                        "${MEMMAX}", "${LOG4J2_CONFIG}", "${JVMEND}",
                         "-Djava.library.path=${natives_directory}",
                         "-Dminecraft.launcher.brand=${launcher_name}",
                         "-Dminecraft.launcher.version=${launcher_version}",
                         "-cp", "${classpath}",
                         "${MAINCLASS}", "${GAMEARGSPREFIX}"
-                    ].extend(self.VersionJson["minecraftArguments"].split() + ["${GAMEARGSEND}"])
+                    ] + self.VersionJson["minecraftArguments"].split() + ["${GAMEARGSEND}"]
                 )
             case 1:
                 Arguments = list()
@@ -160,17 +168,17 @@ class GameLauncher():
             case "launcher_version": return(__fullversion__)
             case "assets_root": return(path("$ASSETS", IsPath=True))
             case "assets_index_name": return(self.VersionJson["assets"])
-            case "auth_player_name": return("WIP")
-            case "auth_access_token": return("WIP")
-            case "auth_uuid": return("WIP")
-            case "user_type": return("WIP")
-            case "auth_xuid": return("WIP")
+            case "auth_player_name": return(self.AccountObject.Name)
+            case "auth_access_token": return(self.AccountObject.getAccessToken())
+            case "auth_uuid": return(self.AccountObject.UUID.hex)
+            case "user_type": return(self.AccountObject.Type.lower())
+            case "auth_xuid": return(uuid4().hex)
             case "version_name": return(self.VersionName)
             case "version_type": return(self._replaces("launcher_name") + " " + self._replaces("launcher_version"))
             case "classpath": return(getClassPath(VersionJson=self.VersionJson, VersionJarPath=self.VersionJarPath, Features=self.Features))
             case "natives_directory": return(self.NativesPath)
             case "game_directory": return(self.VersionDir)
-            case "clientid": return("WIP")
+            case "clientid": return(uuid4().hex)
             case "resolution_width": return(self.getConfig(["WindowWidth"]))
             case "resolution_height": return(self.getConfig(["WindowHeight"]))
             case _: raise ValueError(Key)

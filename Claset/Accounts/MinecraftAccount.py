@@ -5,9 +5,10 @@ from uuid import UUID
 
 from Claset.Utils import getSession
 
-Logger = getLogger()
+Logger = getLogger(__name__)
 
 class MinecraftAccount():
+    """Minecraft 账户相关"""
     def __init__(self, MinecraftAccessToken: str):
         self.AccessToken = MinecraftAccessToken
         self.RequestsSession = getSession()
@@ -15,6 +16,7 @@ class MinecraftAccount():
 
 
     def getAccountInfos(self, MinecraftAccessToken: str | None = None) -> tuple[UUID, str, list, list]:
+        """获取账户相关信息"""
         if MinecraftAccessToken == None:
             MinecraftAccessToken = self.AccessToken
 
@@ -27,5 +29,5 @@ class MinecraftAccount():
 
 
     def DownloadSkins():
-        pass
+        """下载此账户的皮肤"""
 

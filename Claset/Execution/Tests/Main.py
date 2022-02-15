@@ -28,7 +28,7 @@ def testInstallAndRun():
 
 def testMicrosoftOAuth():
     Logger = Claset.getLogger()
-    OAuth = Claset.Accounts.Auth.MicrosoftOAuth()
+    OAuth = Claset.Accounts.Auth()
     OAuth.auth()
     Logger.info("Microsoft Account Keys: \"%s\", \"%s\"", OAuth.MicrosoftAccountAccessToken, OAuth.MicrosoftAccountRefreshToken)
     OAuth.getMinecraftAccountInfos()

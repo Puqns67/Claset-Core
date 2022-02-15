@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from logging import getLogger
-from time import sleep
+from time import sleep, time
 
 from Claset.Utils import getSession
 
@@ -69,6 +69,8 @@ class Auth():
             RefreshToken = self.MicrosoftAccountRefreshToken
         else:
             RefreshToken = MicrosoftAccountRefreshToken
+
+        Logger.info("Refresh Microsoft Account access token from: %s", RefreshToken)
 
         RefreshRequestReturned = self.RequestsSession.post(
             url=MICROSOFT_TOKEN_URL,
@@ -140,4 +142,5 @@ class Auth():
         MinecraftRespons.raise_for_status()
         MinecraftReturned = MinecraftRespons.json()
         self.MinecraftAccessToken = MinecraftReturned["access_token"]
+        self.MinecraftAccessTokenExpiresAt = int(time()) + MinecraftReturned["expires_in"]
 

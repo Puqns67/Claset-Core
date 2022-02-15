@@ -7,7 +7,7 @@
 __author__ = "Puqns67"
 __productname__ = "Claset"
 __version__ = "0.1.0"
-__build__ = 140
+__build__ = 142
 __fullversion__ = __version__ + "_" + str(__build__)
 __all__ = [
     "Accounts", "Execution", "Utils", "Game",
@@ -56,7 +56,7 @@ GolbalLogger.setLevel(DEBUG)
 ProcessLogger = Utils.Logs(GolbalLogger)
 ProcessLogger.SettingLevel()
 
-def setLoggerHandler(**Types: dict[str, str | None]):
+def setLoggerHandler(**Types: str | None):
     ProcessLogger.SettingHandler(**Types)
 
 

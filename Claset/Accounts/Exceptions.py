@@ -12,6 +12,9 @@ class AccountDuplicate(AccountErrors):
 class UnsupportedAccountType(AccountErrors):
     """不支持的账户类型"""
 
+class NoAccountsFound(AccountErrors):
+    """未找到任何账户"""
+
 class AuthError(Exception):
     """登录错误主类"""
 
