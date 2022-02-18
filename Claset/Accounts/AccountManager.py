@@ -13,6 +13,7 @@ from .MinecraftAccount import MinecraftAccount
 from .Exceptions import *
 
 ACCOUNT_TYPES = ("OFFLINE", "MICROSOFT",)
+ACCOUNT_STATUS = ("DELETE", "NORMAL", "DEFAULT")
 Logger = getLogger(__name__)
 
 
@@ -34,7 +35,7 @@ class AccountManager():
         NewAccount = {"Type": Type, "Status": "NORMAL"}
         match Type:
             case "OFFLINE":
-                if Name == None:
+                if (Name is None) or (Name == str()):
                     raise ValueError("OFFLINE type Account Name cannot be None")
                 else:
                     NewAccount["Name"] = Name
@@ -48,6 +49,7 @@ class AccountManager():
                 NewAccount["UUID"] = Account.UUID.hex
                 NewAccount["MicrosoftAccountAccessToken"] = MicrosoftOAuthTask.MicrosoftAccountAccessToken
                 NewAccount["MicrosoftAccountRefreshToken"] = MicrosoftOAuthTask.MicrosoftAccountRefreshToken
+                NewAccount["MicrosoftAccountAccessTokenExpiresTime"] = MicrosoftOAuthTask.MicrosoftAccountAccessTokenExpiresTime
             case _: UnsupportedAccountType(Type)
 
         self.Configs["Accounts"].append(NewAccount)
@@ -98,15 +100,15 @@ class AccountManager():
         return self.Configs["DefaultAccount"]
 
 
-    def updateInfo(self, UUID: UUID, Key: str, To: str) -> None:
+    def updateInfo(self, UUID: UUID, New: dict) -> None:
         """通过 UUID 更新对应账户的信息"""
         for i in range(len(self.Configs["Accounts"])):
             if self.Configs["Accounts"][i]["UUID"] == UUID.hex:
-                self.Configs["Accounts"][i][Key] == To
+                self.Configs["Accounts"][i] = New
 
 
     def getAccountObject(self, ID: int | None = None) -> Account:
-        """通过用户ID获取对应的 AccountObject"""
+        """通过用户 ID 获取对应的 AccountObject"""
         if ID == None: ID = self.getDefault()
         return(Account(Account=self.Configs["Accounts"][ID], Manager=self))
 

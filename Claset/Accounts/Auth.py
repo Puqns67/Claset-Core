@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from logging import getLogger
-from time import sleep, time
+from time import sleep, time, strptime, mktime
 
 from Claset.Utils import getSession
 
@@ -19,6 +19,7 @@ Logger = getLogger(__name__)
 
 
 class Auth():
+    """提供正版验证功能"""
     def __init__(self, MicrosoftAccountRefreshToken: str | None = None):
         self.RequestsSession = getSession()
 
@@ -54,17 +55,20 @@ class Auth():
 
         self.MicrosoftAccountAccessToken = CheckRequestReturned["access_token"]
         self.MicrosoftAccountRefreshToken = CheckRequestReturned["refresh_token"]
+        Logger.info("Logging success!")
 
 
     def refresh(self, MicrosoftAccountRefreshToken: str | None = None):
+        """刷新微软账户的访问 Token 与 刷新 Token"""
         if MicrosoftAccountRefreshToken == None:
             if self.MicrosoftAccountRefreshToken == None: raise ValueError
             MicrosoftAccountRefreshToken = self.MicrosoftAccountRefreshToken
 
-        self.MicrosoftAccountAccessToken, self.MicrosoftAccountRefreshToken = self.refreshAccessTokens()
+        self.MicrosoftAccountAccessToken, self.MicrosoftAccountRefreshToken, self.MicrosoftAccountAccessTokenExpiresTime = self.refreshAccessTokens(MicrosoftAccountRefreshToken)
 
 
-    def refreshAccessTokens(self, MicrosoftAccountRefreshToken: str | None = None) -> tuple[str, str]:
+    def refreshAccessTokens(self, MicrosoftAccountRefreshToken: str | None = None) -> tuple[str, str, str]:
+        """刷新微软账户的访问 Token 与 刷新 Token 并返回"""
         if MicrosoftAccountRefreshToken == None:
             RefreshToken = self.MicrosoftAccountRefreshToken
         else:
@@ -81,7 +85,11 @@ class Auth():
             }
         ).json()
 
-        return((RefreshRequestReturned["access_token"], RefreshRequestReturned["refresh_token"],))
+        return((
+            RefreshRequestReturned["access_token"],
+            RefreshRequestReturned["refresh_token"],
+            RefreshRequestReturned["expires_in"] + int(time()) - 5
+        ))
 
 
     def authToMinectaft(self) -> None:
@@ -93,7 +101,7 @@ class Auth():
 
     def getToken_XBoxLive(self) -> None:
         """获取来自 XBox Live 的 Token, 需先获取 Microsoft Account 的 Access Token"""
-        XboxReturned = self.RequestsSession.post(
+        XboxLiveReturned = self.RequestsSession.post(
             url=XBOX_LIVE_AUTH_URL,
             headers={"content-type": "application/json", "charset": "UTF-8"},
             json={
@@ -107,12 +115,14 @@ class Auth():
             }
         ).json()
 
-        self.XboxLiveToken = XboxReturned["Token"]
+        self.XboxLiveToken = XboxLiveReturned["Token"]
+        self.XboxLiveTokenExpiresTime = int(mktime(strptime(XboxLiveReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f"))) - 5
+        self.XboxLiveUserHash = XboxLiveReturned["DisplayClaims"]["xui"][0]["uhs"]
 
 
     def getToken_XBoxXSTS(self) -> None:
         """获取来自 XBox XSTS 的 Token, 需先获取 XBox Live 的 Access Token"""
-        MinecraftXstsReturned = self.RequestsSession.post(
+        XboxXstsReturned = self.RequestsSession.post(
             url=XBOX_XSTS_AUTH_URL,
             headers={"content-type": "application/json", "charset": "UTF-8"},
             json={
@@ -125,8 +135,9 @@ class Auth():
             }
         ).json()
 
-        self.XboxXstsToken = MinecraftXstsReturned["Token"]
-        self.XboxXstsUserHash = MinecraftXstsReturned["DisplayClaims"]["xui"][0]["uhs"]
+        self.XboxXstsToken = XboxXstsReturned["Token"]
+        self.XboxXstsTokenExpiresTime = int(mktime(strptime(XboxXstsReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f"))) - 5
+        self.XboxXstsUserHash = XboxXstsReturned["DisplayClaims"]["xui"][0]["uhs"]
 
 
     def getToken_Minecreaft(self) -> None:
@@ -142,5 +153,5 @@ class Auth():
         MinecraftRespons.raise_for_status()
         MinecraftReturned = MinecraftRespons.json()
         self.MinecraftAccessToken = MinecraftReturned["access_token"]
-        self.MinecraftAccessTokenExpiresAt = int(time()) + MinecraftReturned["expires_in"]
+        self.MinecraftAccessTokenExpiresTime = MinecraftReturned["expires_in"] + int(time()) - 5
 

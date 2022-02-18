@@ -1,0 +1,39 @@
+name: Codecov
+
+on:
+  push:
+    branches: 
+      - master
+
+
+jobs:
+  Codecov-Windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+
+      - name: Run Codecov test
+        id: codecov
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri https://uploader.codecov.io/latest/windows/codecov.exe -Outfile codecov.exe
+          .\codecov.exe
+
+
+
+  Codecov-Ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+
+      - name: Run Codecov test
+        id: codecov
+        run: |
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov
+

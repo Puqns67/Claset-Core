@@ -5,19 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Tests",
-            "type": "python",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/Claset/Execution/Tests/RunVSCDebug.py",
-            "console": "integratedTerminal"
-        },
-        {
             "name": "Debug CommandLine",
             "type": "python",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/Claset/Execution/CommandLine/RunVSCDebug.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug Tests",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/Claset/Execution/Tests/RunVSCDebug.py",
             "console": "integratedTerminal"
         },
         {

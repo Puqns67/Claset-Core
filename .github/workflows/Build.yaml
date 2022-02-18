@@ -18,9 +18,9 @@ env:
   RELEASES_NAME_PERFIX: ${{ 'Claset-Build' }}
   CACHE_NUITKA_GCC: ${{ true }}
   CACHE_PYPI: ${{ true }}
-  CACHE_BUILD: ${{ false }}
+  CACHE_BUILD: ${{ true }}
   RETENTION_DAYS: ${{ 16 }}
-  DEFAULT_MODULE_NAME: ${{ 'Tests' }}
+  DEFAULT_MODULE_NAME: ${{ 'CommandLine' }}
 
 jobs:
   Build_Windows:

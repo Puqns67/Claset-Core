@@ -3,7 +3,7 @@
 from platform import system, machine, version
 from re import match
 
-from Claset.Utils import AdvancedPath, DownloadTask
+from Claset.Utils import AdvancedPath, DownloadTask, dfCheck, pathAdder
 
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
 
@@ -31,8 +31,10 @@ def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
     for Item in Items:
         if Item.get("os") != None:
             if Item["os"].get("name") != None:
-                SystemHost = {"windows": "windows", "darwin": "osx", "linux": "linux", "java": "java", "": None}[system().lower()]
-                if SystemHost in ("java", None): raise UnsupportSystemHost(SystemHost)
+                try:
+                    SystemHost = {"Windows": "windows", "Darwin": "osx", "Linux": "linux"}[system()]
+                except KeyError:
+                    raise UnsupportSystemHost(system())
                 if Item["os"]["name"] != SystemHost: continue
             if Item["os"].get("arch") != None:
                 if Item["os"]["arch"] != {"amd64": "x64", "x86_64": "x64", "x64": "x64", "i386": "x86", "x86": "x86", "i686": "x86"}[machine().lower()]: continue
@@ -58,8 +60,10 @@ def getNativesObject(Libraries: dict, Features: dict | None = None, getExtract: 
         if ResolveRule(Items=Libraries["rules"], Features=Features) == False: return(None)
 
     # 解析系统信息
-    SystemHost = {"Windows": "windows", "Darwin": "osx", "Linux": "linux", "Java": "java", "": None}[system()]
-    if SystemHost in ("java", None): raise UnsupportSystemHost(SystemHost)
+    try:
+        SystemHost = {"Windows": "windows", "Darwin": "osx", "Linux": "linux"}[system()]
+    except KeyError:
+        raise UnsupportSystemHost(system())
     Output = Libraries["downloads"]["classifiers"][Libraries["natives"][SystemHost]]
 
     # 实现 getExtract
@@ -68,4 +72,13 @@ def getNativesObject(Libraries: dict, Features: dict | None = None, getExtract: 
     else: Output["Extract"] = dict()
 
     return(Output)
+
+
+def getGetVersionList():
+    """获取版本列表"""
+
+
+def checkGameVersion(Name: str) -> bool:
+    """检测版本基础文件是否存在(版本 json 是否对应文件夹名)"""
+    return(dfCheck(Path=pathAdder("$VERSION", Name, Name + ".json"), Type="f"))
 

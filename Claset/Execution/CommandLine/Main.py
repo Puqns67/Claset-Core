@@ -17,13 +17,14 @@ AP_LaunchGame.add_argument("-S", "--ShowGameLogs", action="store_true", help="�
 AP_LaunchGame.add_argument("GameName", help="游戏实例名")
 
 AP_CreateAccount = Cmd2ArgumentParser()
-AP_CreateAccount.add_argument("-N", "--AccountName", help="账户名称, 此选项仅可使用在账户类型为离线时")
-AP_CreateAccount.add_argument("Type", help="账户类型")
+AP_CreateAccount.add_argument("-N", "--AccountName", help="账户名称, 此选项仅可使用在账户类型为离线时使用")
+AP_CreateAccount.add_argument("Type", default="MICROSOFT" , help="账户类型, 现支持 \"OFFLINE\" 和 \"MICROSOFT\" 类型, 默认为 \"MICROSOFT\"")
 
 AP_RemoveAccount = Cmd2ArgumentParser()
-AP_RemoveAccount.add_argument("-I", "--AccountID", help="指定账户ID")
-AP_RemoveAccount.add_argument("-N", "--AccountName", help="指定账户的名称")
-AP_RemoveAccount.add_argument("-T", "--AccountType", help="指定账户类型")
+AP_RemoveAccount.add_argument("-N", "--Name", help="指定账户的名称")
+AP_RemoveAccount.add_argument("-T", "--Type", help="指定账户类型")
+AP_RemoveAccount.add_argument("-i", "--ID", help="指定账户 ID")
+AP_RemoveAccount.add_argument("-I", "--UUID", help="指定账户 UUID")
 
 
 class Main(Cmd):
@@ -53,6 +54,8 @@ class Main(Cmd):
     @with_argparser(AP_CreateAccount)
     def do_CreateAccount(self, init: Namespace):
         """创建新账户"""
+        AccountManager = Claset.Accounts.AccountManager()
+        AccountManager.create(Type=init.Type, Name=init.Name)
 
 
     def do_ListAccount(self, _: Namespace):
@@ -69,5 +72,4 @@ class Main(Cmd):
         Claset.stopALLDownloader()
         Claset.waitALLGames()
         raise SystemExit
-    do_exit = do_Exit
 
