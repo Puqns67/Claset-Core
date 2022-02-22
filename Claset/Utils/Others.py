@@ -28,6 +28,7 @@ def setValueFromDict(Keys: list, Value: Any, Dict: dict | None = None, ) -> dict
 
 def fixType(Input: str) -> Any:
     """修复类型"""
+    Output = Input
     if Input.lower() in fixType_fixs.keys():
         Output = fixType_fixs[Input.lower()]
     elif Input == str(): return None
@@ -37,7 +38,6 @@ def fixType(Input: str) -> Any:
             # 若使用整型格式化失败则尝试浮点
             try: Output = float(Input)
             except ValueError: pass
-    else: Output = Input
     return(Output)
 
 

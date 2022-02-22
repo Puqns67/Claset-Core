@@ -31,7 +31,7 @@ class Auth():
             url=MICROSOFT_DEVICE_CODE_URL,
             data={"client_id": CLASET_CLIENT_ID, "scope": CLASET_SCOPE}
             ).json()
-        Logger.info(NewRequestReturned["message"])
+        Logger.warning(NewRequestReturned["message"])
 
         while True:
             sleep(NewRequestReturned["interval"])
@@ -55,6 +55,7 @@ class Auth():
 
         self.MicrosoftAccountAccessToken = CheckRequestReturned["access_token"]
         self.MicrosoftAccountRefreshToken = CheckRequestReturned["refresh_token"]
+        self.MicrosoftAccountAccessTokenExpiresTime = CheckRequestReturned["expires_in"] + int(time()) - 5
         Logger.info("Logging success!")
 
 

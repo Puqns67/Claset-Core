@@ -2,7 +2,7 @@
 """管理账户"""
 
 from logging import getLogger
-from uuid import UUID, uuid4
+from uuid import UUID as Class_UUID, uuid4
 
 from Claset.Utils import Configs
 
@@ -100,7 +100,7 @@ class AccountManager():
         return self.Configs["DefaultAccount"]
 
 
-    def updateInfo(self, UUID: UUID, New: dict) -> None:
+    def updateInfo(self, UUID: Class_UUID, New: dict) -> None:
         """通过 UUID 更新对应账户的信息"""
         for i in range(len(self.Configs["Accounts"])):
             if self.Configs["Accounts"][i]["UUID"] == UUID.hex:
@@ -111,4 +111,25 @@ class AccountManager():
         """通过用户 ID 获取对应的 AccountObject"""
         if ID == None: ID = self.getDefault()
         return(Account(Account=self.Configs["Accounts"][ID], Manager=self))
+
+
+    def getAccountList(self, ID: int | None = None, UUID: Class_UUID | str | None = None, Name: str | None = None, Type: str | None = None) -> list[dict]:
+        """获取以各种方式过滤后的用户列表"""
+        Output = list()
+        for AccountID in range(len(self.Configs["Accounts"])):
+            Account = self.Configs["Accounts"][AccountID]
+            if (ID != None) and (AccountID != ID):
+                continue
+            if UUID != None:
+                if (type(UUID) == type(Class_UUID)) and (UUID.hex != Account["UUID"]):
+                    continue
+                elif UUID != Account["UUID"]:
+                    continue
+            if (Name != None) and (Account["Name"] != Name):
+                continue
+            if (Type != None) and (Account["Type"] != Type):
+                continue
+            Account["ID"] = AccountID
+            Output.append(Account)
+        return(Output)
 
