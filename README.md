@@ -14,12 +14,13 @@
 |[requests](https://github.com/psf/requests)                |2.27.1       |
 |[cmd2](https://github.com/python-cmd2/cmd2)                |2.3.3        |
 |[zstandard](https://github.com/indygreg/python-zstandard)  |0.17.0       |
-|[rich](https://github.com/Textualize/rich)*                |11.0.0       |
+|[rich](https://github.com/Textualize/rich)*/***            |11.0.0       |
 |[PySocks](https://github.com/Anorov/PySocks)*              |1.7.1        |
 |[Nuitka](https://github.com/Nuitka/Nuitka)**               |0.6.20rc6    |
 
 *: 可选
 **: 用于编译为可执行程序
+***: 命令行模式需要
 
 ## Git 仓库/Git Repositories
 
