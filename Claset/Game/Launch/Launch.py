@@ -3,6 +3,7 @@
 
 from logging import getLogger
 from re import compile as reCompile
+from types import NoneType
 from typing import Any
 from subprocess import Popen, DEVNULL
 from uuid import uuid4
@@ -51,7 +52,7 @@ class GameLauncher():
             raise LauncherVersionError(self.VersionJson["minimumLauncherVersion"])
 
         # Natives
-        self.NativesPath = pathAdder(self.VersionDir, self.getConfig(["NativesDir"]))
+        self.NativesPath = pathAdder(self.VersionDir, self.getConfig("NativesDir"))
 
 
     def launchGame(self, PrintToTerminal: bool = True) -> None:
@@ -112,15 +113,15 @@ class GameLauncher():
 
                 Output = ["${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}", "${MEMMAX}"]
                 for Argument in Arguments:
-                    if (type(Argument) == type(dict())):
+                    if isinstance(Argument, dict):
                         if (ResolveRule(Items=Argument["rules"], Features=self.Features)):
-                            if (type(Argument["value"]) == type(str())):
+                            if isinstance(Argument["value"], str):
                                 Output.append(Argument["value"])
-                            elif (type(Argument["value"]) == type(list())):
+                            elif isinstance(Argument["value"], list):
                                 Output.extend(Argument["value"])
                             else:
                                 raise(ValueError("Argument[\"value\"] type error"))
-                    elif (type(Argument) == type(str())):
+                    elif isinstance(Argument, str):
                         Output.append(Argument)
                     else:
                         raise(ValueError("Argument type error"))
@@ -139,15 +140,15 @@ class GameLauncher():
                 continue
             MatchedGroups = list(Matched.groups())
             Replaced = self._replaces(MatchedGroups[1])
-            if type(Replaced) == type(None):
+            if isinstance(Replaced, NoneType):
                 continue
-            elif type(Replaced) == type(str()):
+            elif isinstance(Replaced, str):
                 MatchedGroups[1] = Replaced
                 Output.append(str().join(MatchedGroups))
-            elif type(Replaced) in (type(tuple()), type(list()),):
+            elif isinstance(Replaced, (tuple, list,)):
                 if len(Replaced) != 0:
                     Output.extend(Replaced)
-            elif type(Replaced) in (type(int()), type(float()),):
+            elif isinstance(Replaced, (int, float)):
                 Output.append(str(Replaced))
         return(Output)
 
@@ -160,8 +161,8 @@ class GameLauncher():
             case "JVMEND": return(self.VersionConfig["UnableGlobal"]["PrefixAndEnds"]["JvmEnd"])
             case "GAMEARGSPREFIX": return(self.VersionConfig["UnableGlobal"]["PrefixAndEnds"]["GamePrefix"])
             case "GAMEARGSEND": return(self.VersionConfig["UnableGlobal"]["PrefixAndEnds"]["GameEnd"])
-            case "MEMMIN": return("-Xms" + str(self.getConfig(["MemoryMin"])) + "M")
-            case "MEMMAX": return("-Xmx" + str(self.getConfig(["MemoryMax"])) + "M")
+            case "MEMMIN": return("-Xms" + str(self.getConfig("MemoryMin")) + "M")
+            case "MEMMAX": return("-Xmx" + str(self.getConfig("MemoryMax")) + "M")
             case "LOG4J2_CONFIG": return(getLog4j2Infos(InitFile=self.VersionJson, Type="Argument"))
             case "MAINCLASS": return(self.VersionJson["mainClass"])
             case "launcher_name": return(__productname__)
@@ -179,14 +180,13 @@ class GameLauncher():
             case "natives_directory": return(self.NativesPath)
             case "game_directory": return(self.VersionDir)
             case "clientid": return(uuid4().hex)
-            case "resolution_width": return(self.getConfig(["WindowWidth"]))
-            case "resolution_height": return(self.getConfig(["WindowHeight"]))
+            case "resolution_width": return(self.getConfig("WindowWidth"))
+            case "resolution_height": return(self.getConfig("WindowHeight"))
             case _: raise ValueError(Key)
 
 
-    def getConfig(self, Keys: list[str] | str) -> Any:
-        if type(Keys) == type(str()): Keys = [Keys]
-        if Keys[0] in self.VersionConfig["Global"].keys():
+    def getConfig(self, Keys: str) -> Any:
+        if Keys in self.VersionConfig["Global"]:
             if self.VersionConfig.get(["UseGlobalConfig"]):
                 return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
             else:
@@ -197,7 +197,7 @@ class GameLauncher():
 
 
     def getJavaPathAndInfo(self) -> JavaInfo:
-        JavaPath = self.getConfig(["JavaPath"])
+        JavaPath = self.getConfig("JavaPath")
         recommendJavaVersion: int = self.VersionJson["javaVersion"]["majorVersion"]
         if JavaPath == "AUTOPICK":
             return(autoPickJava(recommendVersion=recommendJavaVersion))

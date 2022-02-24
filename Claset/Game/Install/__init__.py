@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from . import Exceptions
-from .GameInstaller import GameInstaller
+from .Installer import GameInstaller
 
 __all__ = [
-    "Exceptions", "GameInstaller"
+    "Exceptions", "Installer"
 ]
 

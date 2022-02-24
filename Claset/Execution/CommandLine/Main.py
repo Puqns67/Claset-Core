@@ -16,10 +16,9 @@ AP_InstallGame.add_argument("GameName", help="游戏实例名")
 
 AP_LaunchGame = Cmd2ArgumentParser()
 AP_LaunchGame.add_argument("-S", "--ShowGameLogs", action="store_true", help="输出运行日志至终端")
-AP_LaunchGame.add_argument("-Un", "--UserName", action="store_true", help="指定账户的类型为名称, 如有重复则按账户顺序取第一个")
-AP_LaunchGame.add_argument("-Ui", "--UserUUID", action="store_false", help="指定账户的类型为 UUID")
+AP_LaunchGame.add_argument("-Un", "--UserName", default=None, help="指定账户的类型为名称, 如有重复则按账户顺序取第一个")
+AP_LaunchGame.add_argument("-Uu", "--UserUUID", default=None, help="指定账户的类型为 UUID")
 AP_LaunchGame.add_argument("GameName", help="游戏实例名")
-AP_LaunchGame.add_argument("GameAccount", help="游戏账户, 此属性输入类型受制于 UserName 参数与 UserUUID 参数, 默认类型为 UserName")
 
 AP_CreateAccount = Cmd2ArgumentParser()
 AP_CreateAccount.add_argument("-N", "--AccountName", help="账户名称, 此选项仅可使用在账户类型为离线时使用")
@@ -58,20 +57,33 @@ class Main(Cmd):
     @with_argparser(AP_LaunchGame)
     def do_LaunchGame(self, init: Namespace):
         """启动游戏实例"""
-        GameLauncher = Claset.Game.GameLauncher(init.GameName)
+        UserID = None
+        if init.UserUUID:
+            UserID = self.AccountManager.getAccountOtherInfo(Input=init.UserUUID, InputType="UUID", ReturnType="ID")
+        elif init.UserName:
+            UserID = self.AccountManager.getAccountOtherInfo(Input=init.UserName, InputType="Name", ReturnType="ID")
+        TheAccount = self.AccountManager.getAccountObject(UserID)
+        GameLauncher = Claset.Game.GameLauncher(VersionName=init.GameName, Account=TheAccount)
         GameLauncher.launchGame(PrintToTerminal=init.ShowGameLogs)
 
 
     def do_ListGame(self, _: Namespace):
-        """列出哦所有游戏实例"""
+        """列出所有游戏实例"""
 
 
     @with_argparser(AP_CreateAccount)
     def do_CreateAccount(self, init: Namespace):
         """创建新账户"""
-        if init.Type == "OFFLINE" and init.AccountName == None:
-            raise ValueError("设置账户类型为离线时用户名不应为空")
-        self.AccountManager.create(Type=init.Type, Name=init.AccountName)
+        match init.Type:
+            case "MICROSOFT":
+                self.AccountManager.create(Type=init.Type)
+            case "OFFLINE":
+                if init.AccountName == None:
+                    raise ValueError("设置账户类型为离线时用户名不应为空")
+                else:
+                    self.AccountManager.create(Type=init.Type, Name=init.AccountName)
+            case _:
+                ValueError(init.Type)
         self.AccountManager.save()
 
 

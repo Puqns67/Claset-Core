@@ -7,9 +7,9 @@ from os.path import abspath
 from re import compile as ReCompile
 
 from .Confs.Paths import File
-from .Exceptions import Path as Ex_Path
+from .Exceptions.Path import SearchError, PrefixsMissingKey
 
-PathRegex = ReCompile(r"(.*)\$([a-zA-Z]*)(.*)")
+PathRegex = ReCompile(r"^(.*)\$([a-zA-Z]*)(.*)$")
 PathConfigs = None
 PathConfigKeys = None
 
@@ -28,13 +28,13 @@ def path(Input: str, IsPath: bool = False) -> str:
         PathConfigKeys = PathConfigs.keys()
 
     while "$" in Input:
-        Match = PathRegex.search(Input)
-        if Match == None: raise Ex_Path.SearchError
-        Groups = list(Match.groups())
-        if Groups[1] == None: raise Ex_Path.SearchError
+        Matched = PathRegex.match(Input)
+        if Matched == None: raise SearchError
+        Groups = list(Matched.groups())
+        if Groups[1] == None: raise SearchError
         elif Groups[1] == "PREFIX": Groups[1] = getcwd()
         elif Groups[1] in PathConfigKeys: Groups[1] = PathConfigs[Groups[1]]
-        else: raise Ex_Path.PrefixsMissingKey(Groups[1])
+        else: raise PrefixsMissingKey(Groups[1])
         Input = str().join(Groups)
 
     if IsPath == True:
@@ -43,15 +43,15 @@ def path(Input: str, IsPath: bool = False) -> str:
     return(Input)
 
 
-def pathAdder(*paths: list | tuple | str) -> str:
+def pathAdder(*Paths: list | tuple | str) -> str:
     """拼接路径片段并格式化"""
     PathList = list()
-    for i in paths:
-        if type(i) == type(str()):
+    for i in Paths:
+        if isinstance(i, str):
             PathList.append(i)
-        elif (type(i) == type(list()) or type(i) == type(tuple())):
+        elif isinstance(i, (list, tuple,)):
             PathList.extend(i)
-        elif (type(i) == type(int()) or type(i) == type(float())):
+        elif isinstance(i, (int, float,)):
             PathList.append(str(i))
     Path = "/".join(PathList)
     if "$" in Path: Path = path(Path)

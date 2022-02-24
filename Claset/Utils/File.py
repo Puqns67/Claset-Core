@@ -211,7 +211,7 @@ def addFileIntoArchive(ArchivePath: str, SourcePaths: list[str] | str, ArcnamePe
     ArchivePath = Pathmd(ArchivePath, IsPath=True)
     TempFilePath = ArchivePath + ".TempTarFile"
 
-    if type(SourcePaths) == type(str()):
+    if isinstance(SourcePaths, str):
         SourcePaths = [SourcePaths]
 
     # 解压

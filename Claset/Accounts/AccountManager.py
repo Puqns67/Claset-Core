@@ -2,6 +2,7 @@
 """管理账户"""
 
 from logging import getLogger
+from typing import Any
 from uuid import UUID as Class_UUID, uuid4
 
 from Claset.Utils import Configs
@@ -117,11 +118,11 @@ class AccountManager():
         """获取以各种方式过滤后的用户列表"""
         Output = list()
         for AccountID in range(len(self.Configs["Accounts"])):
-            Account = self.Configs["Accounts"][AccountID]
             if (ID != None) and (AccountID != ID):
                 continue
+            Account = self.Configs["Accounts"][AccountID]
             if UUID != None:
-                if (type(UUID) == type(Class_UUID)) and (UUID.hex != Account["UUID"]):
+                if isinstance(UUID, Class_UUID) and (UUID.hex != Account["UUID"]):
                     continue
                 elif UUID != Account["UUID"]:
                     continue
@@ -132,4 +133,11 @@ class AccountManager():
             Account["ID"] = AccountID
             Output.append(Account)
         return(Output)
+
+
+    def getAccountOtherInfo(self, Input: Any, InputType: str, ReturnType: str) -> Any:
+        """获取账户相关信息, 如有重复则返回第一个"""
+        Kwarg = dict()
+        Kwarg[InputType] = Input
+        return(self.getAccountList(**Kwarg)[0][ReturnType])
 

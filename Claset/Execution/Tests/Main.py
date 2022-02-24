@@ -9,7 +9,7 @@ import Claset
 
 
 def testInstallAndRun():
-    GameInstaller = Claset.Game.Install.GameInstaller(VersionName="Test")
+    GameInstaller = Claset.Game.Install.Installer(VersionName="Test")
     try:
         GameInstaller.InstallVanilla()
     except KeyboardInterrupt:

@@ -68,7 +68,7 @@ class GameInstaller():
 
         # 下载
         Logger.info("Downloading Minecraft Vanilla Verison \"%s\", from mirror \"%s\"", self.VersionName, self.MinecraftVersion)
-        self.Downloader.addTasks(InputTasks=DownloadList, MainProjectID=self.MainDownloadProject)
+        self.Downloader.addTask(InputTasks=DownloadList, MainProjectID=self.MainDownloadProject)
 
         if self.WaitDownloader:
             self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
@@ -107,7 +107,7 @@ class GameInstaller():
                         VersionManifestFileType = "NEW"
             else: break
         VersionTask.full()
-        self.Downloader.addTask(InputTask=VersionTask, ProjectID=self.MainDownloadProject)
+        self.Downloader.addTask(InputTasks=VersionTask, MainProjectID=self.MainDownloadProject)
         self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
 
         self.VersionPath = pathAdder("$VERSION", self.VersionName, self.VersionName + ".json")
@@ -128,7 +128,7 @@ class GameInstaller():
         """获取对应版本的 AssetIndex json"""
         AssetIndexTask = Version_To_AssetIndex(InitFile=VersionJson)
         AssetIndexTask.full()
-        self.Downloader.addTask(InputTask=AssetIndexTask, ProjectID=MainProjectID)
+        self.Downloader.addTask(InputTasks=AssetIndexTask, MainProjectID=MainProjectID)
         self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
         return(loadFile(Path=AssetIndexTask.OutputPaths, Type="json"))
 

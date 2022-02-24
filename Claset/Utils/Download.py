@@ -289,20 +289,26 @@ class DownloadManager():
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
 
 
-    def addTasks(self, InputTasks: list[DownloadTask], MainProjectID: int | None = None) -> int | None:
-        """添加多个任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
+    def addTask(self, InputTasks: list[DownloadTask] | DownloadTask, MainProjectID: int | None = None) -> int:
+        """添加任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         # 如果正在添加任务则不等待添加完成
+        if self.Stopping == True:
+            raise Ex_Download.Stopping
         while self.Adding:
+            if self.Stopping == True:
+                raise Ex_Download.Stopping
             sleep(DownloadConfigs["SleepTime"])
         self.Adding = True
 
-        if self.Stopping == True: raise Ex_Download.Stopping
-        JobTotal = len(InputTasks)
+        if isinstance(InputTasks, DownloadTask):
+            InputTasks = [InputTasks]
+            JobTotal = 1
+        else:
+            JobTotal = len(InputTasks)
+
         if MainProjectID == None:
-            InputProjectID = False
             MainProjectID = self.createProject(AllTasksCount=JobTotal)
         else:
-            InputProjectID = True
             self.addJobToProject(ProjectID=MainProjectID, AllTasksCount=JobTotal)
         Logger.debug("Adding %s tasks to Project %s", JobTotal, MainProjectID)
 
@@ -312,35 +318,7 @@ class DownloadManager():
 
         self.Adding = False
         Logger.info("Added %s tasks to Project %s", JobTotal, MainProjectID)
-        if InputProjectID == False: return(MainProjectID)
-
-
-    def addTask(self, InputTask: DownloadTask, ProjectID: int | None = None) -> int | None:
-        """添加单个 dict 任务对象至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
-        # 如果正在添加任务则不等待添加完成
-        while self.Adding:
-            sleep(DownloadConfigs["SleepTime"])
-        self.Adding = True
-
-        if self.Stopping == True: raise Ex_Download.Stopping
-        if ProjectID == None:
-            InputedProjectID = False
-            ProjectID = self.createProject(AllTasksCount=1)
-        else:
-            InputedProjectID = True
-            self.addJobToProject(ProjectID=ProjectID, AllTasksCount=1)
-        Logger.debug("Adding 1 tasks to Project %s", ProjectID)
-
-        InputTask.ProjectID = ProjectID
-        self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
-
-        self.Adding = False
-        Logger.info("Added 1 task to Project %s", ProjectID)
-
-        if InputedProjectID == False:
-            return(ProjectID)
-        else:
-            return(None)
+        return(MainProjectID)
 
 
     def stop(self) -> None:
@@ -393,7 +371,7 @@ class DownloadManager():
 
     def waitProject(self, ProjectIDs: int | list, Raise: Exception | None = None) -> int:
         """通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数"""
-        if type(ProjectIDs) == type(int()): ProjectIDs = [ProjectIDs]
+        if isinstance(ProjectIDs, int): ProjectIDs = [ProjectIDs]
         ErrorTasksCount = int()
         for ProjectID in ProjectIDs:
             while ((self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) != self.Projects[ProjectID]["AllTasksCount"]):

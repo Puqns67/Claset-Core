@@ -67,7 +67,7 @@ class Configs():
 
 
     def get(self, Keys: list | str) -> Any:
-        if type(Keys) == type(str()): Keys = [Keys]
+        if isinstance(Keys, str): Keys = [Keys]
         try: return(getValueFromDict(Keys=Keys, Dict=self.TheConfig))
         except KeyError: return(None)
 
@@ -119,7 +119,7 @@ class Configs():
         Logger.info("Created Config: %s", self.ID)
 
 
-    def saveConfig(self):
+    def saveConfig(self) -> None:
         """保存配置文件"""
         saveFile(Path=self.FilePath, FileContent=self.TheConfig, Type="json")
 
@@ -146,14 +146,15 @@ class Configs():
                 Reverse = False
             DifferenceS = self.getDifferenceS(TargetVersion=TargetVersion, Reverse=Reverse)
 
-        for Difference in DifferenceS:
-            Type, Key = self.reFindTypeAndKey.match(Difference).groups()
-            NewConfig = self.processConfig(Key=Key, Type=Type)
+        if len(DifferenceS) >= 1:
+            for Difference in DifferenceS:
+                Type, Key = self.reFindTypeAndKey.match(Difference).groups()
+                self.processConfig(Key=Key, Type=Type)
 
-        if Differences == None: NewConfig = self.setVersion(Config=NewConfig, Version=TargetVersion)
+        if Differences == None:
+            self.TheConfig = self.setVersion(Config=self.TheConfig, Version=TargetVersion)
 
-        saveFile(Path=self.FilePath, FileContent=NewConfig, Type="json")
-        self.TheConfig = NewConfig
+        self.saveConfig()
 
 
     def getDifferenceS(self, TargetVersion: int | None = None, Reverse: bool = False) -> list[str]:
@@ -220,16 +221,19 @@ class Configs():
             Dict[Keys[0]] = self.__SetToDict(Keys=Keys[1:], Dict=Dict[Keys[0]], Type=Type, Do=Do)
             return(Dict)
         elif len(Keys) == 1:
-            if Type == "REPLACE":
-                # 尝试修正输入类型
-                if type(Do) == type(str()):
-                    Do = fixType(Do)
-                Dict[Keys[0]] = Do
-                return(Dict)
-            elif Type == "DELETE":
-                try:
-                    Dict.pop(Keys[0])
-                except KeyError:
-                    pass
-                return(Dict)
+            match Type:
+                case "REPLACE":
+                    # 尝试修正输入类型
+                    if isinstance(Do, str):
+                        Do = fixType(Do)
+                    Dict[Keys[0]] = Do
+                    return(Dict)
+                case "DELETE":
+                    try:
+                        Dict.pop(Keys[0])
+                    except KeyError:
+                        pass
+                    return(Dict)
+                case _:
+                    ValueError(Type)
 

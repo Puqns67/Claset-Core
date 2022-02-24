@@ -53,19 +53,19 @@ from . import Accounts, Execution, Utils, Game
 GolbalLogger = getLogger(__name__)
 GolbalLogger.setLevel(DEBUG)
 
-ProcessLogger = Utils.Logs(GolbalLogger)
-ProcessLogger.SettingLevel()
+LoggerProcesser = Utils.Logs(GolbalLogger)
+LoggerProcesser.SettingLevel()
 
 def setLoggerHandler(**Types: str | None):
-    ProcessLogger.SettingHandler(**Types)
+    LoggerProcesser.SettingHandler(**Types)
 
 
 def ProcessLogs(Type: str | None = None, ThreadMode: bool = True) -> None:
     """处理日志"""
     if ThreadMode:
-        ProcessLogger.ThreadProcessLogs(Type=Type)
+        LoggerProcesser.ThreadProcessLogs(Type=Type)
     else:
-        ProcessLogger.ProcessLogs(Type=Type)
+        LoggerProcesser.ProcessLogs(Type=Type)
 
 
 def getLogger() -> Logger:

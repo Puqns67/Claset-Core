@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from platform import system, machine, version
 from re import match
+from typing import Any
+from os import listdir
+from platform import system, machine, version
 
-from Claset.Utils import AdvancedPath, DownloadTask, dfCheck, pathAdder
+from Claset.Utils import AdvancedPath, DownloadTask, path, pathAdder, dfCheck
 
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
 
@@ -74,11 +76,30 @@ def getNativesObject(Libraries: dict, Features: dict | None = None, getExtract: 
     return(Output)
 
 
-def getGetVersionList():
+def getVersionNameList() -> list[str]:
     """获取版本列表"""
+    Output = list()
+    VersionList = listdir(path=path("$VERSION"))
+    for Version in VersionList:
+        if checkVersion(VersionName=Version):
+            Output.append(Version)
+    return(Output)
 
 
-def checkGameVersion(Name: str) -> bool:
+def checkVersion(VersionName: str) -> bool:
     """检测版本基础文件是否存在(版本 json 是否对应文件夹名)"""
-    return(dfCheck(Path=pathAdder("$VERSION", Name, Name + ".json"), Type="f"))
+    return(dfCheck(Path=pathAdder("$VERSION", VersionName, VersionName + ".json"), Type="f"))
+
+
+def getVersionInfoList(VersionNames: list[str]) -> list[dict[str, Any]]:
+    """获取多个版本信息"""
+    Output = list()
+    for VersionName in VersionNames:
+        Output.append(getVersionInfo(VersionName=VersionName))
+    return(Output)
+
+
+def getVersionInfo(VersionName: str) -> dict[str, Any]:
+    """获取版本信息"""
+    
 

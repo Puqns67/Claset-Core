@@ -12,14 +12,14 @@ from .Path import PathRegex
 from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
 from .Exceptions.Configs import ConfigUnregistered
 
+ReMatchLoadString = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>$")
+
 
 class AdvancedPath():
-    ReSearch = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>")
-
     def __init__(self, Others: list | None = None, IsPath: bool = False):
-        self.Configs = Configs(ID="Paths", TargetVersion=0)
+        self.Configs = Configs(ID="Paths")
         self.IsPath = IsPath
-        self.CompleteConfigs: dict = self.Configs.get(["Prefixs"])
+        self.CompleteConfigs: dict = self.Configs["Prefixs"]
         self.CompleteConfigsKeys = self.CompleteConfigs.keys()
 
         if Others != None: self.getFromOthersKeys(Others)
@@ -27,8 +27,8 @@ class AdvancedPath():
 
     def loadOtherString(self, Objects: str) -> dict:
         try:
-            File, Value = self.ReSearch.search(Objects).groups()
-            File = Configs(File, TargetVersion=0)
+            File, Value = ReMatchLoadString.match(Objects).groups()
+            File = Configs(File)
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
         except ConfigUnregistered:
@@ -37,14 +37,14 @@ class AdvancedPath():
         try: Value = self.loadOtherString(Value)
         except Ex_AdvancedPath.SearchError: pass
 
-        return(File.get([Value]))
+        return(File[Value])
 
 
     def getFromOthersKeys(self, OtherTypes: list) -> None:
-        if len(self.Configs.get(["Others"])) == 0:
+        if len(self.Configs["Others"]) == 0:
             OthersKeys = OtherTypes
         else:
-            OthersKeys = self.Configs.get(["Others"]) + OtherTypes
+            OthersKeys = self.Configs["Others"] + OtherTypes
 
         # 顺序获取之后再放入 Prefixs
         for i in OthersKeys:
@@ -71,7 +71,9 @@ class AdvancedPath():
         if ((IsPath == False) and (self.IsPath == True)): self.IsPath = False
 
         while "$" in Input:
-            Groups = list(PathRegex.search(Input).groups())
+            Matched = PathRegex.match(Input)
+            if Matched == None: raise Ex_Path.SearchError
+            Groups = list(Matched.groups())
             if Groups[1] == None: raise Ex_Path.SearchError
             elif Groups[1] == "PREFIX": Groups[1] = getcwd()
             elif Groups[1] in self.CompleteConfigsKeys: Groups[1] = self.CompleteConfigs[Groups[1]]
@@ -83,15 +85,15 @@ class AdvancedPath():
         return(Input)
 
 
-    def pathAdder(self, *paths: list | tuple | str) -> str:
+    def pathAdder(self, *Paths: list | tuple | str) -> str:
         """拼接路径片段并格式化"""
         PathList = list()
-        for i in paths:
-            if type(i) == type(str()):
+        for i in Paths:
+            if isinstance(i, str):
                 PathList.append(i)
-            elif (type(i) == type(list()) or type(i) == type(tuple())):
+            elif isinstance(i, (list, tuple,)):
                 PathList.extend(i)
-            elif (type(i) == type(int()) or type(i) == type(float())):
+            elif isinstance(i, (int, float,)):
                 PathList.append(str(i))
         Path = "/".join(PathList)
         if "$" in Path: Path = self.path(Path)

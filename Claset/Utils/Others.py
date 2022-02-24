@@ -6,17 +6,20 @@ from base64 import b64encode, b64decode
 fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
 
 
-def getValueFromDict(Keys: list, Dict: dict) -> Any:
+def getValueFromDict(Keys: list[str] | str, Dict: dict) -> Any:
     """使用列表从字典获取数据"""
-    if len(Keys) > 1:
-        return(getValueFromDict(Keys=Keys[1:], Dict=Dict[Keys[0]]))
-    else:
-        return(Dict[Keys[0]])
+    if isinstance(Keys, list):
+        if len(Keys) > 1:
+            return(getValueFromDict(Keys=Keys[1:], Dict=Dict[Keys[0]]))
+        else:
+            return(Dict[Keys[0]])
+    elif isinstance(Keys, str):
+        return(Dict[Keys])
 
 
 def setValueFromDict(Keys: list, Value: Any, Dict: dict | None = None, ) -> dict:
     """使用列表向字典填充数据"""
-    if type(Dict) != type(dict()): Dict = dict()
+    if not isinstance(Dict, dict): Dict = dict()
     if len(Keys) > 1:
         if Dict.get(Keys[0]) == None: Dict[Keys[0]] = dict()
         Dict[Keys[0]] = setValueFromDict(Keys=Keys[1:], Value=Value, Dict=Dict[Keys[0]], )
