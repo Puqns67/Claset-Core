@@ -9,14 +9,14 @@ import Claset
 
 
 def testInstallAndRun():
-    GameInstaller = Claset.Game.Install.Installer(VersionName="Test")
+    GameInstaller = Claset.Game.GameInstaller(VersionName="Test")
     try:
         GameInstaller.InstallVanilla()
     except KeyboardInterrupt:
         Claset.stopALLDownloader()
         exit()
 
-    GameLauncher = Claset.Game.Launch.GameLauncher(VersionName="Test")
+    GameLauncher = Claset.Game.GameLauncher(VersionName="Test")
     GameLauncher.launchGame()
     try:
         GameLauncher.waitGame()
@@ -31,7 +31,7 @@ def testMicrosoftOAuth():
     OAuth = Claset.Accounts.Auth()
     OAuth.auth()
     Logger.info("Microsoft Account Keys: \"%s\", \"%s\"", OAuth.MicrosoftAccountAccessToken, OAuth.MicrosoftAccountRefreshToken)
-    OAuth.getMinecraftAccountInfos()
+    OAuth.authToMinectaft()
     Logger.info("Account Infos: \n%s", OAuth.MinecraftAccessToken)
 
 

@@ -99,7 +99,7 @@ jobs:
 
 
       - name: Using Develop Version Nuitka
-        # if: github.event.inputs.use_nuitka_develop_version  == 'true'
+        if: ${{ github.event.inputs.use_nuitka_develop_version }}  == 'true'
         shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
 
@@ -121,7 +121,7 @@ jobs:
 
       - name: Build
         shell: pwsh
-        run: python -m nuitka --standalone --onefile --follow-imports --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}\Run.py"
+        run: python -m nuitka --standalone --onefile --follow-imports --windows-product-name="Claset" --windows-file-version="1.0.0.0" --windows-product-version="0.1.0.147" --windows-company-name="Puqns_67" --windows-file-description="基于 Python 的 Minecraft 启动管理器" --windows-onefile-tempdir-spec="%TEMP%\Claset_%PID%_%TIME%" --assume-yes-for-downloads -o "${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}\Run.py"
 
 
       - name: Upload Build Artifact to Actions
@@ -212,7 +212,7 @@ jobs:
 
 
       - name: Using Develop Version Nuitka
-        # if: github.event.inputs.use_nuitka_develop_version  == 'true'
+        if: ${{ github.event.inputs.use_nuitka_develop_version }}  == 'true'
         shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
 
