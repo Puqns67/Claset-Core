@@ -99,7 +99,7 @@ jobs:
 
 
       - name: Using Develop Version Nuitka
-        if: ${{ github.event.inputs.use_nuitka_develop_version }}  == 'true'
+        if: github.event.inputs.use_nuitka_develop_version
         shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
 
@@ -212,7 +212,7 @@ jobs:
 
 
       - name: Using Develop Version Nuitka
-        if: ${{ github.event.inputs.use_nuitka_develop_version }}  == 'true'
+        if: github.event.inputs.use_nuitka_develop_version
         shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
 
