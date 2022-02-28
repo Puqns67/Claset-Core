@@ -84,7 +84,7 @@ class GameInstaller():
         if dfCheck(Path=VersionManifestTask.OutputPaths, Type="f"):
             VersionManifestFileType = "OLD"
         else:
-            self.Downloader.addTask(InputTask=VersionManifestTask, ProjectID=self.MainDownloadProject)
+            self.Downloader.addTask(InputTasks=VersionManifestTask, MainProjectID=self.MainDownloadProject)
             self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
             VersionManifestFileType = "NEW"
         VersionManifestFile = loadFile(Path=VersionManifestTask.OutputPaths, Type="json")
@@ -101,7 +101,7 @@ class GameInstaller():
                     case "NEW":
                         raise UnknownVersion(self.MinecraftVersion)
                     case "OLD":
-                        self.Downloader.addTask(InputTask=VersionManifestTask, ProjectID=self.MainDownloadProject)
+                        self.Downloader.addTask(InputTasks=VersionManifestTask, MainProjectID=self.MainDownloadProject)
                         self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
                         VersionManifestFile = loadFile(Path=VersionManifestTask.OutputPaths, Type="json")
                         VersionManifestFileType = "NEW"
