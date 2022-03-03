@@ -62,3 +62,8 @@ class Account():
             case _:
                 raise UnsupportedAccountType(self.Type)
 
+
+    def getShortType(self) -> str:
+        """获取简短类型"""
+        return({"OFFLINE": uuid4().hex, "MICROSOFT": "msa"}[self.Type])
+

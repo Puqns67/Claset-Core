@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from argparse import Namespace
+from copy import deepcopy
+from select import select
 
 from rich.console import Console
 from rich.table import Table
@@ -25,11 +27,17 @@ AP_CreateAccount.add_argument("-N", "--AccountName", help="账户名称, 此选�
 AP_CreateAccount.add_argument("-T", "--Type", default="MICROSOFT" , help="账户类型, 现支持 \"OFFLINE\" 和 \"MICROSOFT\" 类型, 默认为 \"MICROSOFT\"")
 
 AP_RemoveAccount = Cmd2ArgumentParser()
-AP_RemoveAccount.add_argument("-N", "--Name", help="指定账户的游戏内名称, 使用此参数时将有可能删除多个账户")
-AP_RemoveAccount.add_argument("-T", "--Type", help="指定账户类型, 使用此参数时将有可能删除多个账户")
-AP_RemoveAccount.add_argument("-i", "--ID", help="指定账户 ID, 此 ID 为在配置文件中的序列号")
-AP_RemoveAccount.add_argument("-I", "--UUID", help="指定账户 UUID")
-AP_RemoveAccount.add_argument("Target", help="对应的目标")
+AP_RemoveAccount.add_argument("-N", "--Name", default=None, help="指定账户的游戏内名称, 使用此参数时将有可能删除多个账户")
+AP_RemoveAccount.add_argument("-T", "--Type", default=None, help="指定账户类型, 使用此参数时将有可能删除多个账户")
+AP_RemoveAccount.add_argument("-i", "--ID", default=None, help="指定账户 ID, 此 ID 为在配置文件中的序列号")
+AP_RemoveAccount.add_argument("-I", "--UUID", default=None, help="指定账户 UUID")
+
+AP_SetDefaultAccount = deepcopy(AP_RemoveAccount)
+
+AP_RemoveAccount.add_argument("-D", "--Dryrun", action="store_false", help="由于此命令有危害性, 您可以使用此参数查看使用此命令后的对账户列表的操作")
+
+AP_Exit = Cmd2ArgumentParser()
+AP_Exit.add_argument("-W", "--WaitGames", default="True", choices=("True", "False",), help="等待游戏结束后再退出 Claset")
 
 
 class Main(Cmd):
@@ -69,6 +77,16 @@ class Main(Cmd):
 
     def do_ListGame(self, _: Namespace):
         """列出所有游戏实例"""
+        GameInfoList = Claset.Game.Utils.getVersionInfoList()
+        if len(GameInfoList) == 0:
+            print("未找到任何游戏实例")
+            return
+
+        GameTable = Table("ID", "实例名", "版本", "版本类型", "位置")
+        for GameID in range(len(GameInfoList)):
+            GameTable.add_row(str(GameID), *GameInfoList[GameID].getInfoList())
+
+        self.RichConsole.print(GameTable)
 
 
     @with_argparser(AP_CreateAccount)
@@ -102,15 +120,32 @@ class Main(Cmd):
         self.RichConsole.print(AccountTable)
 
 
+    @with_argparser(AP_SetDefaultAccount)
+    def do_SetDefaultAccount(self, init: Namespace):
+        """设定指定的账户为默认账户"""
+        try:
+            AccountList = self.AccountManager.getAccountList(ID=int(init.ID), UUID=init.UUID, Name=init.Name, Type=init.Type)
+        except ValueError:
+            self.RichConsole.print("输入有误")
+            return
+
+        if len(AccountList) == 0:
+            self.RichConsole.print("没有符合输入的账户")
+            return
+        self.AccountManager.setDefault(AccountList[0]["ID"])
+
+
     @with_argparser(AP_RemoveAccount)
     def do_RemoveAccount(self, init: Namespace):
         """删除指定的账户"""
 
 
-    def do_Exit(self, _: Namespace):
+    @with_argparser(AP_Exit)
+    def do_Exit(self, init: Namespace):
         """退出程序"""
         Claset.stopALLDownloader()
-        Claset.waitALLGames()
+        if init.WaitGames == "True":
+            Claset.waitALLGames()
         raise SystemExit
     do_exit = do_Exit
     do_quit = do_Exit

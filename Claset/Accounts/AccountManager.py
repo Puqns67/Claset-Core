@@ -13,8 +13,6 @@ from .MinecraftAccount import MinecraftAccount
 
 from .Exceptions import *
 
-ACCOUNT_TYPES = ("OFFLINE", "MICROSOFT",)
-ACCOUNT_STATUS = ("DELETE", "NORMAL", "DEFAULT")
 Logger = getLogger(__name__)
 
 

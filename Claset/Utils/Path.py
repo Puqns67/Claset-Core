@@ -11,7 +11,6 @@ from .Exceptions.Path import SearchError, PrefixsMissingKey
 
 PathRegex = ReCompile(r"^(.*)\$([a-zA-Z]*)(.*)$")
 PathConfigs = None
-PathConfigKeys = None
 
 
 def path(Input: str, IsPath: bool = False) -> str:
@@ -25,7 +24,6 @@ def path(Input: str, IsPath: bool = False) -> str:
                 PathConfigs = load(ConfigFile)["Prefixs"]
         except FileNotFoundError:
             PathConfigs = File["Prefixs"]
-        PathConfigKeys = PathConfigs.keys()
 
     while "$" in Input:
         Matched = PathRegex.match(Input)
@@ -33,7 +31,7 @@ def path(Input: str, IsPath: bool = False) -> str:
         Groups = list(Matched.groups())
         if Groups[1] == None: raise SearchError
         elif Groups[1] == "PREFIX": Groups[1] = getcwd()
-        elif Groups[1] in PathConfigKeys: Groups[1] = PathConfigs[Groups[1]]
+        elif Groups[1] in PathConfigs: Groups[1] = PathConfigs[Groups[1]]
         else: raise PrefixsMissingKey(Groups[1])
         Input = str().join(Groups)
 

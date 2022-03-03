@@ -20,7 +20,6 @@ class AdvancedPath():
         self.Configs = Configs(ID="Paths")
         self.IsPath = IsPath
         self.CompleteConfigs: dict = self.Configs["Prefixs"]
-        self.CompleteConfigsKeys = self.CompleteConfigs.keys()
 
         if Others != None: self.getFromOthersKeys(Others)
 
@@ -61,7 +60,6 @@ class AdvancedPath():
 
         # 刷新数据
         self.CompleteConfigs = CompleteConfigs
-        self.CompleteConfigsKeys = self.CompleteConfigs.keys()
 
 
     def path(self, Input: str, Others: list | None = None, IsPath: bool | None = None) -> str:
@@ -76,7 +74,7 @@ class AdvancedPath():
             Groups = list(Matched.groups())
             if Groups[1] == None: raise Ex_Path.SearchError
             elif Groups[1] == "PREFIX": Groups[1] = getcwd()
-            elif Groups[1] in self.CompleteConfigsKeys: Groups[1] = self.CompleteConfigs[Groups[1]]
+            elif Groups[1] in self.CompleteConfigs: Groups[1] = self.CompleteConfigs[Groups[1]]
             else: raise Ex_Path.PrefixsMissingKey(Groups[1])
             Input = str().join(Groups)
 

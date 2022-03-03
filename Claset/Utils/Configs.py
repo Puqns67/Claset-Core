@@ -13,14 +13,12 @@ from .Confs import ConfigIDs, ConfigInfos
 from .Exceptions import Configs as Ex_Configs
 
 Logger = getLogger(__name__)
-
+ReFindTypeAndKey = reCompile(r"^([a-zA-Z0-9_]+):(.+)$")
+ReFindOldAndNew = reCompile(r"^(.+)->(.*)$")
+ReIFStrList = reCompile(r"^\[.*\]")
 
 class Configs():
     """管理日志"""
-    reFindTypeAndKey = reCompile(r"^([a-zA-Z0-9_]+):(.+)$")
-    reFindOldAndNew = reCompile(r"^(.+)->(.*)$")
-    reIFStrList = reCompile(r"^\[.*\]")
-
     def __init__(self, ID: str, TargetVersion: int = 0, FilePath: str | None = None, ProcessList: list = list()) -> None:
         if ID not in ConfigIDs: raise Ex_Configs.ConfigUnregistered(ID)
         self.ID = ID
@@ -62,8 +60,9 @@ class Configs():
         self.TheConfig[Key] = Value
 
 
-    def keys(self) -> list:
-        return(list(self.TheConfig.keys()))
+    def keys(self):
+        """实现来着dict类型的keys()"""
+        return(self.TheConfig.keys())
 
 
     def get(self, Keys: list | str) -> Any:
@@ -124,6 +123,11 @@ class Configs():
         saveFile(Path=self.FilePath, FileContent=self.TheConfig, Type="json")
 
 
+    def reloadConfig(self) -> None:
+        """从文件重载配置文件"""
+        self.TheConfig = self.getConfig()
+
+
     def updateConfig(self, TargetVersion: int | None = None, Differences: list | None = None) -> None:
         """更新或降级配置文件版本至目标版本(TargetVersion)"""
         # 处理版本数据
@@ -148,7 +152,7 @@ class Configs():
 
         if len(DifferenceS) >= 1:
             for Difference in DifferenceS:
-                Type, Key = self.reFindTypeAndKey.match(Difference).groups()
+                Type, Key = ReFindTypeAndKey.match(Difference).groups()
                 self.processConfig(Key=Key, Type=Type)
 
         if Differences == None:
@@ -167,7 +171,7 @@ class Configs():
             TargetVersion = self.TargetVersion
 
         for DifferentsKey in Differences:
-            Old, New = self.reFindOldAndNew.match(DifferentsKey).groups()
+            Old, New = ReFindOldAndNew.match(DifferentsKey).groups()
             ChangeList.append([int(Old), int(New)])
         ChangeList = sorted(ChangeList, key=lambda ChangeList: ChangeList[0], reverse=Reverse)
 
@@ -191,14 +195,14 @@ class Configs():
         """对配置文件的各种操作"""
         match Type:
             case "REPLACE":
-                Old, New = self.reFindOldAndNew.search(Key).groups()
+                Old, New = ReFindOldAndNew.search(Key).groups()
             case "DELETE":
                 Old = Key
                 New = None
             case _:
                 raise Ex_Configs.UnknownDifferenceType
 
-        if self.reIFStrList.search(Old.strip()) != None: Old = self.__StrList2List(Old)
+        if ReIFStrList.search(Old.strip()) != None: Old = self.__StrList2List(Old)
         else: Old = [Old]
         return(self.__SetToDict(Keys=Old, Dict=self.TheConfig, Type=Type, Do=New))
 
