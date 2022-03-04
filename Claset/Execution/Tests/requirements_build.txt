@@ -2,7 +2,7 @@
 # python >=3.10.2
 requests >=2.27.1
 urllib3  >=1.26.8
-nuitka   >=0.7.1
+nuitka   >=0.7.3
 zstandard>=0.17.0
 rich     >=11.2.0
 PySocks  >=1.7.1

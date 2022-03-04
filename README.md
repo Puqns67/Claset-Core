@@ -16,7 +16,7 @@
 |[cmd2](https://github.com/python-cmd2/cmd2)***             |2.4.0        |
 |[rich](https://github.com/Textualize/rich)* / ***          |11.2.0       |
 |[PySocks](https://github.com/Anorov/PySocks)*              |1.7.1        |
-|[Nuitka](https://github.com/Nuitka/Nuitka)**               |0.7.1        |
+|[Nuitka](https://github.com/Nuitka/Nuitka)**               |0.7.3        |
 
 * *: 可选
 * **: 用于编译为可执行程序

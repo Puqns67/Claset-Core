@@ -130,7 +130,7 @@ reference = "tuna"
 
 [[package]]
 name = "nuitka"
-version = "0.7.1"
+version = "0.7.3"
 description = "Python compiler with full language support and CPython compatibility"
 category = "dev"
 optional = false
@@ -303,7 +303,7 @@ reference = "tuna"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10.0"
-content-hash = "60023d60f7e506949f290c6c41df74f7f979f4576b1201bd866000dedfcfc71d"
+content-hash = "e421a16f76a82256265218d7a09100615960ff225c4052803844704b88377ab8"
 
 [metadata.files]
 attrs = [
@@ -387,7 +387,7 @@ idna = [
     {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
 ]
 nuitka = [
-    {file = "Nuitka-0.7.1.tar.gz", hash = "sha256:540fd4731a7d132ada1dff26eea2b463460a95dd058f85123b5d28594fbf195e"},
+    {file = "Nuitka-0.7.3.tar.gz", hash = "sha256:84d84fb68960a218172b549b370453791f930f510de674ca12ec96e79d223205"},
 ]
 pycparser = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
