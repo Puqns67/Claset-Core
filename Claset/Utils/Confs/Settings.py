@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 4
+LastVersion = 5
 
 
 File = {
@@ -13,12 +13,16 @@ File = {
         "WindowHeight": 480,
         "JavaPath": "AUTOPICK",
         "NotCheckGame": False,
-        "NotCheckJvm": False
+        "NotCheckJvm": False,
+        "WindowsPriority": "NORMAL"
     }
 }
 
 
 Difference = {
+    "4->5": [
+        "REPLACE:[GlobalConfig, WindowsPriority]->NORMAL",
+    ],
     "3->4": [
         "REPLACE:[GlobalConfig, JavaPath]->AUTOPICK"
     ],

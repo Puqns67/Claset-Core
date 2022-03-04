@@ -2,7 +2,6 @@
 
 from argparse import Namespace
 from copy import deepcopy
-from select import select
 
 from rich.console import Console
 from rich.table import Table
@@ -37,7 +36,7 @@ AP_SetDefaultAccount = deepcopy(AP_RemoveAccount)
 AP_RemoveAccount.add_argument("-D", "--Dryrun", action="store_false", help="由于此命令有危害性, 您可以使用此参数查看使用此命令后的对账户列表的操作")
 
 AP_Exit = Cmd2ArgumentParser()
-AP_Exit.add_argument("-W", "--WaitGames", default="True", choices=("True", "False",), help="等待游戏结束后再退出 Claset")
+AP_Exit.add_argument("-W", "--WaitGames", default=True, choices=(True, False,), help="等待游戏结束后再退出 Claset, 默认将等待游戏结束")
 
 
 class Main(Cmd):
@@ -144,7 +143,7 @@ class Main(Cmd):
     def do_Exit(self, init: Namespace):
         """退出程序"""
         Claset.stopALLDownloader()
-        if init.WaitGames == "True":
+        if init.WaitGames:
             Claset.waitALLGames()
         raise SystemExit
     do_exit = do_Exit

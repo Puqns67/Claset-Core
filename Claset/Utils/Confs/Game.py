@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 1
+LastVersion = 2
 
 
 File = {
@@ -13,10 +13,10 @@ File = {
         "WindowHeight": None,
         "JavaPath": None,
         "NotCheckGame": None,
-        "NotCheckJvm": None
+        "NotCheckJvm": None,
+        "WindowsPriority": None
     },
     "UnableGlobal": {
-        "NativesDir": None,
         "PrefixAndEnds": {
             "JvmPrefix": [],
             "JvmEnd": [],
@@ -27,5 +27,10 @@ File = {
 }
 
 
-Difference = {}
+Difference = {
+    "1->2": [
+        "REPLACE:[Global, WindowsPriority]->NORMAL",
+        "DELETE:[UnableGlobal, NativesDir]"
+    ]
+}
 

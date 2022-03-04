@@ -5,8 +5,12 @@ from logging import getLogger
 from re import compile as reCompile
 from types import NoneType
 from typing import Any
-from subprocess import Popen, DEVNULL
 from uuid import uuid4
+from platform import system
+from subprocess import (
+    Popen, REALTIME_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, ABOVE_NORMAL_PRIORITY_CLASS,
+    NORMAL_PRIORITY_CLASS, BELOW_NORMAL_PRIORITY_CLASS, IDLE_PRIORITY_CLASS, DEVNULL
+)
 
 from Claset import __fullversion__, __productname__, LaunchedGames
 from Claset.Accounts import AccountManager, Account
@@ -19,7 +23,9 @@ from .Exceptions import *
 Logger = getLogger(__name__)
 ReMatchRunCodeKey = reCompile(r"^(.*)\$\{(.+)\}(.*)$")
 Features: dict[str, bool] = {"is_demo_user": False, "has_custom_resolution": True}
+SubProcessPriorityClasses = {"REALTIME": REALTIME_PRIORITY_CLASS, "HIGH": HIGH_PRIORITY_CLASS, "ABOVE_NORMAL": ABOVE_NORMAL_PRIORITY_CLASS, "NORMAL": NORMAL_PRIORITY_CLASS, "BELOW_NORMAL": BELOW_NORMAL_PRIORITY_CLASS, "IDLE": IDLE_PRIORITY_CLASS}
 ClasetJvmHeader: list[str] = ["-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=16m", "-XX:-UseAdaptiveSizePolicy", "-XX:-OmitStackTraceInFastThrow", "-XX:-DontCompileHugeMethods"]
+
 
 class GameLauncher():
     """游戏启动器"""
@@ -50,10 +56,18 @@ class GameLauncher():
         processNatives(VersionJson=self.VersionInfos.Json, ExtractTo=self.VersionInfos.NativesPath, Features=Features)
         Logger.info("Launch Game: %s", self.VersionInfos.Name)
         Logger.debug("Run code: %s", RunArgs)
-        if PrintToTerminal:
-            self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir)
-        else:
-            self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=DEVNULL)
+        match system():
+            case "Windows":
+                Priority = SubProcessPriorityClasses[self.getConfig("WindowsPriority")]
+                if PrintToTerminal:
+                    self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, creationflags=Priority)
+                else:
+                    self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=DEVNULL, creationflags=Priority)
+            case "Darwin" | "Linux":
+                if PrintToTerminal:
+                    self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir)
+                else:
+                    self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=DEVNULL)
         LaunchedGames.append(self)
 
 
