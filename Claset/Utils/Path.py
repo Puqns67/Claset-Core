@@ -9,6 +9,7 @@ from re import compile as ReCompile
 from .Confs.Paths import File
 from .Exceptions.Path import SearchError, PrefixsMissingKey
 
+__all__ = ("PathRegex", "path", "pathAdder",)
 PathRegex = ReCompile(r"^(.*)\$([a-zA-Z]*)(.*)$")
 PathConfigs = None
 
@@ -16,7 +17,6 @@ PathConfigs = None
 def path(Input: str, IsPath: bool = False) -> str:
     """格式化路径"""
     global PathConfigs
-    global PathConfigKeys
 
     if PathConfigs == None:
         try:

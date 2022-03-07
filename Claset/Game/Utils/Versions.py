@@ -5,6 +5,8 @@ from types import NoneType
 
 from Claset.Utils import Configs, path, pathAdder, dfCheck, loadFile
 
+__all__ = ("VersionInfos", "getVersionInfoList", "getVersionNameList",)
+
 
 class VersionInfos():
     """实例相关信息的获取与实例的检查"""

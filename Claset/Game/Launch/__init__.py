@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from . import Exceptions
-from .Launch import GameLauncher
+from .Launch import *
 
-__all__ = [
-    "Exceptions", "GameLauncher"
-]
+__all__ = (
+    "Exceptions",
+) + (
+    Launch.__all__
+)
 

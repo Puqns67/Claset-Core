@@ -7,13 +7,14 @@
 __author__ = "Puqns67"
 __productname__ = "Claset"
 __version__ = "0.1.0"
-__build__ = 155
+__build__ = 156
 __fullversion__ = __version__ + "_" + str(__build__)
-__all__ = [
+__all__ = (
     "Accounts", "Execution", "Utils", "Game",
     "LaunchedGames", "Downloaders",
-    "setLoggerHandler", "processOldLog", "getLogger", "waitALLGames", "stopALLGames"
-]
+    "waitALLGames", "stopALLGames", "getDownloader", "stopALLDownloader",
+    "setLoggerHandler", "ProcessOldLog", "getLogger", 
+)
 
 LaunchedGames = list()
 Downloaders = list()
@@ -56,12 +57,14 @@ GolbalLogger.setLevel(DEBUG)
 LoggerProcesser = Utils.Logs(GolbalLogger)
 LoggerProcesser.SettingLevel()
 
+
 def setLoggerHandler(**Types: str | None):
+    """设置日志句柄"""
     LoggerProcesser.SettingHandler(**Types)
 
 
 def ProcessLogs(Type: str | None = None, ThreadMode: bool = True) -> None:
-    """处理日志"""
+    """处理旧日志"""
     if ThreadMode:
         LoggerProcesser.ThreadProcessLogs(Type=Type)
     else:
@@ -69,5 +72,6 @@ def ProcessLogs(Type: str | None = None, ThreadMode: bool = True) -> None:
 
 
 def getLogger() -> Logger:
+    """获得原全局日志"""
     return(GolbalLogger)
 

@@ -3,7 +3,8 @@
 from typing import Any
 from base64 import b64encode, b64decode
 
-fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
+__all__ = ("getValueFromDict", "setValueFromDict", "fixType", "encodeBase64", "decodeBase64",)
+__fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
 
 
 def getValueFromDict(Keys: list[str] | str, Dict: dict) -> Any:
@@ -32,8 +33,8 @@ def setValueFromDict(Keys: list, Value: Any, Dict: dict | None = None, ) -> dict
 def fixType(Input: str) -> Any:
     """修复类型"""
     Output = Input
-    if Input.lower() in fixType_fixs.keys():
-        Output = fixType_fixs[Input.lower()]
+    if Input.lower() in __fixType_fixs.keys():
+        Output = __fixType_fixs[Input.lower()]
     elif Input == str(): return None
     elif Input[-1] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
         try: Output = int(Input)

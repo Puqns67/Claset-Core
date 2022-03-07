@@ -10,5 +10,5 @@ try:
 except ModuleNotFoundError:
     TestMain = None
 
-__all__ = ["CommandLineMain", "TestMain"]
+__all__ = ("CommandLineMain", "TestMain",)
 

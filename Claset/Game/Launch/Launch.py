@@ -17,9 +17,11 @@ from Claset.Accounts import AccountManager, Account
 from Claset.Game.Utils import VersionInfos, ResolveRule, getClassPath, processNatives, getLog4j2Infos
 from Claset.Utils import Configs, path, getValueFromDict
 from Claset.Utils.JavaHelper import autoPickJava, fixJavaPath, getJavaInfoList, JavaInfo
+from Claset.Utils.Exceptions.Claset import UnsupportSystemHost
 
 from .Exceptions import *
 
+__all__ = ("Features", "ClasetJvmHeader", "GameLauncher",)
 Logger = getLogger(__name__)
 ReMatchRunCodeKey = reCompile(r"^(.*)\$\{(.+)\}(.*)$")
 Features: dict[str, bool] = {"is_demo_user": False, "has_custom_resolution": True}
@@ -56,6 +58,7 @@ class GameLauncher():
         processNatives(VersionJson=self.VersionInfos.Json, ExtractTo=self.VersionInfos.NativesPath, Features=Features)
         Logger.info("Launch Game: %s", self.VersionInfos.Name)
         Logger.debug("Run code: %s", RunArgs)
+
         match system():
             case "Windows":
                 Priority = SubProcessPriorityClasses[self.getConfig("WindowsPriority")]
@@ -63,11 +66,14 @@ class GameLauncher():
                     self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, creationflags=Priority)
                 else:
                     self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=DEVNULL, creationflags=Priority)
-            case "Darwin" | "Linux":
+            case "Linux":
                 if PrintToTerminal:
                     self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir)
                 else:
                     self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=DEVNULL)
+            case _:
+                raise UnsupportSystemHost(system())
+
         LaunchedGames.append(self)
 
 

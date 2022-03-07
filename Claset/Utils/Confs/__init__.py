@@ -3,6 +3,8 @@
 
 from . import Accounts, Download, Game, Logs, Mirrors, Paths, Settings
 
+__all__ = ("ConfigIDs", "ConfigInfos", "changeConfsObject",)
+
 ConfigIDs = [
     "Download", "Paths", "Mirrors", "Settings", "Logs", "Game", "Accounts"
 ]
@@ -47,15 +49,10 @@ ConfigInfos = {
 }
 
 
-def changeConfObject(Name: str, Version: int, File: dict, Difference: dict, Path: str) -> None:
+def changeConfsObject(Name: str, Version: int, File: dict, Difference: dict, Path: str) -> None:
     if Name not in ConfigIDs: ConfigIDs.append(Name)
     ConfigInfos["Version"][Name] = Version
     ConfigInfos["File"][Name] = File
     ConfigInfos["Difference"][Name] = Difference
     ConfigInfos["Path"][Name] = Path
-
-
-__all__ = [
-    "ConfigIDs", "ConfigInfos", "changeConfigObject"
-]
 

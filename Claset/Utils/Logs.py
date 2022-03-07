@@ -16,6 +16,8 @@ from .File import dfCheck, removeFile, makeArchive, addFileIntoArchive
 from .Configs import Configs
 from .Path import path as Pathmd, pathAdder
 
+__all__ = ("Logs",)
+
 
 class Logs():
     """日志相关的处理方案"""

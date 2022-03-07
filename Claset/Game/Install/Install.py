@@ -17,6 +17,7 @@ from Claset.Game.Utils.Exceptions import TargetVersionNotFound
 
 from .Exceptions import UnknownVersion, DownloadError, UndefinedMirror
 
+__all__ = ("GameInstaller",)
 Logger = getLogger(__name__)
 
 

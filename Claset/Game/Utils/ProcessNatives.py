@@ -12,7 +12,9 @@ from .LoadJson import getNativesObject
 
 from .Exceptions import NativesFileError, Sha1VerificationError
 
+__all__ = ("processNatives",)
 Logger = getLogger(__name__)
+
 
 def processNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = None):
     """处理 Natives"""

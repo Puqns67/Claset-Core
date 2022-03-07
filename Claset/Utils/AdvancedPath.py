@@ -12,6 +12,7 @@ from .Path import PathRegex
 from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
 from .Exceptions.Configs import ConfigUnregistered
 
+__all__ = ("ReMatchLoadString", "AdvancedPath",)
 ReMatchLoadString = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>$")
 
 

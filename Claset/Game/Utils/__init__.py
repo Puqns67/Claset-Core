@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from . import Exceptions
-from .ProcessNatives import processNatives
-from .LoadJson import (
-    Versionmanifest_VersionList, getClassPath,
-    VersionManifest_To_Version, Version_Client_DownloadList, Version_Server_DownloadList,
-    Version_To_AssetIndex, AssetIndex_DownloadList, getLog4j2Infos
-)
-from .Others import getVersionManifestTask, ResolveRule, getNativesObject
-from .Versions import VersionInfos, getVersionInfoList, getVersionNameList
+from .ProcessNatives import *
+from .LoadJson import *
+from .Others import *
+from .Versions import *
 
-__all__ = [
-    "Exceptions", "processNatives", "Versionmanifest_VersionList", "VersionManifest_To_Version",
-    "Version_Client_DownloadList", "Version_Server_DownloadList", "Version_To_AssetIndex",
-    "AssetIndex_DownloadList", "ResolveRule", "getVersionManifestTask", "ResolveRule", "getNativesObject",
-    "getClassPath", "getLog4j2Infos", "VersionInfos", "getVersionInfoList", "getVersionNameList"
-]
+__all__ = (
+    "Exceptions",
+) + (
+    ProcessNatives.__all__ +
+    LoadJson.__all__ +
+    Others.__all__ +
+    Versions.__all__
+)
 

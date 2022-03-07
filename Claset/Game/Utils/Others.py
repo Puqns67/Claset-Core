@@ -7,6 +7,8 @@ from Claset.Utils import AdvancedPath, DownloadTask
 
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
 
+__all__ = ("getVersionManifestTask", "ResolveRule", "getNativesObject",)
+
 
 def getVersionManifestTask(Ver: int = 1, Path: str | None = None) -> DownloadTask:
     """获取对应版本的 Manifest URL"""

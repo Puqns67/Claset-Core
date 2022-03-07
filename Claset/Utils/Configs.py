@@ -12,10 +12,12 @@ from .Others import getValueFromDict, fixType
 from .Confs import ConfigIDs, ConfigInfos
 from .Exceptions import Configs as Ex_Configs
 
+__all__ = ("Configs",)
 Logger = getLogger(__name__)
 ReFindTypeAndKey = reCompile(r"^([a-zA-Z0-9_]+):(.+)$")
 ReFindOldAndNew = reCompile(r"^(.+)->(.*)$")
 ReIFStrList = reCompile(r"^\[.*\]")
+
 
 class Configs():
     """管理日志"""

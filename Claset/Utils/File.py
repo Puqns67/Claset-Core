@@ -14,10 +14,10 @@ from .Path import pathAdder, path as Pathmd
 
 from .Exceptions.File import *
 
-__all__ = [
+__all__ = (
     "loadFile", "saveFile", "copyFile", "moveFile", "dfCheck", "removeFile",
-    "compressFile", "decompressFile", "makeArchive", "addFileIntoArchive"
-]
+    "compressFile", "decompressFile", "makeArchive", "addFileIntoArchive",
+)
 Logger = getLogger(__name__)
 
 

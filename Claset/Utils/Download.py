@@ -23,6 +23,7 @@ from .Exceptions import Download as Ex_Download
 from .File import dfCheck, loadFile, saveFile
 from .Path import pathAdder, path as Pathmd
 
+__all__ = ("getSession", "DownloadTask", "DownloadManager",)
 Logger = getLogger(__name__)
 DownloadConfigs = Configs(ID="Download")
 
