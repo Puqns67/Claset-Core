@@ -6,5 +6,7 @@ if __name__ == "__main__":
     Claset.setLoggerHandler(Stream="WARNING")
     Claset.ProcessLogs()
     Main = Claset.Execution.CommandLineMain()
+    Main.i18n()
+    Main.addArgumentToParsers()
     Main.cmdloop()
 

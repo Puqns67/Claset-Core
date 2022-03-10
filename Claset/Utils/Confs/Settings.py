@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 5
+LastVersion = 6
 
 
 File = {
     "DownloadServer": "Vanilla",
+    "Language": None,
     "GlobalConfig": {
         "MemoryMin": 512,
         "MemoryMax": 1024,
@@ -20,6 +21,9 @@ File = {
 
 
 Difference = {
+    "5->6": [
+        "REPLACE:Language->None"
+    ],
     "4->5": [
         "REPLACE:[GlobalConfig, WindowsPriority]->NORMAL",
     ],

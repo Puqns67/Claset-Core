@@ -303,7 +303,7 @@ reference = "tuna"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10.0"
-content-hash = "e421a16f76a82256265218d7a09100615960ff225c4052803844704b88377ab8"
+content-hash = "c87ee31cb511621158bf9837f26557b8868c9fa43d0bb7b3ba58beb6d4a3b8f2"
 
 [metadata.files]
 attrs = [

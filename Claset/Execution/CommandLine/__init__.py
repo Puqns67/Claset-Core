@@ -2,5 +2,5 @@
 
 from .Main import Main as CommandLineMain
 
-__all__ = ["CommandLineMain"]
+__all__ = ("CommandLineMain",)
 
