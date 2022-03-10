@@ -21,3 +21,4 @@ Claset-Build*
 !.vscode/launch.json
 temp*
 *.jar
+!template.pot
