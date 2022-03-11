@@ -39,14 +39,12 @@ class GameInstaller():
         else:
             self.Downloader = Downloader
 
-        self.MainDownloadProject = self.Downloader.createProject()
-
         # 载入相关的配置
         self.GlobalSettings = Configs(ID="Settings")
         if UsingDownloadServer != None:
             self.UsingDownloadServer = UsingDownloadServer
         else:
-            self.UsingDownloadServer: str = Configs(ID="Settings").get(["DownloadServer"])
+            self.UsingDownloadServer: str = Configs(ID="Settings")["DownloadServer"]
 
         try:
             self.Mirrors = Configs(ID="Mirrors")[self.UsingDownloadServer]
@@ -56,6 +54,7 @@ class GameInstaller():
 
     def InstallVanilla(self) -> None:
         """下载并安装游戏"""
+        self.MainDownloadProject = self.Downloader.createProject()
         if self.MinecraftVersion == None:
             Logger.info("Start installation name \"%s\" from latest Vanilla stable Verison", self.VersionName)
         else:

@@ -6,7 +6,6 @@ from re import compile as reCompile
 from types import NoneType
 from typing import Any
 from uuid import uuid4
-from platform import system
 from subprocess import (
     Popen, REALTIME_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, ABOVE_NORMAL_PRIORITY_CLASS,
     NORMAL_PRIORITY_CLASS, BELOW_NORMAL_PRIORITY_CLASS, IDLE_PRIORITY_CLASS, DEVNULL
@@ -18,6 +17,7 @@ from Claset.Game.Utils import VersionInfos, ResolveRule, getClassPath, processNa
 from Claset.Utils import Configs, path, getValueFromDict
 from Claset.Utils.JavaHelper import autoPickJava, fixJavaPath, getJavaInfoList, JavaInfo
 from Claset.Utils.Exceptions.Claset import UnsupportSystemHost
+from Claset.Utils.Platform import System
 
 from .Exceptions import *
 
@@ -59,7 +59,7 @@ class GameLauncher():
         Logger.info("Launch Game: %s", self.VersionInfos.Name)
         Logger.debug("Run code: %s", RunArgs)
 
-        match system():
+        match System:
             case "Windows":
                 Priority = SubProcessPriorityClasses[self.getConfig("WindowsPriority")]
                 if PrintToTerminal:
@@ -72,7 +72,7 @@ class GameLauncher():
                 else:
                     self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=DEVNULL)
             case _:
-                raise UnsupportSystemHost(system())
+                raise UnsupportSystemHost(System)
 
         LaunchedGames.append(self)
 

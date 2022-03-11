@@ -2,6 +2,7 @@
 """Claset 基础包"""
 
 from . import Exceptions
+from .Platform import *
 from .AdvancedPath import AdvancedPath
 from .Configs import Configs
 from .Confs import *
@@ -15,8 +16,9 @@ from .JavaHelper import *
 __all__ = (
     "Exceptions", "AdvancedPath", "Configs", "Logs",
 ) + (
-    Confs.__all__ + Download.__all__ +
-    File.__all__ + Others.__all__ +
-    Path.__all__ + JavaHelper.__all__
+    Platform.__all__ + Confs.__all__ +
+    Download.__all__ + File.__all__ +
+    Others.__all__ + Path.__all__ +
+    JavaHelper.__all__
 )
 

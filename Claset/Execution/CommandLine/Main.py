@@ -2,9 +2,11 @@
 
 from argparse import Namespace
 from gettext import translation
+from time import sleep
 
 from rich.console import Console
 from rich.table import Table
+from rich.progress import (Progress, TextColumn, BarColumn, )
 from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser
 
 import Claset
@@ -72,8 +74,27 @@ class Main(Cmd):
     @with_argparser(InstallGame)
     def do_InstallGame(self, init: Namespace):
         """安装游戏实例"""
-        GameInstaller = Claset.Game.GameInstaller(VersionName=init.GameName, MinecraftVersion=init.Version)
+        Downloader = Claset.getDownloader()
+        GameInstaller = Claset.Game.GameInstaller(VersionName=init.GameName, MinecraftVersion=init.Version, Downloader=Downloader, WaitDownloader=False)
         GameInstaller.InstallVanilla()
+
+        InstallProgressBar = Progress(
+            TextColumn("[bold blue]" + self._("安装游戏:\"{task.description}\""), justify="right"),
+            BarColumn(bar_width=None),
+            "[progress.percentage]{task.percentage:>3.1f}%",
+            console=self.RichConsole
+        )
+
+        if init.Version != None:
+            taskName = init.GameName + "-" + init.Version
+        else:
+            taskName = init.GameName
+
+        with InstallProgressBar:
+            taskID = InstallProgressBar.add_task(description=taskName, total=Downloader.Projects[GameInstaller.MainDownloadProject]["AllTasksCount"], completed=Downloader.Projects[GameInstaller.MainDownloadProject]["CompletedTasksCount"])
+            while not Downloader.isProjectCompleted(ProjectID=GameInstaller.MainDownloadProject):
+                sleep(0.1)
+                InstallProgressBar.update(task_id=taskID, total=Downloader.Projects[GameInstaller.MainDownloadProject]["AllTasksCount"], completed=Downloader.Projects[GameInstaller.MainDownloadProject]["CompletedTasksCount"])
 
 
     @with_argparser(LaunchGame)

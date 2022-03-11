@@ -370,12 +370,12 @@ class DownloadManager():
         if ErrorTasksCount != None:     self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
 
 
-    def waitProject(self, ProjectIDs: int | list, Raise: Exception | None = None) -> int:
+    def waitProject(self, ProjectIDs: list | int, Raise: Exception | None = None) -> int:
         """通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数"""
         if isinstance(ProjectIDs, int): ProjectIDs = [ProjectIDs]
         ErrorTasksCount = int()
         for ProjectID in ProjectIDs:
-            while ((self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"]) != self.Projects[ProjectID]["AllTasksCount"]):
+            while not self.isProjectCompleted(ProjectID=ProjectID):
                 sleep(DownloadConfigs["SleepTime"])
             ErrorTasksCount += self.Projects[ProjectID]["ErrorTasksCount"]
 
@@ -388,4 +388,12 @@ class DownloadManager():
             raise Raise(ErrorTasksCount)
         else:
             return(ErrorTasksCount)
+
+
+    def isProjectCompleted(self, ProjectID: int) -> bool:
+        """检查此 Project 是否已完成"""
+        if self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"] == self.Projects[ProjectID]["AllTasksCount"]:
+            return(True)
+        else:
+            return(False)
 
