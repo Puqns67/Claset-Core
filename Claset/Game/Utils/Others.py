@@ -2,8 +2,7 @@
 
 from re import match
 
-from Claset.Utils import AdvancedPath, DownloadTask
-from Claset.Utils.Platform import System, Arch, Version
+from Claset.Utils import AdvancedPath, DownloadTask, System, Arch, formatDollar, OriginalVersion
 
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
 
@@ -33,11 +32,11 @@ def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
     for Item in Items:
         if Item.get("os") != None:
             if Item["os"].get("name") != None:
-                if Item["os"]["name"] != System: continue
+                if Item["os"]["name"] != System().getFormated(Format="Minecraft"): continue
             if Item["os"].get("arch") != None:
-                if Item["os"]["arch"] != Arch: continue
+                if Item["os"]["arch"] != Arch().getFormated(Format="Minecraft"): continue
             if Item["os"].get("version") != None:
-                if match(Item["os"]["version"], Version) == None: continue
+                if match(Item["os"]["version"], OriginalVersion) == None: continue
         if Item.get("features") != None:
             try:
                 for FeaturesKey in Item["features"].keys():
@@ -57,8 +56,8 @@ def getNativesObject(Libraries: dict, Features: dict | None = None, getExtract: 
     if "rules" in LibrariesKeys:
         if ResolveRule(Items=Libraries["rules"], Features=Features) == False: return(None)
 
-    # 解析系统信息 TODO: 于 Libraries["natives"][System] 中有可能会出现 ${} 形态的需要替换的数值
-    Output = Libraries["downloads"]["classifiers"][Libraries["natives"][System]]
+    # 解析系统信息
+    Output = Libraries["downloads"]["classifiers"][formatDollar(Libraries["natives"][System().getFormated(Format="Minecraft")], arch=Arch().getFormated(Format="PureNumbers"))]
 
     # 实现 getExtract
     if (getExtract and ("extract" in LibrariesKeys)):

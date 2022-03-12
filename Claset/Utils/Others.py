@@ -2,9 +2,11 @@
 
 from typing import Any
 from base64 import b64encode, b64decode
+from re import compile
 
-__all__ = ("getValueFromDict", "setValueFromDict", "fixType", "encodeBase64", "decodeBase64",)
+__all__ = ("getValueFromDict", "setValueFromDict", "fixType", "encodeBase64", "decodeBase64", "formatDollar",)
 __fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
+__ReMatchFormatDollar = compile(r"^(.*)\${(.*)}(.*)$")
 
 
 def getValueFromDict(Keys: list[str] | str, Dict: dict) -> Any:
@@ -53,4 +55,19 @@ def encodeBase64(Input: str) -> str:
 def decodeBase64(Input: str) -> str:
     """返回Base64解码后的字符串"""
     return(str(b64decode(bytes(Input, encoding="utf8")), encoding="utf8"))
+
+
+def formatDollar(Input: str, **Kwargs: str) -> None:
+    """格式化 ${}"""
+    try:
+        Matched = list(__ReMatchFormatDollar.match(Input).groups())
+    except AttributeError:
+        return(Input)
+    while Matched:
+        Matched[1] = Kwargs[Matched[1]]
+        try:
+            Matched = list(__ReMatchFormatDollar.match(str().join(Matched)).groups())
+        except AttributeError:
+            break
+    return(str().join(Matched))
 

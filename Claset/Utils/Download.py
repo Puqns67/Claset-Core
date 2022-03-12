@@ -241,7 +241,7 @@ class DownloadManager():
                     if (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1):
                         raise Ex_Download.FileExist
                     else:
-                        Logger.warning("File: \"%s\" sha1 verify Error! ReDownload it")
+                        Logger.warning("File: \"%s\" sha1 verify Error! ReDownload it", baseName(OutputPaths))
                 else:
                     raise Ex_Download.FileExist
 
@@ -370,6 +370,11 @@ class DownloadManager():
         if ErrorTasksCount != None:     self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
 
 
+    def getInfoFormProject(self, ProjectID: int, Type: str) -> Any:
+        """通过 ProjectID 从 Projects 中获取相关信息"""
+        return(self.Projects[ProjectID][Type])
+
+
     def waitProject(self, ProjectIDs: list | int, Raise: Exception | None = None) -> int:
         """通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数"""
         if isinstance(ProjectIDs, int): ProjectIDs = [ProjectIDs]
@@ -392,7 +397,7 @@ class DownloadManager():
 
     def isProjectCompleted(self, ProjectID: int) -> bool:
         """检查此 Project 是否已完成"""
-        if self.Projects[ProjectID]["CompletedTasksCount"] + self.Projects[ProjectID]["ErrorTasksCount"] == self.Projects[ProjectID]["AllTasksCount"]:
+        if self.getInfoFormProject(ProjectID, "CompletedTasksCount") + self.getInfoFormProject(ProjectID, "ErrorTasksCount") == self.getInfoFormProject(ProjectID, "AllTasksCount"):
             return(True)
         else:
             return(False)

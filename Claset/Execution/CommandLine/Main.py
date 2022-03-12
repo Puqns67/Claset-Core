@@ -3,10 +3,11 @@
 from argparse import Namespace
 from gettext import translation
 from time import sleep
+from sys import exec_prefix
 
 from rich.console import Console
 from rich.table import Table
-from rich.progress import (Progress, TextColumn, BarColumn, )
+from rich.progress import (Progress, TextColumn, BarColumn,)
 from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser
 
 import Claset
@@ -36,7 +37,10 @@ class Main(Cmd):
 
     def i18n(self) -> None:
         """多国语言支持"""
-        self.TranslateObj = translation(domain="Default", localedir="Translations", languages=self.Configs["Language"])
+        try:
+            self.TranslateObj = translation(domain="Default", localedir=Claset.Utils.pathAdder(exec_prefix, "Translations"), languages=self.Configs["Language"])
+        except FileNotFoundError:
+            self.TranslateObj = translation(domain="Default", localedir=Claset.Utils.path(Input="$PREFIX/Translations", IsPath=True), languages=self.Configs["Language"])
         self._ = self.TranslateObj.gettext
 
         self.intro = self._("Claset - 内建命令行模式\n当前版本: {}".format(Claset.__fullversion__))
@@ -79,9 +83,10 @@ class Main(Cmd):
         GameInstaller.InstallVanilla()
 
         InstallProgressBar = Progress(
-            TextColumn("[bold blue]" + self._("安装游戏:\"{task.description}\""), justify="right"),
+            TextColumn("[bold blue]" + self._("[安装游戏]{task.description}"), justify="right"),
             BarColumn(bar_width=None),
             "[progress.percentage]{task.percentage:>3.1f}%",
+            self._("[green]已完成[yellow]/[blue]需下载文件数[white]:[green]{task.completed}[yellow]/[blue]{task.total}"),
             console=self.RichConsole
         )
 
@@ -91,10 +96,18 @@ class Main(Cmd):
             taskName = init.GameName
 
         with InstallProgressBar:
-            taskID = InstallProgressBar.add_task(description=taskName, total=Downloader.Projects[GameInstaller.MainDownloadProject]["AllTasksCount"], completed=Downloader.Projects[GameInstaller.MainDownloadProject]["CompletedTasksCount"])
+            ProgressBarID = InstallProgressBar.add_task(
+                description=taskName,
+                total=Downloader.getInfoFormProject(GameInstaller.MainDownloadProject, "AllTasksCount"),
+                completed=Downloader.getInfoFormProject(GameInstaller.MainDownloadProject, "CompletedTasksCount"),
+            )
             while not Downloader.isProjectCompleted(ProjectID=GameInstaller.MainDownloadProject):
                 sleep(0.1)
-                InstallProgressBar.update(task_id=taskID, total=Downloader.Projects[GameInstaller.MainDownloadProject]["AllTasksCount"], completed=Downloader.Projects[GameInstaller.MainDownloadProject]["CompletedTasksCount"])
+                InstallProgressBar.update(
+                    task_id=ProgressBarID,
+                    total=Downloader.getInfoFormProject(GameInstaller.MainDownloadProject, "AllTasksCount"),
+                    completed=Downloader.getInfoFormProject(GameInstaller.MainDownloadProject, "CompletedTasksCount"),
+                )
 
 
     @with_argparser(LaunchGame)

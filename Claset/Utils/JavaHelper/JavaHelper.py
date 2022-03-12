@@ -5,9 +5,8 @@ from logging import getLogger
 from os import getenv
 from subprocess import run
 from re import compile
-from platform import system
 
-from Claset.Utils import pathAdder, saveFile, dfCheck, fixType
+from Claset.Utils import pathAdder, saveFile, dfCheck, fixType, OriginalSystem
 from Claset.Utils.Exceptions.Claset import UnsupportSystemHost
 
 from .Exceptions import MatchStringError, JavaNotFound
@@ -24,21 +23,21 @@ JavaInfo = dict[str, str | tuple[int]]
 def getJavaPath() -> list[str]:
     """获取 Java 路径列表"""
     Output = list()
-    match system():
+    match OriginalSystem:
         case "Windows":
             Paths = getenv("PATH").split(";")
         case "Linux":
             Paths = getenv("PATH").split(":")
         case _:
-            UnsupportSystemHost(system())
+            UnsupportSystemHost(OriginalSystem)
     for OnePath in Paths:
-        match system():
+        match OriginalSystem:
             case "Windows":
                 OnePath = pathAdder(OnePath, "java.exe")
             case "Linux":
                 OnePath = pathAdder(OnePath, "java")
             case _:
-                UnsupportSystemHost(system())
+                UnsupportSystemHost(OriginalSystem)
         if dfCheck(Path=OnePath, Type="d"):
             if (not (OnePath in Output)):
                 Output.append(OnePath)
@@ -62,7 +61,7 @@ def getJavaInfo(Path: str | None) -> tuple[str]:
 def fixJavaPath(Path: str) -> str:
     """修正路径"""
     if Path == None: Path = str()
-    match system():
+    match OriginalSystem:
         case "Windows":
             if Path[-4] == "java":
                 Path = Path[:-4] + "java.exe"
@@ -70,7 +69,7 @@ def fixJavaPath(Path: str) -> str:
             if Path[-8:] == "java.exe":
                 Path = Path[:-8] + "java"
         case _:
-            UnsupportSystemHost(system())
+            UnsupportSystemHost(OriginalSystem)
     return(Path)
 
 

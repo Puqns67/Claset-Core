@@ -17,7 +17,7 @@ from Claset.Game.Utils import VersionInfos, ResolveRule, getClassPath, processNa
 from Claset.Utils import Configs, path, getValueFromDict
 from Claset.Utils.JavaHelper import autoPickJava, fixJavaPath, getJavaInfoList, JavaInfo
 from Claset.Utils.Exceptions.Claset import UnsupportSystemHost
-from Claset.Utils.Platform import System
+from Claset.Utils.Platform import OriginalSystem
 
 from .Exceptions import *
 
@@ -59,7 +59,7 @@ class GameLauncher():
         Logger.info("Launch Game: %s", self.VersionInfos.Name)
         Logger.debug("Run code: %s", RunArgs)
 
-        match System:
+        match OriginalSystem:
             case "Windows":
                 Priority = SubProcessPriorityClasses[self.getConfig("WindowsPriority")]
                 if PrintToTerminal:
@@ -72,7 +72,7 @@ class GameLauncher():
                 else:
                     self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=DEVNULL)
             case _:
-                raise UnsupportSystemHost(System)
+                raise UnsupportSystemHost(OriginalSystem)
 
         LaunchedGames.append(self)
 
