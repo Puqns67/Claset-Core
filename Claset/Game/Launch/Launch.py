@@ -6,10 +6,7 @@ from re import compile as reCompile
 from types import NoneType
 from typing import Any
 from uuid import uuid4
-from subprocess import (
-    Popen, REALTIME_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, ABOVE_NORMAL_PRIORITY_CLASS,
-    NORMAL_PRIORITY_CLASS, BELOW_NORMAL_PRIORITY_CLASS, IDLE_PRIORITY_CLASS, DEVNULL
-)
+from subprocess import Popen, DEVNULL
 
 from Claset import __fullversion__, __productname__, LaunchedGames
 from Claset.Accounts import AccountManager, Account
@@ -19,13 +16,19 @@ from Claset.Utils.JavaHelper import autoPickJava, fixJavaPath, getJavaInfoList, 
 from Claset.Utils.Exceptions.Claset import UnsupportSystemHost
 from Claset.Utils.Platform import OriginalSystem
 
+if OriginalSystem == "Windows":
+    from subprocess import (
+        REALTIME_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, ABOVE_NORMAL_PRIORITY_CLASS,
+        NORMAL_PRIORITY_CLASS, BELOW_NORMAL_PRIORITY_CLASS, IDLE_PRIORITY_CLASS
+    )
+    SubProcessPriorityClasses = {"REALTIME": REALTIME_PRIORITY_CLASS, "HIGH": HIGH_PRIORITY_CLASS, "ABOVE_NORMAL": ABOVE_NORMAL_PRIORITY_CLASS, "NORMAL": NORMAL_PRIORITY_CLASS, "BELOW_NORMAL": BELOW_NORMAL_PRIORITY_CLASS, "IDLE": IDLE_PRIORITY_CLASS}
+
 from .Exceptions import *
 
 __all__ = ("Features", "ClasetJvmHeader", "GameLauncher",)
 Logger = getLogger(__name__)
 ReMatchRunCodeKey = reCompile(r"^(.*)\$\{(.+)\}(.*)$")
 Features: dict[str, bool] = {"is_demo_user": False, "has_custom_resolution": True}
-SubProcessPriorityClasses = {"REALTIME": REALTIME_PRIORITY_CLASS, "HIGH": HIGH_PRIORITY_CLASS, "ABOVE_NORMAL": ABOVE_NORMAL_PRIORITY_CLASS, "NORMAL": NORMAL_PRIORITY_CLASS, "BELOW_NORMAL": BELOW_NORMAL_PRIORITY_CLASS, "IDLE": IDLE_PRIORITY_CLASS}
 ClasetJvmHeader: list[str] = ["-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=16m", "-XX:-UseAdaptiveSizePolicy", "-XX:-OmitStackTraceInFastThrow", "-XX:-DontCompileHugeMethods"]
 
 
