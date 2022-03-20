@@ -149,7 +149,7 @@ jobs:
 
       - name: Unpack translations archive
         shell: pwsh
-        run: 7za x -y ${{ github.workspace }}\Translations.7z
+        run: 7z x -y ${{ github.workspace }}\Translations.7z
 
 
       - name: Show Environment
