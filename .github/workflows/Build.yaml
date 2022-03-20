@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          submodules: 'true'
 
 
       - name: Install gettext
@@ -38,12 +40,12 @@ jobs:
 
       - name: Build
         shell: pwsh
-        run: Tools\Translations\Build.ps1
+        run: ${{ github.workspace }}/Tools/Translations/Build.ps1
 
 
       - name: Make archive
         shell: pwsh
-        run: Tools\Translations\MakeArchive.ps1
+        run: ${{ github.workspace }}/Tools/Translations/MakeArchive.ps1
 
 
       - name: Upload archive
