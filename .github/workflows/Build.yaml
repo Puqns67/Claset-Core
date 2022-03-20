@@ -130,7 +130,7 @@ jobs:
       - name: Setting PyPI Environment
         shell: pwsh
         run: |
-          pip install --upgrade pip setuptools wheel
+          pip install --upgrade pip setuptools wheel --user
           pip install -r requirements_build.txt
 
 
@@ -138,6 +138,18 @@ jobs:
         if: github.event.inputs.use_nuitka_develop_version
         shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
+
+
+      - name: Download translations archive
+        uses: actions/download-artifact@v3
+        with:
+          name: Translations.7z
+          path: ${{ github.workspace }}
+
+
+      - name: Unpack translations archive
+        shell: pwsh
+        run: 7za x -y ${{ github.workspace }}\Translations.7z
 
 
       - name: Show Environment
@@ -253,6 +265,18 @@ jobs:
         if: github.event.inputs.use_nuitka_develop_version
         shell: pwsh
         run: pip install -U "https://github.com/Nuitka/Nuitka/archive/develop.zip"
+
+
+      - name: Download translations archive
+        uses: actions/download-artifact@v3
+        with:
+          name: Translations.7z
+          path: ${{ github.workspace }}
+
+
+      - name: Unpack translations archive
+        shell: pwsh
+        run: 7za x -y ${{ github.workspace }}/Translations.7z
 
 
       - name: Show Environment
