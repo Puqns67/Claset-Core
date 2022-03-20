@@ -109,6 +109,13 @@ def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False) -
 
 
 def compressFile(ArchiveType: str, SourceFilePath: str, ToFilePath: str, CompressLevel: int = 8):
+    """
+    压缩文件
+    * ArchiveType: 文档类型
+    * SourceFilePath: 源文件位置
+    * ToFilePath: 压缩后文件位置
+    * CompressLevel: 压缩等级
+    """
     # 读取
     SourceFile = loadFile(Path=SourceFilePath, Type="bytes")
 
@@ -125,6 +132,12 @@ def compressFile(ArchiveType: str, SourceFilePath: str, ToFilePath: str, Compres
 
 
 def decompressFile(ArchiveType: str, SourceFilePath: str, ToFilePath: str):
+    """
+    解压文件
+    * ArchiveType: 文档类型
+    * SourceFilePath: 源文件位置
+    * ToFilePath: 解压后文件位置
+    """
     # 读取
     SourceFile = loadFile(Path=SourceFilePath, Type="bytes")
 
@@ -144,6 +157,9 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
     """
     检测文件夹/文件是否存在和体积是否正常\n
     在输入 Type 不存在时触发 ValueError\n
+    * Path: 对象路径
+    * Type: 检查选项
+    * Size: 对应的文件大小(字节), 用于匹配大小\n
     检查选项
     * f: 检测文件是否存在, 也可检测文件夹
     * d: 检测文件夹是否存在, 也可检测文件
@@ -167,7 +183,7 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
                 raise FileNotFoundError(Path)
             FileSize = getsize(Path)
             if Size != FileSize:
-                if FileSize == None: raise ValueError
+                if FileSize is None: raise ValueError
                 return(False)
             else: return(True)
         elif "m" in Type:
@@ -180,33 +196,37 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
         raise ValueError(Type)
 
 
-def makeArchive(From: str, As: str, ArchiveType: str = "Zstandard", CompressLevel: int = 8) -> None:
+def makeArchive(SourcePaths: str, ArchivePath: str, ArchiveType: str = "Zstandard", CompressLevel: int = 8) -> None:
     """
     制作存档
-    * From: 源文件/文件夹地址
-    * As: 保存至的文件名
+    * SourcePaths: 源文件/文件夹地址
+    * ArchivePath: 保存至的文件路径
     * ArchiveType: 存档文件类型, 暂只支持 "Zstandard"
     * CompressLevel: 压缩等级, 某些压缩类型支持
     """
-    FullFrom = Pathmd(From, IsPath=True)
-    As = Pathmd(As, IsPath=True)
-    From = basename(FullFrom)
-    TempFilePath = As + ".TempTarFile"
+    FullSourcePaths = Pathmd(SourcePaths, IsPath=True)
+    ArchivePath = Pathmd(ArchivePath, IsPath=True)
+    SourcePaths = basename(FullSourcePaths)
+    TempFilePath = ArchivePath + ".TempTarFile"
 
     if dfCheck(Path=TempFilePath, Type="f"):
         removeFile(TempFilePath)
 
     with openTar(name=TempFilePath, mode="x") as File:
-        File.add(name=FullFrom, arcname=From)
+        File.add(name=FullSourcePaths, arcname=SourcePaths)
 
-    compressFile(ArchiveType=ArchiveType, SourceFilePath=TempFilePath, ToFilePath=As, CompressLevel=CompressLevel)
+    compressFile(ArchiveType=ArchiveType, SourceFilePath=TempFilePath, ToFilePath=ArchivePath, CompressLevel=CompressLevel)
 
     removeFile(TempFilePath)
 
 
-def addFileIntoArchive(ArchivePath: str, SourcePaths: list[str] | str, ArcnamePerfix: str | None = None, ArchiveType: str = "Zstandard") -> None:
+def addFileIntoArchive(ArchivePath: str, SourcePaths: list[str] | str, ArchiveType: str = "Zstandard", ArcnamePerfix: str | None = None) -> None:
     """
     添加文件至存档
+    * ArchivePath: 存档的文件路径
+    * SourcePaths: 源文件/文件夹地址
+    * ArchiveType: 存档文件类型, 暂只支持 "Zstandard"
+    * ArcnamePerfix: 添加至存档内的路径
     """
     ArchivePath = Pathmd(ArchivePath, IsPath=True)
     TempFilePath = ArchivePath + ".TempTarFile"
@@ -223,7 +243,7 @@ def addFileIntoArchive(ArchivePath: str, SourcePaths: list[str] | str, ArcnamePe
         for SourcePath in SourcePaths:
             SourcePath = Pathmd(SourcePath, IsPath=True)
             Arcname = basename(SourcePath)
-            if ArcnamePerfix != None:
+            if ArcnamePerfix is not None:
                 Arcname = ArcnamePerfix + "/" +  Arcname
             File.add(name=SourcePath, arcname=Arcname)
 

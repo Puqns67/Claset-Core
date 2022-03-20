@@ -61,8 +61,8 @@ class Auth():
 
     def refresh(self, MicrosoftAccountRefreshToken: str | None = None):
         """刷新微软账户的访问 Token 与 刷新 Token"""
-        if MicrosoftAccountRefreshToken == None:
-            if self.MicrosoftAccountRefreshToken == None: raise ValueError
+        if MicrosoftAccountRefreshToken is None:
+            if self.MicrosoftAccountRefreshToken is None: raise ValueError
             MicrosoftAccountRefreshToken = self.MicrosoftAccountRefreshToken
 
         self.MicrosoftAccountAccessToken, self.MicrosoftAccountRefreshToken, self.MicrosoftAccountAccessTokenExpiresTime = self.refreshAccessTokens(MicrosoftAccountRefreshToken)
@@ -70,7 +70,7 @@ class Auth():
 
     def refreshAccessTokens(self, MicrosoftAccountRefreshToken: str | None = None) -> tuple[str, str, str]:
         """刷新微软账户的访问 Token 与 刷新 Token 并返回"""
-        if MicrosoftAccountRefreshToken == None:
+        if MicrosoftAccountRefreshToken is None:
             RefreshToken = self.MicrosoftAccountRefreshToken
         else:
             RefreshToken = MicrosoftAccountRefreshToken

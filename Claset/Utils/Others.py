@@ -24,7 +24,7 @@ def setValueFromDict(Keys: list, Value: Any, Dict: dict | None = None, ) -> dict
     """使用列表向字典填充数据"""
     if not isinstance(Dict, dict): Dict = dict()
     if len(Keys) > 1:
-        if Dict.get(Keys[0]) == None: Dict[Keys[0]] = dict()
+        if Dict.get(Keys[0]) is None: Dict[Keys[0]] = dict()
         Dict[Keys[0]] = setValueFromDict(Keys=Keys[1:], Value=Value, Dict=Dict[Keys[0]], )
         return(Dict)
     else:
@@ -35,7 +35,7 @@ def setValueFromDict(Keys: list, Value: Any, Dict: dict | None = None, ) -> dict
 def fixType(Input: str) -> Any:
     """修复类型"""
     Output = Input
-    if Input.lower() in __fixType_fixs.keys():
+    if Input.lower() in __fixType_fixs:
         Output = __fixType_fixs[Input.lower()]
     elif Input == str(): return None
     elif Input[-1] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:

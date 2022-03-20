@@ -22,7 +22,7 @@ class Base():
 
 
 class System(Base):
-    """用于方便获取各类风格的 System 字符串"""
+    """用于获取各类风格的 System 字符串"""
     def getFormated(self, Format: str = "Python") -> str:
         """返回已格式化的 System 字符串"""
         match Format:
@@ -36,7 +36,9 @@ class System(Base):
 
 
 class Arch(Base):
+    """用于获取各类风格的 Arch 字符串"""
     def getFormated(self, Format: str = "Python") -> str:
+        """返回已格式化的 Arch 字符串"""
         match Format:
             case "Minecraft": return(ArchFormats["Minecraft"][OriginalArch.lower()])
             case "PureNumbers": return(self.getFormated(Format="Minecraft").replace("x", str()))
@@ -45,7 +47,9 @@ class Arch(Base):
 
 
 class Version(Base):
+    """用于获取各类风格的 Version 字符串"""
     def getFormated(self, Format: str = "Python") -> str:
+        """返回已格式化的 Version 字符串"""
         match Format:
             case "Python": return(OriginalVersion)
             case _: raise ValueError(Format)

@@ -22,8 +22,8 @@ SetDefaultAccount = Cmd2ArgumentParser()
 Exit = Cmd2ArgumentParser()
 
 
-class Main(Cmd):
-    """命令行模式下的主函数"""
+class ClasetCommandLine(Cmd):
+    """命令行模式主类"""
 
     RichConsole = Console()
     AccountManager = Claset.Accounts.AccountManager()
@@ -90,7 +90,7 @@ class Main(Cmd):
             console=self.RichConsole
         )
 
-        if init.Version != None:
+        if init.Version is not None:
             taskName = init.GameName + "-" + init.Version
         else:
             taskName = init.GameName
@@ -144,7 +144,7 @@ class Main(Cmd):
             case "MICROSOFT":
                 self.AccountManager.create(Type=init.Type)
             case "OFFLINE":
-                if init.AccountName == None:
+                if init.AccountName is None:
                     raise ValueError(self._("设置账户类型为离线时用户名不应为空"))
                 else:
                     self.AccountManager.create(Type=init.Type, Name=init.AccountName)

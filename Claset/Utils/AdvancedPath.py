@@ -22,10 +22,11 @@ class AdvancedPath():
         self.IsPath = IsPath
         self.CompleteConfigs: dict = self.Configs["Prefixs"]
 
-        if Others != None: self.getFromOthersKeys(Others)
+        if Others is not None: self.getFromOthersKeys(Others)
 
 
     def loadOtherString(self, Objects: str) -> dict:
+        """加载 Others 字符串"""
         try:
             File, Value = ReMatchLoadString.match(Objects).groups()
             File = Configs(File)
@@ -41,6 +42,7 @@ class AdvancedPath():
 
 
     def getFromOthersKeys(self, OtherTypes: list) -> None:
+        """从 Others 字符串列表取得额外的 Key"""
         if len(self.Configs["Others"]) == 0:
             OthersKeys = OtherTypes
         else:
@@ -49,7 +51,7 @@ class AdvancedPath():
         # 顺序获取之后再放入 Prefixs
         for i in OthersKeys:
             loaded = self.loadOtherString(i)
-            for ii in loaded.keys():
+            for ii in loaded:
                 self.CompleteConfigs[ii] = loaded[ii]
 
         CompleteConfigsList = sorted(self.CompleteConfigs, reverse=True)
@@ -66,20 +68,23 @@ class AdvancedPath():
     def path(self, Input: str, Others: list | None = None, IsPath: bool | None = None) -> str:
         """高级格式化路径"""
         # 如果启用了 Others 且未载过 Others 则通过 getFromOthersKeys 取得额外的 Key
-        if ((Others != None) and (self.OthersType == False)): self.getFromOthersKeys(Others)
-        if ((IsPath == False) and (self.IsPath == True)): self.IsPath = False
+        if (Others is not None) and (not self.OthersType): self.getFromOthersKeys(Others)
+        if (not IsPath) and self.IsPath: self.IsPath = False
 
         while "$" in Input:
-            Matched = PathRegex.match(Input)
-            if Matched == None: raise Ex_Path.SearchError
-            Groups = list(Matched.groups())
-            if Groups[1] == None: raise Ex_Path.SearchError
-            elif Groups[1] == "PREFIX": Groups[1] = getcwd()
-            elif Groups[1] in self.CompleteConfigs: Groups[1] = self.CompleteConfigs[Groups[1]]
-            else: raise Ex_Path.PrefixsMissingKey(Groups[1])
-            Input = str().join(Groups)
+            try:
+                Perfix, Matched, Suffix = PathRegex.match(Input).groups()
+            except (AttributeError, ValueError):
+                raise Ex_Path.SearchError(Input)
+            match Matched:
+                case "PREFIX": Matched = getcwd()
+                case Matched if Matched in self.CompleteConfigs:
+                    Matched = self.CompleteConfigs[Matched]
+                case _: raise Ex_Path.PrefixsMissingKey(Matched)
+            Input = f"{Perfix}{Matched}{Suffix}"
 
-        if ((IsPath == True) or ((IsPath == None) and (self.IsPath == True))): Input = abspath(Input)
+        if (IsPath or (IsPath is None and self.IsPath)):
+            Input = abspath(Input)
 
         return(Input)
 

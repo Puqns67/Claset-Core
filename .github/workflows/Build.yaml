@@ -28,7 +28,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        submodules: 'true'
+
+
+      - name: Build
+        shell: pwsh
+        run: Tools\Translations\Build.ps1
+
+
+      - name: Make archive
+        shell: pwsh
+        run: Tools\Translations\MakeArchive.ps1
+
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v3
+        with:
+          name: Translations.7z
+          path: ${{ github.workspace }}/Translations.7z
+          retention-days: ${{ env.RETENTION_DAYS }}
+
 
 
   Build_Windows:
@@ -37,7 +57,7 @@ jobs:
     needs: Build_Translations
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
 
       - name: Generate Times
@@ -89,8 +109,8 @@ jobs:
         shell: pwsh
         run: |
           Write-Output "Copy & delete files"
-          Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\Run.py ${{ github.workspace }}\ -Verbose
-          Move-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\requirements_build.txt ${{ github.workspace }}\ -Verbose
+          Copy-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\Run.py ${{ github.workspace }}\ -Verbose
+          Copy-Item ${{ github.workspace }}\Claset\Execution\${{ env.DEFAULT_MODULE_NAME }}\requirements_build.txt ${{ github.workspace }}\ -Verbose
           Get-ChildItem -Path ${{ github.workspace }}\Claset\Execution\ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force -Verbose
 
 
@@ -131,12 +151,12 @@ jobs:
 
       - name: Build
         shell: pwsh
-        run: python -m nuitka --standalone --onefile --follow-imports --assume-yes-for-downloads --include-data-dir=Translations=Translations --windows-product-name="Claset" --windows-file-version="1.0.0.0" --windows-product-version="0.1.0.147" --windows-company-name="Puqns_67" --windows-onefile-tempdir-spec="%TEMP%\Claset_%PID%_%TIME%" -o "${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}\Run.py"
+        run: python -m nuitka --standalone --onefile --follow-imports --assume-yes-for-downloads --include-data-dir=Translations=Translations --windows-onefile-tempdir-spec="%TEMP%\Claset_%PID%_%TIME%" -o "${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}" "${{ github.workspace }}\Run.py"
 
 
       - name: Upload Build Artifact to Actions
         if: ${{ env.UPLOAD_TO_ACTIONS }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.genFileName.outputs.filename }}
           path: ${{ github.workspace }}\${{ steps.genFileName.outputs.filename }}
@@ -150,7 +170,7 @@ jobs:
     needs: Build_Translations
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
 
       - name: Generate Times
@@ -202,8 +222,8 @@ jobs:
         shell: pwsh
         run: |
           Write-Output "Copy & delete files"
-          Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/Run.py ${{ github.workspace }}/ -Verbose
-          Move-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/requirements_build.txt ${{ github.workspace }}/ -Verbose
+          Copy-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/Run.py ${{ github.workspace }}/ -Verbose
+          Copy-Item ${{ github.workspace }}/Claset/Execution/${{ env.DEFAULT_MODULE_NAME }}/requirements_build.txt ${{ github.workspace }}/ -Verbose
           Get-ChildItem -Path ${{ github.workspace }}/Claset/Execution/ -Exclude ${{ env.DEFAULT_MODULE_NAME }} -Recurse -Directory | Remove-Item -Recurse -Force -Verbose
           Write-Output "Install build tools"
           sudo apt-get install patchelf ccache
@@ -251,7 +271,7 @@ jobs:
 
       - name: Upload Build Artifact to Actions
         if: ${{ env.UPLOAD_TO_ACTIONS }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.genFileName.outputs.filename }}
           path: ${{ github.workspace }}/${{ steps.genFileName.outputs.filename }}

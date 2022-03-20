@@ -60,7 +60,7 @@ def getJavaInfo(Path: str | None) -> tuple[str]:
 
 def fixJavaPath(Path: str) -> str:
     """修正路径"""
-    if Path == None: Path = str()
+    if Path is None: Path = str()
     match OriginalSystem:
         case "Windows":
             if Path[-4] == "java":
@@ -91,7 +91,7 @@ def getJavaInfoList(PathList: list[str] | None = None) -> list[JavaInfo]:
     通过版本列表获取字典形式的 Java 信息, 如输入为空则通过 Claset.Utils.JavaHelper.getJavaPath() 获取\n
     如获取过程中出现 JavaHelper.MatchStringError 将不在输出中附上出错的信息
     """
-    if PathList == None:
+    if PathList is None:
         PathList: list[str] = getJavaPath()
     Outputs: list[JavaInfo] = list()
     for Path in PathList:
@@ -109,7 +109,7 @@ def getJavaInfoList(PathList: list[str] | None = None) -> list[JavaInfo]:
 def autoPickJava(recommendVersion: int, JavaInfoList: list[JavaInfo] | None = None) -> JavaInfo:
     """自动选择 Java"""
     # 如 JavaInfoList 为空则通过 getJavaInfoList() 获取
-    if JavaInfoList == None:
+    if JavaInfoList is None:
         JavaInfoList = getJavaInfoList()
 
     # 如 JavaInfoList 为中单位数量为零则抛出 JavaNotFound 异常

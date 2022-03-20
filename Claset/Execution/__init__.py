@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from .CommandLine import CommandLineMain
+    from .CommandLine import ClasetCommandLine, ClasetCommandLineMain
 except ModuleNotFoundError:
-    CommandLine = None
+    ClasetCommandLine = None
+    ClasetCommandLineMain = None
 
 try:
     from .Tests import TestMain
 except ModuleNotFoundError:
     TestMain = None
 
-__all__ = ("CommandLineMain", "TestMain",)
+__all__ = ("ClasetCommandLine", "ClasetCommandLineMain", "TestMain")
 

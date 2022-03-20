@@ -18,7 +18,7 @@ def path(Input: str, IsPath: bool = False) -> str:
     """格式化路径"""
     global PathConfigs
 
-    if PathConfigs == None:
+    if PathConfigs is None:
         try:
             with open(getcwd() + "/Claset/Paths.json") as ConfigFile:
                 PathConfigs = load(ConfigFile)["Prefixs"]
@@ -26,16 +26,18 @@ def path(Input: str, IsPath: bool = False) -> str:
             PathConfigs = File["Prefixs"]
 
     while "$" in Input:
-        Matched = PathRegex.match(Input)
-        if Matched == None: raise SearchError
-        Groups = list(Matched.groups())
-        if Groups[1] == None: raise SearchError
-        elif Groups[1] == "PREFIX": Groups[1] = getcwd()
-        elif Groups[1] in PathConfigs: Groups[1] = PathConfigs[Groups[1]]
-        else: raise PrefixsMissingKey(Groups[1])
-        Input = str().join(Groups)
+        try:
+            Perfix, Matched, Suffix = PathRegex.match(Input).groups()
+        except (AttributeError, ValueError):
+            raise SearchError(Input)
+        match Matched:
+            case "PREFIX": Matched = getcwd()
+            case Matched if Matched in PathConfigs:
+                Matched = PathConfigs[Matched]
+            case _: raise PrefixsMissingKey(Matched)
+        Input = f"{Perfix}{Matched}{Suffix}"
 
-    if IsPath == True:
+    if IsPath:
         Input = abspath(Input)
 
     return(Input)

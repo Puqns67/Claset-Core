@@ -30,7 +30,7 @@ class Configs():
             self.TargetVersion = TargetVersion
 
         # 如果指定了文件位置, 类型将判断为非全局
-        if FilePath == None:
+        if FilePath is None:
             if ConfigInfos["Path"][ID] == "$NONGLOBAL$":
                 raise Ex_Configs.ConfigNonGlobalMissingFilePath
             else:
@@ -138,10 +138,10 @@ class Configs():
         else:
             Logger.info("Update Config (%s) From Version %s to last Version", self.ID, self.NowVersion)
 
-        if Differences != None:
+        if Differences is not None:
             DifferenceS = Differences
         else:
-            if TargetVersion == None:
+            if TargetVersion is None:
                 TargetVersion = self.TargetVersion
             if TargetVersion == 0:
                 TargetVersion = ConfigInfos["Version"][self.ID]
@@ -157,7 +157,7 @@ class Configs():
                 Type, Key = ReFindTypeAndKey.match(Difference).groups()
                 self.processConfig(Key=Key, Type=Type)
 
-        if Differences == None:
+        if Differences is None:
             self.TheConfig = self.setVersion(Config=self.TheConfig, Version=TargetVersion)
 
         self.saveConfig()
@@ -169,7 +169,7 @@ class Configs():
         ChangeList = list()
         DifferenceS = list()
 
-        if TargetVersion == None:
+        if TargetVersion is None:
             TargetVersion = self.TargetVersion
 
         for DifferentsKey in Differences:
@@ -204,7 +204,7 @@ class Configs():
             case _:
                 raise Ex_Configs.UnknownDifferenceType
 
-        if ReIFStrList.search(Old.strip()) != None: Old = self.__StrList2List(Old)
+        if ReIFStrList.search(Old.strip()) is not None: Old = self.__StrList2List(Old)
         else: Old = [Old]
         return(self.__SetToDict(Keys=Old, Dict=self.TheConfig, Type=Type, Do=New))
 
@@ -223,7 +223,7 @@ class Configs():
         * Do: 替换为
         """
         if len(Keys) > 1:
-            if Dict.get(Keys[0]) == None: Dict[Keys[0]] = dict()
+            if Dict.get(Keys[0]) is None: Dict[Keys[0]] = dict()
             Dict[Keys[0]] = self.__SetToDict(Keys=Keys[1:], Dict=Dict[Keys[0]], Type=Type, Do=Do)
             return(Dict)
         elif len(Keys) == 1:

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from .Main import Main as CommandLineMain
+from .ClasetCommandLine import ClasetCommandLine
+from .Run import main as ClasetCommandLineMain
 
-__all__ = ("CommandLineMain",)
+__all__ = ("ClasetCommandLine", "ClasetCommandLineMain")
 

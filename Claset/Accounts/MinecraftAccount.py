@@ -7,6 +7,7 @@ from Claset.Utils import getSession
 
 Logger = getLogger(__name__)
 
+
 class MinecraftAccount():
     """Minecraft 账户相关"""
     def __init__(self, MinecraftAccessToken: str):
@@ -17,7 +18,7 @@ class MinecraftAccount():
 
     def getAccountInfos(self, MinecraftAccessToken: str | None = None) -> tuple[UUID, str, list, list]:
         """获取账户相关信息"""
-        if MinecraftAccessToken == None:
+        if MinecraftAccessToken is None:
             MinecraftAccessToken = self.AccessToken
 
         Infos = self.RequestsSession.get(

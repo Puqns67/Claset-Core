@@ -86,7 +86,7 @@ class AccountManager():
         if (ID <= -1) or (len(self.Configs["Accounts"]) - 1 < ID):
             raise AccountNotFound
         # 将老的默认账户的状态还原
-        if self.Configs["DefaultAccount"] != None:
+        if self.Configs["DefaultAccount"] is not None:
             self.Configs["Accounts"][self.Configs["DefaultAccount"]]["Status"] = "NORMAL"
         self.Configs["DefaultAccount"] = ID
         self.Configs["Accounts"][ID]["Status"] = "DEFAULT"
@@ -94,7 +94,7 @@ class AccountManager():
 
     def getDefault(self) -> int:
         """获取默认账户 ID"""
-        if self.Configs["DefaultAccount"] == None:
+        if self.Configs["DefaultAccount"] is None:
             raise NoAccountsFound
         return self.Configs["DefaultAccount"]
 
@@ -108,7 +108,7 @@ class AccountManager():
 
     def getAccountObject(self, ID: int | None = None) -> Account:
         """通过用户 ID 获取对应的 AccountObject"""
-        if ID == None: ID = self.getDefault()
+        if ID is None: ID = self.getDefault()
         return(Account(Account=self.Configs["Accounts"][ID], Manager=self))
 
 
@@ -116,17 +116,17 @@ class AccountManager():
         """获取以各种方式过滤后的用户列表"""
         Output = list()
         for AccountID in range(len(self.Configs["Accounts"])):
-            if (ID != None) and (AccountID != ID):
+            if (ID is not None) and (AccountID != ID):
                 continue
             Account = self.Configs["Accounts"][AccountID]
-            if UUID != None:
+            if UUID is not None:
                 if isinstance(UUID, Class_UUID) and (UUID.hex != Account["UUID"]):
                     continue
                 elif UUID != Account["UUID"]:
                     continue
-            if (Name != None) and (Account["Name"] != Name):
+            if (Name is not None) and (Account["Name"] != Name):
                 continue
-            if (Type != None) and (Account["Type"] != Type):
+            if (Type is not None) and (Account["Type"] != Type):
                 continue
             Account["ID"] = AccountID
             Output.append(Account)

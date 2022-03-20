@@ -34,14 +34,14 @@ class GameInstaller():
         self.WaitDownloader = WaitDownloader
         self.VersionDir = pathAdder("$VERSION", VersionName)
 
-        if Downloader == None:
+        if Downloader is None:
             self.Downloader = getDownloader()
         else:
             self.Downloader = Downloader
 
         # 载入相关的配置
         self.GlobalSettings = Configs(ID="Settings")
-        if UsingDownloadServer != None:
+        if UsingDownloadServer is not None:
             self.UsingDownloadServer = UsingDownloadServer
         else:
             self.UsingDownloadServer: str = Configs(ID="Settings")["DownloadServer"]
@@ -55,7 +55,7 @@ class GameInstaller():
     def InstallVanilla(self) -> None:
         """下载并安装游戏"""
         self.MainDownloadProject = self.Downloader.createProject()
-        if self.MinecraftVersion == None:
+        if self.MinecraftVersion is None:
             Logger.info("Start installation name \"%s\" from latest Vanilla stable Verison", self.VersionName)
         else:
             Logger.info("Start installation name \"%s\" from Vanilla Verison \"%s\"", self.VersionName, self.MinecraftVersion)
@@ -90,7 +90,7 @@ class GameInstaller():
         VersionManifestFile = loadFile(Path=VersionManifestTask.OutputPaths, Type="json")
 
         # 如版本号为空, 则使用最新的稳定版 Minecraft
-        if self.MinecraftVersion == None:
+        if self.MinecraftVersion is None:
             self.MinecraftVersion = VersionManifestFile["latest"]["release"]
 
         while True:

@@ -23,14 +23,19 @@ from .Exceptions import Download as Ex_Download
 from .File import dfCheck, loadFile, saveFile
 from .Path import pathAdder, path as Pathmd
 
-__all__ = ("getSession", "DownloadTask", "DownloadManager",)
+__all__ = ("reloadConfig", "getSession", "DownloadTask", "DownloadManager",)
 Logger = getLogger(__name__)
 DownloadConfigs = Configs(ID="Download")
 
 
+def reloadConfig() -> None:
+    """重载配置文件"""
+    DownloadConfigs.reloadConfig()
+
+
 def getSession(TheSession: Session | None = None) -> Session:
     """设置/获取 Session"""
-    if TheSession == None: TheSession = Session()
+    if TheSession is None: TheSession = Session()
 
     TheSession.stream = True
     TheSession.trust_env = DownloadConfigs["UseSystemProxy"]
@@ -40,7 +45,7 @@ def getSession(TheSession: Session | None = None) -> Session:
     if DownloadConfigs["SSLVerify"] == False:
         requestsPackages.urllib3.disable_warnings()
 
-    if DownloadConfigs["ProxyLink"] != None:
+    if DownloadConfigs["ProxyLink"] is not None:
         try:
             post(DownloadConfigs["ProxyLink"])
         except Ex_Requests.ConnectionError:
@@ -86,17 +91,17 @@ class DownloadTask():
     def full(self) -> None:
         """完善本 Task"""
         # 处理缺失的项目
-        if ((self.OutputPaths == None) or (self.OutputPaths == str())):
+        if ((self.OutputPaths is None) or (self.OutputPaths == str())):
             # 如不存在 OutputPath 或 OutputPath 为空, 则使用当前位置
-            if ((self.OutputPath == None) or (self.OutputPath == str())):
+            if ((self.OutputPath is None) or (self.OutputPath == str())):
                 self.OutputPath = "$PREFIX"
 
             # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
-            if self.FileName == None:
+            if self.FileName is None:
                 self.FileName = baseName(self.URL)
                 if self.FileName == str():
                     self.FileName = baseName(self.OutputPath)
-            if self.FileName == None:
+            if self.FileName is None:
                 self.FileName = baseName(self.OutputPath)
                 if self.FileName == str():
                     self.FileName = baseName(self.URL)
@@ -104,7 +109,7 @@ class DownloadTask():
                 self.FileName = "NoName"
 
             # 从 OutputPath 中去除重复的文件名
-            if ((self.FileName in self.OutputPath) and ((search(self.FileName + "$", self.OutputPath)) != None)):
+            if ((self.FileName in self.OutputPath) and ((search(self.FileName + "$", self.OutputPath)) is not None)):
                 self.OutputPath = search("^(.*)" + self.FileName + "$", self.OutputPath).groups()[0]
 
             self.OutputPaths = pathAdder(self.OutputPath, self.FileName)
@@ -135,7 +140,7 @@ class DownloadManager():
         self.ThreadPool = ThreadPoolExecutor(max_workers=DownloadConfigs["MaxThread"], thread_name_prefix="DownloadTask")
 
         # 定义全局 Requests Session
-        if DownloadConfigs["UseGobalRequestsSession"] == True:
+        if DownloadConfigs["UseGobalRequestsSession"] is True:
             self.RequestsSession = getSession()
 
         Logger.debug("urllib3 Version: %s", Urllib3Version)
@@ -196,7 +201,7 @@ class DownloadManager():
                 self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
                 Logger.warning("Unknown Error:", exc_info=True)
 
-            if Errored == True:
+            if Errored:
                 if Task.Retry > 0:
                     Task.Retry -= 1
                     Retry = True
@@ -208,7 +213,7 @@ class DownloadManager():
             else:
                 self.addJobToProject(Task.ProjectID, CompletedTasksCount=1)
                 # 没有出现下载错误之后尝试执行 Task.Next
-                if Task.Next != None:
+                if Task.Next is not None:
                     try:
                         Task.Next(Task)
                     except Exception:
@@ -236,8 +241,8 @@ class DownloadManager():
         ) -> None:
         """简易下载器"""
         if dfCheck(Path=OutputPaths, Type="f"):
-            if Overwrite == False:
-                if Sha1 != None:
+            if not Overwrite:
+                if Sha1 is not None:
                     if (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1):
                         raise Ex_Download.FileExist
                     else:
@@ -283,8 +288,8 @@ class DownloadManager():
             Ex_Requests.ConnectionError
         ): raise Ex_Download.DownloadExceptions
 
-        if ((Size != None) and (len(File.getbuffer())) != Size): raise Ex_Download.SizeError
-        if ((Sha1 != None) and (sha1(File.getbuffer()).hexdigest() != Sha1)): raise Ex_Download.HashError
+        if ((Size is not None) and (len(File.getbuffer())) != Size): raise Ex_Download.SizeError
+        if ((Sha1 is not None) and (sha1(File.getbuffer()).hexdigest() != Sha1)): raise Ex_Download.HashError
 
         dfCheck(Path=OutputPaths, Type="fm")
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
@@ -293,10 +298,10 @@ class DownloadManager():
     def addTask(self, InputTasks: list[DownloadTask] | DownloadTask, MainProjectID: int | None = None) -> int:
         """添加任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         # 如果正在添加任务则不等待添加完成
-        if self.Stopping == True:
+        if self.Stopping:
             raise Ex_Download.Stopping
         while self.Adding:
-            if self.Stopping == True:
+            if self.Stopping:
                 raise Ex_Download.Stopping
             sleep(DownloadConfigs["SleepTime"])
         self.Adding = True
@@ -307,7 +312,7 @@ class DownloadManager():
         else:
             JobTotal = len(InputTasks)
 
-        if MainProjectID == None:
+        if MainProjectID is None:
             MainProjectID = self.createProject(AllTasksCount=JobTotal)
         else:
             self.addJobToProject(ProjectID=MainProjectID, AllTasksCount=JobTotal)
@@ -342,13 +347,13 @@ class DownloadManager():
 
     def createProject(self, AllTasksCount: int = 0, setProjectID: int | None = None) -> int:
         """建立 Project 对象"""
-        if setProjectID == None:
+        if setProjectID is None:
             while True:
                 NewProjectID = randint(1,4096)
-                if not (NewProjectID in self.Projects.keys()):
+                if not (NewProjectID in self.Projects):
                     break
         else:
-            if setProjectID in self.Projects.keys():
+            if setProjectID in self.Projects:
                 raise ValueError(setProjectID)
             else:
                 NewProjectID = setProjectID
@@ -364,10 +369,10 @@ class DownloadManager():
 
     def addJobToProject(self, ProjectID: int, AllTasksCount: int | None = None, CompletedTasksCount: int | None = None, FailuredTasksCount: int | None = None, ErrorTasksCount: int | None = None) -> None:
         """向 Project 对象添加任务"""
-        if AllTasksCount != None:       self.Projects[ProjectID]["AllTasksCount"] += AllTasksCount
-        if CompletedTasksCount != None: self.Projects[ProjectID]["CompletedTasksCount"] += CompletedTasksCount
-        if FailuredTasksCount != None:  self.Projects[ProjectID]["FailuredTasksCount"] += FailuredTasksCount
-        if ErrorTasksCount != None:     self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
+        if AllTasksCount is not None:       self.Projects[ProjectID]["AllTasksCount"] += AllTasksCount
+        if CompletedTasksCount is not None: self.Projects[ProjectID]["CompletedTasksCount"] += CompletedTasksCount
+        if FailuredTasksCount is not None:  self.Projects[ProjectID]["FailuredTasksCount"] += FailuredTasksCount
+        if ErrorTasksCount is not None:     self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
 
 
     def getInfoFormProject(self, ProjectID: int, Type: str) -> Any:
@@ -389,7 +394,7 @@ class DownloadManager():
         else:
             Logger.debug("Waited Project \"%s\" completed by %s Errors", ProjectIDs[0], ErrorTasksCount)
 
-        if ((Raise != None) and (ErrorTasksCount > 0)):
+        if ((Raise is not None) and (ErrorTasksCount > 0)):
             raise Raise(ErrorTasksCount)
         else:
             return(ErrorTasksCount)

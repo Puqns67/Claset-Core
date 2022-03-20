@@ -60,7 +60,7 @@ class VersionInfos():
         # Natives 文件夹位置
         self.NativesPath = pathAdder(self.Dir, "natives")
 
-        if self.JarName != None:
+        if self.JarName is not None:
             self.JarPath = pathAdder(self.Dir, self.JarName + ".jar")
         else:
             self.JarPath = pathAdder(self.Dir, self.Name + ".jar")

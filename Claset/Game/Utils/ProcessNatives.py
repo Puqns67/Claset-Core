@@ -20,7 +20,7 @@ def processNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = No
     """处理 Natives"""
     for Libraries in VersionJson["libraries"]:
         NativesObject = getNativesObject(Libraries=Libraries, Features=Features, getExtract=True)
-        if NativesObject != None:
+        if NativesObject is not None:
             Path = pathAdder("$LIBRERIES", NativesObject["path"])
             Extract: dict = NativesObject["Extract"]
             BaseNameByPath = baseName(Path)
@@ -48,18 +48,16 @@ def processNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = No
                     FileSha1[Name] = Sha1
                 elif TheZipPath.is_dir():
                     FileList.remove(FilePathInZip)
-                elif ((Extract != None) and ("exclude" in Extract.keys())):
+                elif ((Extract is not None) and ("exclude" in Extract)):
                     for Exclude in Extract["exclude"]:
                         if Exclude in FilePathInZip:
                             FileList.remove(FilePathInZip)
                             Logger.debug("Excluded: \"%s\" From \"%s\" By Extract", FilePathInZip, BaseNameByPath)
                             break
 
-            FileSha1Keys = FileSha1.keys()
-
             for FilePathInZip in FileList:
                 TheFile = File.read(FilePathInZip)
-                if (FilePathInZip in FileSha1Keys):
+                if (FilePathInZip in FileSha1):
                     if not (sha1(TheFile).hexdigest() == FileSha1[FilePathInZip]):
                         raise Sha1VerificationError
 

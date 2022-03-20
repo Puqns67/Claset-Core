@@ -42,7 +42,7 @@ class GameLauncher():
         self.VersionInfos.full()
 
         # 获取账户相关信息
-        if Account == None:
+        if Account is None:
             self.AccountObject = AccountManager().getAccountObject()
         else:
             self.AccountObject = Account
@@ -139,7 +139,7 @@ class GameLauncher():
         Output = list()
         for RunCode in RunCodeList:
             Matched = ReMatchRunCodeKey.match(RunCode)
-            if Matched == None:
+            if Matched is None:
                 Output.append(RunCode)
                 continue
             MatchedGroups = list(Matched.groups())
@@ -195,7 +195,7 @@ class GameLauncher():
                 return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
             else:
                 Return = getValueFromDict(Keys=Keys, Dict=self.VersionInfos.Configs["Global"])
-                if Return != None: return(Return)
+                if Return is not None: return(Return)
                 return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
         else: return(getValueFromDict(Keys=Keys, Dict=self.VersionInfos.Configs["UnableGlobal"]))
 

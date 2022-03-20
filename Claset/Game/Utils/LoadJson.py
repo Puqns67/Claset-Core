@@ -18,7 +18,7 @@ Logger = getLogger(__name__)
 
 
 def Versionmanifest_VersionList(InitFile: dict, Recommend: str | None = None) -> list[str]:
-    if Recommend != None: return(InitFile["Latest"][Recommend])
+    if Recommend is not None: return(InitFile["Latest"][Recommend])
     OutputList = list()
     for Version in InitFile["versions"]: OutputList.append(Version["id"])
     return(OutputList)
@@ -26,7 +26,7 @@ def Versionmanifest_VersionList(InitFile: dict, Recommend: str | None = None) ->
 
 def VersionManifest_To_Version(InitFile: dict, TargetVersion: str | None) -> DownloadTask:
     """从 VersionManifest Json 提取 Version Json 的相关信息并转化为 DownloadManager Task"""
-    if TargetVersion == None:
+    if TargetVersion is None:
         TargetVersion = InitFile["latest"]["release"]
 
     for Version in InitFile["versions"]:
@@ -56,11 +56,11 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
 
     # Libraries
     for Libraries in InitFile["libraries"]:
-        if "rules" in Libraries.keys():
+        if "rules" in Libraries:
             if ResolveRule(Items=Libraries["rules"], Features=Types) == False: continue
 
         Natives = getNativesObject(Libraries=Libraries, Features=Types)
-        if Natives != None:
+        if Natives is not None:
             Tasks.append(DownloadTask(
                 URL = Natives["url"],
                 Size = Natives["size"],
@@ -84,7 +84,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
 
     # Log4j2 config
     Log4j2Config = getLog4j2Infos(InitFile=InitFile, Type="DownloadTask")
-    if Log4j2Config != None:
+    if Log4j2Config is not None:
         Tasks.append(Log4j2Config)
 
     return(Tasks)
@@ -139,7 +139,7 @@ def AssetIndex_DownloadList(InitFile: dict) -> list[DownloadTask]:
 def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None = None) -> str:
     Output = str()
     for Libraries in VersionJson["libraries"]:
-        if "rules" in Libraries.keys():
+        if "rules" in Libraries:
             if ResolveRule(Items=Libraries["rules"], Features=Features) == False: continue
         try: Temp = pathAdder("$LIBRERIES/", Libraries["downloads"]["artifact"]["path"])
         except KeyError: pass
@@ -150,7 +150,7 @@ def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None =
 
 
 def getLog4j2Infos(InitFile: dict, Type: str, Platform: str | None = None) -> DownloadTask | str | None:
-    if Platform == None:
+    if Platform is None:
         Platform = "client"
 
     try:

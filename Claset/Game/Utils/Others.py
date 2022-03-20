@@ -21,46 +21,45 @@ def getVersionManifestTask(Ver: int = 1, Path: str | None = None) -> DownloadTas
             URL = APath.path("$LauncherMeta/mc/game/version_manifest_v2.json")
         case _:
             raise ValueError("Unknown Ver")
-    if Path == None: Path = "$MCVersionManifest/"
+    if Path is None: Path = "$MCVersionManifest/"
     return(DownloadTask(URL=URL, OutputPaths=APath.pathAdder(Path, FileName)))
 
 
 def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
     """规则匹配"""
     allow = False
-    if Features == None: Features = dict()
+    if Features is None: Features = dict()
     for Item in Items:
-        if Item.get("os") != None:
-            if Item["os"].get("name") != None:
+        if Item.get("os") is not None:
+            if Item["os"].get("name") is not None:
                 if Item["os"]["name"] != System().getFormated(Format="Minecraft"): continue
-            if Item["os"].get("arch") != None:
+            if Item["os"].get("arch") is not None:
                 if Item["os"]["arch"] != Arch().getFormated(Format="Minecraft"): continue
-            if Item["os"].get("version") != None:
-                if match(Item["os"]["version"], OriginalVersion) == None: continue
-        if Item.get("features") != None:
+            if Item["os"].get("version") is not None:
+                if match(Item["os"]["version"], OriginalVersion) is None: continue
+        if Item.get("features") is not None:
             try:
-                for FeaturesKey in Item["features"].keys():
-                    if FeaturesKey in Features.keys():
+                for FeaturesKey in Item["features"]:
+                    if FeaturesKey in Features:
                         if Features[FeaturesKey] != Item["features"][FeaturesKey]: raise FeaturesContinue
                     else: raise FeaturesMissingKey(FeaturesKey)
             except FeaturesContinue: continue
         allow = {"allow": True, "disallow": False, None: None}[Item.get("action")]
-        if allow == None: raise UnsupportSystemHost
+        if allow is None: raise UnsupportSystemHost
     return(allow)
 
 
 def getNativesObject(Libraries: dict, Features: dict | None = None, getExtract: bool = False) -> dict | None:
     # 判断是否需要输出
-    LibrariesKeys = Libraries.keys()
-    if not ("natives" in LibrariesKeys): return(None)
-    if "rules" in LibrariesKeys:
+    if not ("natives" in Libraries): return(None)
+    if "rules" in Libraries:
         if ResolveRule(Items=Libraries["rules"], Features=Features) == False: return(None)
 
     # 解析系统信息
     Output = Libraries["downloads"]["classifiers"][formatDollar(Libraries["natives"][System().getFormated(Format="Minecraft")], arch=Arch().getFormated(Format="PureNumbers"))]
 
     # 实现 getExtract
-    if (getExtract and ("extract" in LibrariesKeys)):
+    if (getExtract and ("extract" in Libraries)):
         Output["Extract"] = Libraries["extract"]
     else: Output["Extract"] = dict()
 

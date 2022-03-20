@@ -45,7 +45,7 @@ class Account():
         """获取对应 ID 用户的 Minecraft Access Token"""
         match self.Type:
             case "MICROSOFT":
-                if "MinecraftAccessToken" in self.TheAccount.keys() and "MinecraftAccessTokenExpiresTime" in self.TheAccount.keys():
+                if "MinecraftAccessToken" in self.TheAccount and "MinecraftAccessTokenExpiresTime" in self.TheAccount:
                     if not (self.TheAccount["MinecraftAccessTokenExpiresTime"] >= int(time())):
                         if self.TheAccount["MicrosoftAccountAccessTokenExpiresTime"] >= int(time()):
                             self.refreshToken(WithMicrosoft=False)
