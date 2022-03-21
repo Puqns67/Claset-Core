@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from argparse import Namespace
-from gettext import translation
-from time import sleep
+from gettext import GNUTranslations, NullTranslations, find as FindMo
+from os import environ
 from sys import exec_prefix
+from time import sleep
 
-from rich.console import Console
-from rich.table import Table
-from rich.progress import (Progress, TextColumn, BarColumn,)
 from cmd2 import Cmd, Cmd2ArgumentParser, with_argparser
+from rich.console import Console
+from rich.progress import BarColumn, Progress, TextColumn
+from rich.table import Table
 
 import Claset
-
 
 # Argument parsers
 InstallGame = Cmd2ArgumentParser()
@@ -37,17 +37,35 @@ class ClasetCommandLine(Cmd):
 
     def i18n(self) -> None:
         """多国语言支持"""
-        try:
-            self.TranslateObj = translation(domain="Default", localedir=Claset.Utils.pathAdder(exec_prefix, "Translations"), languages=self.Configs["Language"])
-        except FileNotFoundError:
-            self.TranslateObj = translation(domain="Default", localedir=Claset.Utils.path(Input="$PREFIX/Translations", IsPath=True), languages=self.Configs["Language"])
-        self._ = self.TranslateObj.gettext
+        match Claset.Utils.OriginalSystem:
+            case "Windows":
+                EnvironLanguage = None
+                for i in ('LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LANG',):
+                    EnvironLanguage = environ.get(i)
+                    if EnvironLanguage is not None:
+                        EnvironLanguage = EnvironLanguage.split(";")
+                        break
+                TargetLanguage = self.Configs["Language"] or EnvironLanguage or "zh_CN.UTF-8"
+            case _:
+                TargetLanguage = self.Configs["Language"]
 
+        if isinstance(TargetLanguage, str): TargetLanguage = [TargetLanguage]
+
+        MoFilePath = FindMo(domain="Default", localedir=Claset.Utils.path(Input=f"{exec_prefix}/Translations", IsPath=True), languages=TargetLanguage)
+        if MoFilePath is None:
+            MoFilePath = FindMo(domain="Default", localedir=Claset.Utils.path(Input=f"$PREFIX/Translations", IsPath=True), languages=TargetLanguage)
+        if MoFilePath is None:
+            self.TranslateObj = NullTranslations()
+        else:
+            with open(file=MoFilePath, mode="rb") as MoFile:
+                self.TranslateObj = GNUTranslations(fp=MoFile)
+
+        self._ = self.TranslateObj.gettext
         self.intro = self._("Claset - 内建命令行模式\n当前版本: {}".format(Claset.__fullversion__))
         self.prompt = self._("> ")
 
         # 为 Cmd2 进行部分汉化
-        self.doc_header = self._("Documented commands (use 'help -v' for verbose/'help <topic>' for details):")
+        self.doc_header = self._("Documented commands (type help <topic>):")
         self.help_error = self._("No help on {}")
         self.default_error = self._("{} is not a recognized command, alias, or macro")
 

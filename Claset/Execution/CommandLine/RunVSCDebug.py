@@ -5,13 +5,9 @@ from os import getcwd
 
 path.append(getcwd())
 
-import Claset
+from Claset.Execution.CommandLine.Run import main
+
 
 if __name__ == "__main__":
-    Claset.setLoggerHandler(Stream="WARNING")
-    Claset.ProcessLogs()
-    Main = Claset.Execution.CommandLineMain()
-    Main.i18n()
-    Main.addArgumentToParsers()
-    Main.cmdloop()
+    main()
 

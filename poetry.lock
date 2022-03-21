@@ -130,7 +130,7 @@ reference = "tuna"
 
 [[package]]
 name = "nuitka"
-version = "0.7.4"
+version = "0.7.6"
 description = "Python compiler with full language support and CPython compatibility"
 category = "dev"
 optional = false
@@ -252,14 +252,14 @@ reference = "tuna"
 
 [[package]]
 name = "urllib3"
-version = "1.26.8"
+version = "1.26.9"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
 
 [package.extras]
-brotli = ["brotlipy (>=0.6.0)"]
+brotli = ["brotlicffi (>=0.8.0)", "brotli (>=1.0.9)", "brotlipy (>=0.6.0)"]
 secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "certifi", "ipaddress"]
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
@@ -303,7 +303,7 @@ reference = "tuna"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10.0"
-content-hash = "c87ee31cb511621158bf9837f26557b8868c9fa43d0bb7b3ba58beb6d4a3b8f2"
+content-hash = "75fe79c3dfa6ca5395f5856dc2f20aeef833ab931abd626dbd209fe257bdfc5a"
 
 [metadata.files]
 attrs = [
@@ -387,7 +387,7 @@ idna = [
     {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
 ]
 nuitka = [
-    {file = "Nuitka-0.7.4.tar.gz", hash = "sha256:61c6138fa31cf5cb5af9a8674f2b4846f5e25b314e0ddc22f5a382f85087da74"},
+    {file = "Nuitka-0.7.6.tar.gz", hash = "sha256:b52d007517b41c68b62806fec2e81aa2a56932af4a4017c16ad8b5163704f828"},
 ]
 pycparser = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
@@ -418,8 +418,8 @@ rich = [
     {file = "rich-11.2.0.tar.gz", hash = "sha256:1a6266a5738115017bb64a66c59c717e7aa047b3ae49a011ede4abdeffc6536e"},
 ]
 urllib3 = [
-    {file = "urllib3-1.26.8-py2.py3-none-any.whl", hash = "sha256:000ca7f471a233c2251c6c7023ee85305721bfdf18621ebff4fd17a8653427ed"},
-    {file = "urllib3-1.26.8.tar.gz", hash = "sha256:0e7c33d9a63e7ddfcb86780aac87befc2fbddf46c58dbb487e0855f7ceec283c"},
+    {file = "urllib3-1.26.9-py2.py3-none-any.whl", hash = "sha256:44ece4d53fb1706f667c9bd1c648f5469a2ec925fcf3a776667042d645472c14"},
+    {file = "urllib3-1.26.9.tar.gz", hash = "sha256:aabaf16477806a5e1dd19aa41f8c2b7950dd3c746362d7e3223dbe6de6ac448e"},
 ]
 wcwidth = [
     {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
