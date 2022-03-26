@@ -2,14 +2,14 @@
 """格式化路径"""
 
 from json import load
-from os import getcwd
+from os import getcwd, chdir
 from os.path import abspath
 from re import compile as ReCompile
 
 from .Confs.Paths import File
 from .Exceptions.Path import SearchError, PrefixsMissingKey
 
-__all__ = ("PathRegex", "path", "pathAdder",)
+__all__ = ("PathRegex", "path", "pathAdder", "setPerfix")
 PathRegex = ReCompile(r"^(.*)\$([a-zA-Z]*)(.*)$")
 PathConfigs = None
 
@@ -56,4 +56,9 @@ def pathAdder(*Paths: list | tuple | str) -> str:
     Path = "/".join(PathList)
     if "$" in Path: Path = path(Path)
     return(abspath(Path))
+
+
+def setPerfix(NewPerfix: str) -> None:
+    """设置当前工作路径"""
+    chdir(abspath(NewPerfix))
 

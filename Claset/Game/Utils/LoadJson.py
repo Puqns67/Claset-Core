@@ -142,7 +142,7 @@ def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None =
         if "rules" in Libraries:
             if ResolveRule(Items=Libraries["rules"], Features=Features) == False: continue
         try: Temp = pathAdder("$LIBRERIES/", Libraries["downloads"]["artifact"]["path"])
-        except KeyError: pass
+        except KeyError: continue
         if Temp not in Output:
             Output += Temp + ";"
     Output += VersionJarPath

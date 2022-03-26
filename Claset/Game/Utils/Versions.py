@@ -33,29 +33,27 @@ class VersionInfos():
         self.JsonPath = pathAdder(self.Dir, self.Name + ".json")
         self.Json: dict = loadFile(Path=self.JsonPath, Type="json")
 
-        try:
-            self.AssetsVersion = self.Json["assets"]
-            self.ComplianceLevel = self.Json["complianceLevel"]
-            self.MinimumLauncherVersion = self.Json["minimumLauncherVersion"]
-            self.MainClass = self.Json["mainClass"]
-            self.Type = self.Json["type"]
-        except KeyError:
-            ValueError("This Version's ({NAME}) version json is broken".format(NAME=self.Name))
+        self.AssetsVersion = self.Json.get("assets")
+        self.ComplianceLevel = self.Json.get("complianceLevel")
+        self.MinimumLauncherVersion = self.Json.get("minimumLauncherVersion")
+        self.MainClass = self.Json.get("mainClass")
+        self.Type = self.Json.get("type")
+        self.Version = self.Json.get("version")
 
-        try:
-            self.ID = self.Json["id"]
-        except KeyError:
-            self.ID = None
+        # 兼容来自 HMCL 的配置文件
+        if "patches" in self.Json:
+            for i in self.Json["patches"]:
+                if i.get("id") == "game":
+                    if self.AssetsVersion is None: self.AssetsVersion = i.get("assets")
+                    if self.ComplianceLevel is None: self.ComplianceLevel = i.get("complianceLevel")
+                    if self.MinimumLauncherVersion is None: self.MinimumLauncherVersion = i.get("minimumLauncherVersion")
+                    if self.MainClass is None: self.MainClass = i.get("mainClass")
+                    if self.Type is None: self.Type = i.get("type")
+                    if self.Version is None: self.Version = i.get("version")
+                    break
 
-        try:
-            self.JarName = self.Json["jar"]
-        except KeyError:
-            self.JarName = None
-
-        try:
-            self.Version = self.Json["version"]
-        except KeyError:
-            self.Version = None
+        self.ID = self.Json.get("id")
+        self.JarName = self.Json.get("jar")
 
         # Natives 文件夹位置
         self.NativesPath = pathAdder(self.Dir, "natives")
@@ -75,9 +73,8 @@ class VersionInfos():
 
     def getInfoList(self) -> tuple:
         """获取信息元组"""
-        if not self.ISFULL:
-            self.full()
-        return((self.Name, self.Version, self.Type, self.Dir))
+        self.full()
+        return((self.Name, self.Version, self.Type, self.Dir,))
 
 
 def getVersionNameList() -> list[str]:
@@ -95,8 +92,11 @@ def getVersionNameList() -> list[str]:
 def getVersionInfoList(VersionNames: list[str] | str | None = None) -> list[VersionInfos]:
     """获取输入的多个版本中已被识别的版本的信息"""
     if isinstance(VersionNames, NoneType):
-        VersionNames = listdir(path=path("$VERSION"))
-    if isinstance(VersionNames, str):
+        try:
+            VersionNames = listdir(path=path("$VERSION"))
+        except FileNotFoundError:
+            return(list())
+    elif isinstance(VersionNames, str):
         VersionNames = [VersionNames]
     Output: list[VersionInfos] = list()
     for VersionName in VersionNames:

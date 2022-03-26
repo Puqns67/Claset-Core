@@ -186,6 +186,7 @@ class GameLauncher():
             case "clientid": return(uuid4().hex)
             case "resolution_width": return(self.getConfig("WindowWidth"))
             case "resolution_height": return(self.getConfig("WindowHeight"))
+            case "library_directory": return(path("$LIBRERIES", IsPath=True))
             case _: raise ValueError(Key)
 
 

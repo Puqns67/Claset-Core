@@ -19,6 +19,7 @@ LaunchGame = Cmd2ArgumentParser()
 CreateAccount = Cmd2ArgumentParser()
 RemoveAccount = Cmd2ArgumentParser()
 SetDefaultAccount = Cmd2ArgumentParser()
+SetWorkDir = Cmd2ArgumentParser()
 Exit = Cmd2ArgumentParser()
 
 
@@ -53,7 +54,7 @@ class ClasetCommandLine(Cmd):
 
         MoFilePath = FindMo(domain="Default", localedir=Claset.Utils.path(Input=f"{exec_prefix}/Translations", IsPath=True), languages=TargetLanguage)
         if MoFilePath is None:
-            MoFilePath = FindMo(domain="Default", localedir=Claset.Utils.path(Input=f"$PREFIX/Translations", IsPath=True), languages=TargetLanguage)
+            MoFilePath = FindMo(domain="Default", localedir=Claset.Utils.path(Input="$PREFIX/Translations", IsPath=True), languages=TargetLanguage)
         if MoFilePath is None:
             self.TranslateObj = NullTranslations()
         else:
@@ -65,7 +66,7 @@ class ClasetCommandLine(Cmd):
         self.prompt = self._("> ")
 
         # 为 Cmd2 进行部分汉化
-        self.doc_header = self._("Documented commands (type help <topic>):")
+        self.doc_header = self._("Documented commands (use 'help -v' for verbose/'help <topic>' for details):")
         self.help_error = self._("No help on {}")
         self.default_error = self._("{} is not a recognized command, alias, or macro")
 
@@ -89,6 +90,7 @@ class ClasetCommandLine(Cmd):
         SetDefaultAccount.add_argument("-T", "--Type", default=None, help=self._("指定账户类型, 使用此参数时将有可能删除多个账户"))
         SetDefaultAccount.add_argument("-i", "--ID", default=None, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
         SetDefaultAccount.add_argument("-I", "--UUID", default=None, help=self._("指定账户 UUID"))
+        SetWorkDir.add_argument("NewWorkDir", default=None, help=self._("新的工作目录路径"))
         Exit.add_argument("-W", "--WaitGames", default=True, choices=(True, False,), help=self._("等待游戏结束后再退出 Claset, 默认将等待游戏结束"))
 
 
@@ -204,6 +206,20 @@ class ClasetCommandLine(Cmd):
     @with_argparser(RemoveAccount)
     def do_RemoveAccount(self, init: Namespace):
         """删除指定的账户"""
+
+
+    @with_argparser(SetWorkDir)
+    def do_SetWorkDir(self, init: Namespace):
+        """指定新的工作目录"""
+        try:
+            Claset.Utils.setPerfix(init.NewWorkDir)
+        except FileNotFoundError:
+            self.RichConsole.print(self._("指定的新工作目录 \"{}\" 未找到").format(init.NewWorkDir))
+
+
+    def do_GetWorkDir(self, _: Namespace):
+        """指定新的工作目录"""
+        self.RichConsole.print(Claset.Utils.Path.getcwd())
 
 
     @with_argparser(Exit)
