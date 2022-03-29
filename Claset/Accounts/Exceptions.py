@@ -30,3 +30,6 @@ class MicrosoftOAuthDeclined(MicrosoftOAuthError, AuthError):
 class MicrosoftOAuthTimeOut(MicrosoftOAuthError):
     """微软账户登录过程中超时"""
 
+class AccountDeleted(AccountErrors):
+    """此账户已被移除"""
+

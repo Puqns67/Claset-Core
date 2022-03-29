@@ -7,16 +7,17 @@ from hashlib import sha1
 from copy import deepcopy as deepCopy
 
 from Claset.Utils import pathAdder, saveFile
+from Claset.Utils.File import dfCheck, loadFile
 
 from .LoadJson import getNativesObject
 
 from .Exceptions import NativesFileError, Sha1VerificationError
 
-__all__ = ("processNatives",)
+__all__ = ("extractNatives",)
 Logger = getLogger(__name__)
 
 
-def processNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = None):
+def extractNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = None):
     """处理 Natives"""
     for Libraries in VersionJson["libraries"]:
         NativesObject = getNativesObject(Libraries=Libraries, Features=Features, getExtract=True)
@@ -56,11 +57,14 @@ def processNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = No
                             break
 
             for FilePathInZip in FileList:
+                RealFilePath = pathAdder(ExtractTo, FilePathInZip)
+                if dfCheck(Path=RealFilePath, Type="f"):
+                    if FilePathInZip in FileSha1:
+                        if (sha1(loadFile(Path=RealFilePath, Type="bytes")).hexdigest() == FileSha1[FilePathInZip]):
+                            continue
                 TheFile = File.read(FilePathInZip)
-                if (FilePathInZip in FileSha1):
+                if FilePathInZip in FileSha1:
                     if not (sha1(TheFile).hexdigest() == FileSha1[FilePathInZip]):
                         raise Sha1VerificationError
-
-                RealFilePath = pathAdder(ExtractTo, FilePathInZip)
                 saveFile(Path=RealFilePath, FileContent=TheFile, Type="bytes")
 

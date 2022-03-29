@@ -10,7 +10,7 @@ from subprocess import Popen, DEVNULL
 
 from Claset import __fullversion__, __productname__, LaunchedGames
 from Claset.Accounts import AccountManager, Account
-from Claset.Game.Utils import VersionInfos, ResolveRule, getClassPath, processNatives, getLog4j2Infos
+from Claset.Game.Utils import VersionInfos, ResolveRule, getClassPath, extractNatives, getLog4j2Infos
 from Claset.Utils import Configs, path, getValueFromDict
 from Claset.Utils.JavaHelper import autoPickJava, fixJavaPath, getJavaInfoList, JavaInfo
 from Claset.Utils.Exceptions.Claset import UnsupportSystemHost
@@ -49,8 +49,8 @@ class GameLauncher():
 
         self.GlobalConfig = Configs(ID="Settings")
 
-        if self.VersionInfos.Json["minimumLauncherVersion"] > 21:
-            raise LauncherVersionError(self.VersionInfos.Json["minimumLauncherVersion"])
+        if self.VersionInfos.MinimumLauncherVersion > 21:
+            raise LauncherVersionError(self.VersionInfos.MinimumLauncherVersion)
 
 
     def launchGame(self, PrintToTerminal: bool = True) -> None:
@@ -58,22 +58,17 @@ class GameLauncher():
         RunArgs = self.getRunArgs()
         self.PickedJava = self.getJavaPathAndInfo()
 
-        processNatives(VersionJson=self.VersionInfos.Json, ExtractTo=self.VersionInfos.NativesPath, Features=Features)
+        extractNatives(VersionJson=self.VersionInfos.Json, ExtractTo=self.VersionInfos.NativesPath, Features=Features)
         Logger.info("Launch Game: %s", self.VersionInfos.Name)
         Logger.debug("Run code: %s", RunArgs)
+        if PrintToTerminal: Stdout = None
+        else: Stdout = DEVNULL
 
         match OriginalSystem:
             case "Windows":
-                Priority = SubProcessPriorityClasses[self.getConfig("WindowsPriority")]
-                if PrintToTerminal:
-                    self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, creationflags=Priority)
-                else:
-                    self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=DEVNULL, creationflags=Priority)
+                self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=Stdout, creationflags=SubProcessPriorityClasses[self.getConfig("WindowsPriority")])
             case "Linux":
-                if PrintToTerminal:
-                    self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir)
-                else:
-                    self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=DEVNULL)
+                self.Game = Popen(args=[self.PickedJava["Path"]] + RunArgs, cwd=self.VersionInfos.Dir, stdout=Stdout)
             case _:
                 raise UnsupportSystemHost(OriginalSystem)
 
@@ -168,7 +163,7 @@ class GameLauncher():
             case "MEMMIN": return("-Xms" + str(self.getConfig("MemoryMin")) + "M")
             case "MEMMAX": return("-Xmx" + str(self.getConfig("MemoryMax")) + "M")
             case "LOG4J2CONFIG": return(getLog4j2Infos(InitFile=self.VersionInfos.Json, Type="Argument"))
-            case "MAINCLASS": return(self.VersionInfos.Json["mainClass"])
+            case "MAINCLASS": return(self.VersionInfos.MainClass)
             case "launcher_name": return(__productname__)
             case "launcher_version": return(__fullversion__)
             case "assets_root": return(path("$ASSETS", IsPath=True))

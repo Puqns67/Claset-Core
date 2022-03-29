@@ -6,7 +6,7 @@ from re import compile
 
 __all__ = ("getValueFromDict", "setValueFromDict", "fixType", "encodeBase64", "decodeBase64", "formatDollar",)
 __fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
-__ReMatchFormatDollar = compile(r"^(.*)\${(.*)}(.*)$")
+ReMatchFormatDollar = compile(r"^(.*)\${([a-zA-Z\d]+)}(.*)$")
 
 
 def getValueFromDict(Keys: list[str] | str, Dict: dict) -> Any:
@@ -38,7 +38,7 @@ def fixType(Input: str) -> Any:
     if Input.lower() in __fixType_fixs:
         Output = __fixType_fixs[Input.lower()]
     elif Input == str(): return None
-    elif Input[-1] in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+    elif Input[-1] in ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9",):
         try: Output = int(Input)
         except ValueError:
             # 若使用整型格式化失败则尝试浮点
@@ -59,15 +59,13 @@ def decodeBase64(Input: str) -> str:
 
 def formatDollar(Input: str, **Kwargs: str) -> None:
     """格式化 ${}"""
-    try:
-        Matched = list(__ReMatchFormatDollar.match(Input).groups())
-    except AttributeError:
-        return(Input)
-    while Matched:
-        Matched[1] = Kwargs[Matched[1]]
+    while "${" in Input:
         try:
-            Matched = list(__ReMatchFormatDollar.match(str().join(Matched)).groups())
-        except AttributeError:
+            Perfix, Matched, Suffix = ReMatchFormatDollar.match(Input).groups()
+        except (AttributeError, ValueError):
             break
-    return(str().join(Matched))
+        else:
+            Matched = Kwargs[Matched]
+            Input = f"{Perfix}{Matched}{Suffix}"
+    return(Input)
 

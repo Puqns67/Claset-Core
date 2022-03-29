@@ -75,23 +75,24 @@ class ClasetCommandLine(Cmd):
         """为参数解析器附加参数"""
         InstallGame.add_argument("-V", "--Version", help=self._("游戏版本, 不指定时使用最新的正式版"))
         InstallGame.add_argument("GameName", help=self._("游戏实例名"))
-        LaunchGame.add_argument("-S", "--ShowGameLogs", default=False, choices=(True, False,), help=self._("输出运行日志至终端"))
+        LaunchGame.add_argument("-S", "--ShowGameLogs", action="store_true", help=self._("输出运行日志至终端"))
         LaunchGame.add_argument("-Un", "--UserName", default=None, help=self._("指定账户的类型为名称, 如有重复则按账户顺序取第一个"))
         LaunchGame.add_argument("-Uu", "--UserUUID", default=None, help=self._("指定账户的类型为 UUID"))
+        LaunchGame.add_argument("-Ui", "--UserID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
         LaunchGame.add_argument("GameName", help=self._("游戏实例名"))
         CreateAccount.add_argument("-N", "--AccountName", help=self._("账户名称, 此选项仅可使用在账户类型为离线时使用"))
         CreateAccount.add_argument("-T", "--Type", default="MICROSOFT", choices=("MICROSOFT", "OFFLINE",), help=self._("账户类型, 现支持 \"OFFLINE\" 和 \"MICROSOFT\" 类型, 默认为 \"MICROSOFT\""))
         RemoveAccount.add_argument("-N", "--Name", default=None, help=self._("指定账户的游戏内名称, 使用此参数时将有可能删除多个账户"))
         RemoveAccount.add_argument("-T", "--Type", default=None, help=self._("指定账户类型, 使用此参数时将有可能删除多个账户"))
-        RemoveAccount.add_argument("-i", "--ID", default=None, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
+        RemoveAccount.add_argument("-i", "--ID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
         RemoveAccount.add_argument("-I", "--UUID", default=None, help=self._("指定账户 UUID"))
-        RemoveAccount.add_argument("-D", "--Dryrun", default=False, choices=(True, False,), help=self._("由于此命令有危害性, 您可以使用此参数查看使用此命令后的对账户列表的操作"))
+        RemoveAccount.add_argument("-C", "--Confirm", action="store_false", help=self._("由于此命令有危害性, 您可以使用此参数查看使用此命令后的对账户列表的操作"))
         SetDefaultAccount.add_argument("-N", "--Name", default=None, help=self._("指定账户的游戏内名称, 使用此参数时将有可能删除多个账户"))
         SetDefaultAccount.add_argument("-T", "--Type", default=None, help=self._("指定账户类型, 使用此参数时将有可能删除多个账户"))
-        SetDefaultAccount.add_argument("-i", "--ID", default=None, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
+        SetDefaultAccount.add_argument("-i", "--ID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
         SetDefaultAccount.add_argument("-I", "--UUID", default=None, help=self._("指定账户 UUID"))
         SetWorkDir.add_argument("NewWorkDir", default=None, help=self._("新的工作目录路径"))
-        Exit.add_argument("-W", "--WaitGames", default=True, choices=(True, False,), help=self._("等待游戏结束后再退出 Claset, 默认将等待游戏结束"))
+        Exit.add_argument("-W", "--WaitGames", action="store_false", help=self._("等待游戏结束后再退出 Claset, 默认将等待游戏结束"))
 
 
     # 命令实现
@@ -103,7 +104,7 @@ class ClasetCommandLine(Cmd):
         GameInstaller.InstallVanilla()
 
         InstallProgressBar = Progress(
-            TextColumn("[bold blue]" + self._("[安装游戏]{task.description}"), justify="right"),
+            TextColumn(self._("[yellow]安装游戏实例 [bold blue]\"{task.description}\""), justify="right"),
             BarColumn(bar_width=None),
             "[progress.percentage]{task.percentage:>3.1f}%",
             self._("[green]已完成[yellow]/[blue]需下载文件数[white]:[green]{task.completed}[yellow]/[blue]{task.total}"),
@@ -134,12 +135,20 @@ class ClasetCommandLine(Cmd):
     def do_LaunchGame(self, init: Namespace):
         """启动游戏实例"""
         UserID = None
-        if init.UserUUID:
+        if init.UserUUID is not None:
             UserID = self.AccountManager.getAccountOtherInfo(Input=init.UserUUID, InputType="UUID", ReturnType="ID")
-        elif init.UserName:
+        elif init.UserName is not None:
             UserID = self.AccountManager.getAccountOtherInfo(Input=init.UserName, InputType="Name", ReturnType="ID")
+        elif init.UserID is not None:
+            UserID = init.UserID
         TheAccount = self.AccountManager.getAccountObject(UserID)
-        GameLauncher = Claset.Game.GameLauncher(VersionName=init.GameName, Account=TheAccount)
+
+        try:
+            GameLauncher = Claset.Game.GameLauncher(VersionName=init.GameName, Account=TheAccount)
+        except Claset.Game.Launch.Exceptions.VersionNotFound:
+            self.RichConsole.print("此游戏实例 \"{}\" 未找到".format(init.GameName))
+            return
+
         GameLauncher.launchGame(PrintToTerminal=init.ShowGameLogs)
 
 
@@ -192,7 +201,7 @@ class ClasetCommandLine(Cmd):
     def do_SetDefaultAccount(self, init: Namespace):
         """设定指定的账户为默认账户"""
         try:
-            AccountList = self.AccountManager.getAccountList(ID=int(init.ID), UUID=init.UUID, Name=init.Name, Type=init.Type)
+            AccountList = self.AccountManager.getAccountList(ID=init.ID, UUID=init.UUID, Name=init.Name, Type=init.Type)
         except ValueError:
             self.RichConsole.print(self._("输入有误"))
             return
@@ -200,12 +209,35 @@ class ClasetCommandLine(Cmd):
         if len(AccountList) == 0:
             self.RichConsole.print(self._("未找到符合输入的账户"))
             return
+        elif len(AccountList) >= 2:
+            self.RichConsole.print(self._("无法设置多个账户为默认"))
+            return
+
         self.AccountManager.setDefault(AccountList[0]["ID"])
+        self.AccountManager.save()
 
 
     @with_argparser(RemoveAccount)
     def do_RemoveAccount(self, init: Namespace):
         """删除指定的账户"""
+        try:
+            AccountList = self.AccountManager.getAccountList(ID=init.ID, UUID=init.UUID, Name=init.Name, Type=init.Type)
+        except ValueError:
+            self.RichConsole.print(self._("输入有误"))
+            return
+
+        if len(AccountList) == 0:
+            self.RichConsole.print(self._("未找到符合输入的账户"))
+        else:
+            if init.Confirm:
+                AccountTable = Table(self._("ID"), self._("账户名"), self._("UUID"), self._("账户类型"), self._("账户状态"))
+                for Account in AccountList:
+                    AccountTable.add_row(str(Account["ID"]), Account["Name"], Account["UUID"], Account["Type"], Account["Status"])
+                self.RichConsole.print(self._("[white]由于此命令有一定的[red]危险性[white]，默认不执行，请在确认输出后附加参数 \"--Confirm\" 以确认执行，确认执行后将删除账户:"), AccountTable)
+            else:
+                for Account in AccountList:
+                    self.AccountManager.remove(Account["ID"])
+                self.AccountManager.save()
 
 
     @with_argparser(SetWorkDir)

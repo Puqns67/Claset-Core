@@ -4,6 +4,7 @@
 from logging import getLogger
 from typing import Any
 from uuid import UUID as Class_UUID, uuid4
+from copy import deepcopy
 
 from Claset.Utils import Configs
 
@@ -21,6 +22,7 @@ class AccountManager():
     def __init__(self):
         self.Configs = Configs(ID="Accounts")
 
+        # TODO: 删除账户时可能导致默认账户变化
         for Account in self.Configs["Accounts"]:
             if Account["Status"] == "DELETE":
                 self.Configs["Accounts"].remove(Account)
@@ -64,16 +66,17 @@ class AccountManager():
         # 若要删除的账户为默认账户, 则设置另一个账户为默认
         match self.Configs["Accounts"][ID]["Status"]:
             case "DEFAULT":
-                if len(self.Configs["Accounts"]) >= 2:
+                if len(self.Configs["Accounts"]) >= 1:
                     self.Configs["DefaultAccount"] = 0
                 else:
                     self.Configs["DefaultAccount"] = None
             case "DELETE":
-                Logger.warning("This account is deleted, Skipping it")
-                return(None)
+                Logger.warning("Account ({}) deleted, Skipping it".format(self.Configs["Accounts"][ID]["Name"]))
+                return
 
         # 设置移除账户的状态
         self.Configs["Accounts"][ID]["Status"] = "DELETE"
+        Logger.info("Removeing account {}".format(self.Configs["Accounts"][ID]["Name"]))
 
 
     def save(self) -> None:
@@ -81,10 +84,20 @@ class AccountManager():
         self.Configs.saveConfig()
 
 
-    def setDefault(self, ID: int) -> None:
+    def setDefault(self, ID: int, RaiseException=True) -> None:
         """设置默认账户 ID"""
         if (ID <= -1) or (len(self.Configs["Accounts"]) - 1 < ID):
-            raise AccountNotFound
+            if RaiseException:
+                raise AccountNotFound
+            else:
+                Logger.warning("Account ({})  not found, Skipping it".format(self.Configs["Accounts"][ID]["Name"]))
+                return
+        if self.Configs["Accounts"][ID]["Status"] == "DELETE":
+            if RaiseException:
+                raise AccountDeleted
+            else:
+                Logger.warning("Account ({}) deleted, Skipping it".format(self.Configs["Accounts"][ID]["Name"]))
+                return
         # 将老的默认账户的状态还原
         if self.Configs["DefaultAccount"] is not None:
             self.Configs["Accounts"][self.Configs["DefaultAccount"]]["Status"] = "NORMAL"
@@ -118,7 +131,7 @@ class AccountManager():
         for AccountID in range(len(self.Configs["Accounts"])):
             if (ID is not None) and (AccountID != ID):
                 continue
-            Account = self.Configs["Accounts"][AccountID]
+            Account = deepcopy(self.Configs["Accounts"][AccountID])
             if UUID is not None:
                 if isinstance(UUID, Class_UUID) and (UUID.hex != Account["UUID"]):
                     continue

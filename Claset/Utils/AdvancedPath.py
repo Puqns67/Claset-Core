@@ -13,7 +13,7 @@ from .Exceptions import Path as Ex_Path, AdvancedPath as Ex_AdvancedPath
 from .Exceptions.Configs import ConfigUnregistered
 
 __all__ = ("ReMatchLoadString", "AdvancedPath",)
-ReMatchLoadString = reCompile(r"^&F<([a-zA-Z0-9_]+)>&V<(.+)>$")
+ReMatchLoadString = reCompile(r"^&F<([a-zA-Z_\d]+)>&V<(.+)>$")
 
 
 class AdvancedPath():
@@ -76,12 +76,13 @@ class AdvancedPath():
                 Perfix, Matched, Suffix = PathRegex.match(Input).groups()
             except (AttributeError, ValueError):
                 raise Ex_Path.SearchError(Input)
-            match Matched:
-                case "PREFIX": Matched = getcwd()
-                case Matched if Matched in self.CompleteConfigs:
-                    Matched = self.CompleteConfigs[Matched]
-                case _: raise Ex_Path.PrefixsMissingKey(Matched)
-            Input = f"{Perfix}{Matched}{Suffix}"
+            else:
+                match Matched:
+                    case "PREFIX": Matched = getcwd()
+                    case Matched if Matched in self.CompleteConfigs:
+                        Matched = self.CompleteConfigs[Matched]
+                    case _: raise Ex_Path.PrefixsMissingKey(Matched)
+                Input = f"{Perfix}{Matched}{Suffix}"
 
         if (IsPath or (IsPath is None and self.IsPath)):
             Input = abspath(Input)

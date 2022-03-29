@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from . import Exceptions
-from .ProcessNatives import *
+from .ExtractNatives import *
 from .LoadJson import *
 from .Others import *
 from .Versions import *
@@ -9,7 +9,7 @@ from .Versions import *
 __all__ = (
     "Exceptions",
 ) + (
-    ProcessNatives.__all__ +
+    ExtractNatives.__all__ +
     LoadJson.__all__ +
     Others.__all__ +
     Versions.__all__

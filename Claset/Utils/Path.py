@@ -30,12 +30,13 @@ def path(Input: str, IsPath: bool = False) -> str:
             Perfix, Matched, Suffix = PathRegex.match(Input).groups()
         except (AttributeError, ValueError):
             raise SearchError(Input)
-        match Matched:
-            case "PREFIX": Matched = getcwd()
-            case Matched if Matched in PathConfigs:
-                Matched = PathConfigs[Matched]
-            case _: raise PrefixsMissingKey(Matched)
-        Input = f"{Perfix}{Matched}{Suffix}"
+        else:
+            match Matched:
+                case "PREFIX": Matched = getcwd()
+                case Matched if Matched in PathConfigs:
+                    Matched = PathConfigs[Matched]
+                case _: raise PrefixsMissingKey(Matched)
+            Input = f"{Perfix}{Matched}{Suffix}"
 
     if IsPath:
         Input = abspath(Input)

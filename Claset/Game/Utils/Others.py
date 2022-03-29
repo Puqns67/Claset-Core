@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from re import match
-
 from Claset.Utils import AdvancedPath, DownloadTask, System, Arch, formatDollar, OriginalVersion
 
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
@@ -36,7 +34,7 @@ def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
             if Item["os"].get("arch") is not None:
                 if Item["os"]["arch"] != Arch().getFormated(Format="Minecraft"): continue
             if Item["os"].get("version") is not None:
-                if match(Item["os"]["version"], OriginalVersion) is None: continue
+                if Item["os"]["version"] != OriginalVersion: continue
         if Item.get("features") is not None:
             try:
                 for FeaturesKey in Item["features"]:
