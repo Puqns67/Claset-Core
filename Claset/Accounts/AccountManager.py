@@ -21,12 +21,7 @@ class AccountManager():
     """账户管理器"""
     def __init__(self):
         self.Configs = Configs(ID="Accounts")
-
-        # TODO: 删除账户时可能导致默认账户变化
-        for Account in self.Configs["Accounts"]:
-            if Account["Status"] == "DELETE":
-                self.Configs["Accounts"].remove(Account)
-
+        self.removeNow()
         self.save()
 
 
@@ -62,7 +57,7 @@ class AccountManager():
 
 
     def remove(self, ID: int) -> None:
-        """通过账户 ID 删除对应的账户"""
+        """通过账户 ID 删除对应的账户(设置账户状态为 DELETE)"""
         # 若要删除的账户为默认账户, 则设置另一个账户为默认
         match self.Configs["Accounts"][ID]["Status"]:
             case "DEFAULT":
@@ -77,6 +72,21 @@ class AccountManager():
         # 设置移除账户的状态
         self.Configs["Accounts"][ID]["Status"] = "DELETE"
         Logger.info("Removeing account {}".format(self.Configs["Accounts"][ID]["Name"]))
+
+
+    def removeNow(self) -> None:
+        """立即移除状态为 DELETE 的账户"""
+        if self.Configs["DefaultAccount"] is not None:
+            DefaultAccount = self.Configs["Accounts"][self.Configs["DefaultAccount"]]
+        else:
+            DefaultAccount = None
+
+        for Account in deepcopy(self.Configs["Accounts"]):
+            if Account["Status"] == "DELETE":
+                self.Configs["Accounts"].remove(Account)
+
+        if DefaultAccount:
+            self.Configs["DefaultAccount"] = self.Configs["Accounts"].index(DefaultAccount)
 
 
     def save(self) -> None:

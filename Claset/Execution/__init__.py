@@ -6,10 +6,5 @@ except ModuleNotFoundError:
     ClasetCommandLine = None
     ClasetCommandLineMain = None
 
-try:
-    from .Tests import TestMain
-except ModuleNotFoundError:
-    TestMain = None
-
-__all__ = ("ClasetCommandLine", "ClasetCommandLineMain", "TestMain")
+__all__ = ("ClasetCommandLine", "ClasetCommandLineMain",)
 

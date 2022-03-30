@@ -16,14 +16,14 @@ from Claset.Utils.JavaHelper import autoPickJava, fixJavaPath, getJavaInfoList, 
 from Claset.Utils.Exceptions.Claset import UnsupportSystemHost
 from Claset.Utils.Platform import OriginalSystem
 
+from .Exceptions import *
+
 if OriginalSystem == "Windows":
     from subprocess import (
         REALTIME_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, ABOVE_NORMAL_PRIORITY_CLASS,
         NORMAL_PRIORITY_CLASS, BELOW_NORMAL_PRIORITY_CLASS, IDLE_PRIORITY_CLASS
     )
     SubProcessPriorityClasses = {"REALTIME": REALTIME_PRIORITY_CLASS, "HIGH": HIGH_PRIORITY_CLASS, "ABOVE_NORMAL": ABOVE_NORMAL_PRIORITY_CLASS, "NORMAL": NORMAL_PRIORITY_CLASS, "BELOW_NORMAL": BELOW_NORMAL_PRIORITY_CLASS, "IDLE": IDLE_PRIORITY_CLASS}
-
-from .Exceptions import *
 
 __all__ = ("Features", "ClasetJvmHeader", "GameLauncher",)
 Logger = getLogger(__name__)

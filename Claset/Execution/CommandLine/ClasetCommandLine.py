@@ -16,6 +16,7 @@ import Claset
 # Argument parsers
 InstallGame = Cmd2ArgumentParser()
 LaunchGame = Cmd2ArgumentParser()
+RemoveGame = Cmd2ArgumentParser()
 CreateAccount = Cmd2ArgumentParser()
 RemoveAccount = Cmd2ArgumentParser()
 SetDefaultAccount = Cmd2ArgumentParser()
@@ -80,13 +81,15 @@ class ClasetCommandLine(Cmd):
         LaunchGame.add_argument("-Uu", "--UserUUID", default=None, help=self._("指定账户的类型为 UUID"))
         LaunchGame.add_argument("-Ui", "--UserID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
         LaunchGame.add_argument("GameName", help=self._("游戏实例名"))
+        RemoveGame.add_argument("GameName", help=self._("游戏实例名"))
         CreateAccount.add_argument("-N", "--AccountName", help=self._("账户名称, 此选项仅可使用在账户类型为离线时使用"))
         CreateAccount.add_argument("-T", "--Type", default="MICROSOFT", choices=("MICROSOFT", "OFFLINE",), help=self._("账户类型, 现支持 \"OFFLINE\" 和 \"MICROSOFT\" 类型, 默认为 \"MICROSOFT\""))
         RemoveAccount.add_argument("-N", "--Name", default=None, help=self._("指定账户的游戏内名称, 使用此参数时将有可能删除多个账户"))
         RemoveAccount.add_argument("-T", "--Type", default=None, help=self._("指定账户类型, 使用此参数时将有可能删除多个账户"))
         RemoveAccount.add_argument("-i", "--ID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
         RemoveAccount.add_argument("-I", "--UUID", default=None, help=self._("指定账户 UUID"))
-        RemoveAccount.add_argument("-C", "--Confirm", action="store_false", help=self._("由于此命令有危害性, 您可以使用此参数查看使用此命令后的对账户列表的操作"))
+        RemoveAccount.add_argument("-C", "--Confirm", action="store_false", help=self._("由于此命令有危害性, 您可以使用此参数以确认执行"))
+        RemoveAccount.add_argument("--Now", action="store_false", help=self._("立即从配置文件中移除已被删除的账户, 默认为下次启动时移除"))
         SetDefaultAccount.add_argument("-N", "--Name", default=None, help=self._("指定账户的游戏内名称, 使用此参数时将有可能删除多个账户"))
         SetDefaultAccount.add_argument("-T", "--Type", default=None, help=self._("指定账户类型, 使用此参数时将有可能删除多个账户"))
         SetDefaultAccount.add_argument("-i", "--ID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
@@ -107,7 +110,7 @@ class ClasetCommandLine(Cmd):
             TextColumn(self._("[yellow]安装游戏实例 [bold blue]\"{task.description}\""), justify="right"),
             BarColumn(bar_width=None),
             "[progress.percentage]{task.percentage:>3.1f}%",
-            self._("[green]已完成[yellow]/[blue]需下载文件数[white]:[green]{task.completed}[yellow]/[blue]{task.total}"),
+            self._("[green]已完成[yellow]/[blue]需检查[cyan]文件数[white]:[green]{task.completed}[yellow]/[blue]{task.total}"),
             console=self.RichConsole
         )
 
@@ -146,7 +149,7 @@ class ClasetCommandLine(Cmd):
         try:
             GameLauncher = Claset.Game.GameLauncher(VersionName=init.GameName, Account=TheAccount)
         except Claset.Game.Launch.Exceptions.VersionNotFound:
-            self.RichConsole.print("此游戏实例 \"{}\" 未找到".format(init.GameName))
+            self.RichConsole.print("游戏实例 \"{}\" 未找到".format(init.GameName))
             return
 
         GameLauncher.launchGame(PrintToTerminal=init.ShowGameLogs)
@@ -164,6 +167,15 @@ class ClasetCommandLine(Cmd):
             GameTable.add_row(str(GameID), *GameInfoList[GameID].getInfoList())
 
         self.RichConsole.print(GameTable)
+
+
+    @with_argparser(RemoveGame)
+    def do_RemoveGame(self, init: Namespace):
+        """移除指定的游戏实例"""
+        try:
+            Claset.Game.Utils.removeGame(Name=init.GameName)
+        except Claset.Game.Utils.Exceptions.TargetVersionNotFound:
+            self.RichConsole.print(self._("游戏实例 \"{}\" 未找到").format(init.GameName))
 
 
     @with_argparser(CreateAccount)
@@ -219,7 +231,7 @@ class ClasetCommandLine(Cmd):
 
     @with_argparser(RemoveAccount)
     def do_RemoveAccount(self, init: Namespace):
-        """删除指定的账户"""
+        """移除指定的账户"""
         try:
             AccountList = self.AccountManager.getAccountList(ID=init.ID, UUID=init.UUID, Name=init.Name, Type=init.Type)
         except ValueError:
@@ -237,6 +249,8 @@ class ClasetCommandLine(Cmd):
             else:
                 for Account in AccountList:
                     self.AccountManager.remove(Account["ID"])
+                if init.Now:
+                    self.AccountManager.removeNow()
                 self.AccountManager.save()
 
 
@@ -250,7 +264,7 @@ class ClasetCommandLine(Cmd):
 
 
     def do_GetWorkDir(self, _: Namespace):
-        """指定新的工作目录"""
+        """打印当前工作目录"""
         self.RichConsole.print(Claset.Utils.Path.getcwd())
 
 

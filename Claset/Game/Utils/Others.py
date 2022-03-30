@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from Claset.Utils import AdvancedPath, DownloadTask, System, Arch, formatDollar, OriginalVersion
+from Claset.Utils import AdvancedPath, DownloadTask, System, Arch, formatDollar, dfCheck, removeDir, path, OriginalVersion
 
-from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey
+from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey, TargetVersionNotFound
 
-__all__ = ("getVersionManifestTask", "ResolveRule", "getNativesObject",)
+__all__ = ("getVersionManifestTask", "ResolveRule", "getNativesObject", "removeGame",)
 
 
 def getVersionManifestTask(Ver: int = 1, Path: str | None = None) -> DownloadTask:
@@ -62,4 +62,13 @@ def getNativesObject(Libraries: dict, Features: dict | None = None, getExtract: 
     else: Output["Extract"] = dict()
 
     return(Output)
+
+
+def removeGame(Name: str):
+    """移除游戏实例"""
+    if dfCheck(Path=f"$VERSION\{Name}", Type="d"):
+        removeDir(path(f"$VERSION\{Name}", IsPath=True))
+    else:
+        raise TargetVersionNotFound
+
 

@@ -5,7 +5,7 @@ from json import dumps, load
 from logging import getLogger
 from os import makedirs, remove as removeFile
 from os.path import basename, dirname, exists, getsize, isdir, isfile
-from shutil import move, copy2 as copyFile
+from shutil import move, copy2 as copyFile, rmtree as removeDir
 from tarfile import open as openTar
 
 from zstandard import ZstdCompressor, ZstdDecompressor
@@ -15,7 +15,7 @@ from .Path import pathAdder, path as Pathmd
 from .Exceptions.File import *
 
 __all__ = (
-    "loadFile", "saveFile", "copyFile", "moveFile", "dfCheck", "removeFile",
+    "loadFile", "saveFile", "copyFile", "moveFile", "dfCheck", "removeFile", "removeDir",
     "compressFile", "decompressFile", "makeArchive", "addFileIntoArchive",
 )
 Logger = getLogger(__name__)

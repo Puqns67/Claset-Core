@@ -3,13 +3,17 @@ name = "Claset"
 version = "0.1.0"
 description = "基于 Python 的 Minecraft 启动管理器"
 authors = ["Puqns67 <me@puqns67.icu>"]
-license = "GPLv3"
+license = "GPL-3.0-or-later"
+packages = [
+    { include = "Claset" }
+]
+exclude = ["Claset/Cache/*", "Claset/Logs/*", "Claset/Utils/JavaHelper/JavaSrcs/*"]
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
 requests = "^2.27.1"
 cmd2 = "^2.4.0"
-rich = "^12.0.0"
+rich = "^12.0.1"
 zstandard = "^0.17.0"
 PySocks = "^1.7.1"
 
