@@ -380,7 +380,7 @@ class DownloadManager():
         return(self.Projects[ProjectID][Type])
 
 
-    def waitProject(self, ProjectIDs: list | int, Raise: Exception | None = None) -> int:
+    def waitProject(self, ProjectIDs: list | int, Raise: Any | None = None) -> int:
         """通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数"""
         if isinstance(ProjectIDs, int): ProjectIDs = [ProjectIDs]
         ErrorTasksCount = int()
@@ -395,7 +395,10 @@ class DownloadManager():
             Logger.debug("Waited Project \"%s\" completed by %s Errors", ProjectIDs[0], ErrorTasksCount)
 
         if ((Raise is not None) and (ErrorTasksCount > 0)):
-            raise Raise(ErrorTasksCount)
+            if issubclass(Raise, Exception):
+                raise Raise(ErrorTasksCount)
+            else:
+                raise Ex_Download.DownloadExceptions(Raise)
         else:
             return(ErrorTasksCount)
 

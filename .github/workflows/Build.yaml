@@ -13,7 +13,7 @@ on:
 
 env:
   UPLOAD_TO_ACTIONS: ${{ true }}
-  PYTHON_VERSION: ${{ '3.10.2' }}
+  PYTHON_VERSION: ${{ '3.10.4' }}
   PYTHON_ARCHITECTURE: ${{ 'x64' }}
   RELEASES_NAME_PERFIX: ${{ 'Claset-Build' }}
   CACHE_NUITKA_GCC: ${{ true }}

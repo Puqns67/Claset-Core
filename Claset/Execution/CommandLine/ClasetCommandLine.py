@@ -17,6 +17,7 @@ import Claset
 InstallGame = Cmd2ArgumentParser()
 LaunchGame = Cmd2ArgumentParser()
 RemoveGame = Cmd2ArgumentParser()
+StopRunningGame = Cmd2ArgumentParser()
 CreateAccount = Cmd2ArgumentParser()
 RemoveAccount = Cmd2ArgumentParser()
 SetDefaultAccount = Cmd2ArgumentParser()
@@ -37,19 +38,22 @@ class ClasetCommandLine(Cmd):
     delattr(Cmd, "do_quit")
 
 
-    def i18n(self) -> None:
+    def i18n(self, ForceLanguage: str | list | None = None) -> None:
         """多国语言支持"""
-        match Claset.Utils.OriginalSystem:
-            case "Windows":
-                EnvironLanguage = None
-                for i in ('LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LANG',):
-                    EnvironLanguage = environ.get(i)
-                    if EnvironLanguage is not None:
-                        EnvironLanguage = EnvironLanguage.split(";")
-                        break
-                TargetLanguage = self.Configs["Language"] or EnvironLanguage or "zh_CN.UTF-8"
-            case _:
-                TargetLanguage = self.Configs["Language"]
+        if ForceLanguage is not None:
+            TargetLanguage = ForceLanguage
+        else:
+            match Claset.Utils.OriginalSystem:
+                case "Windows":
+                    EnvironLanguage = None
+                    for i in ('LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LANG',):
+                        EnvironLanguage = environ.get(i)
+                        if EnvironLanguage is not None:
+                            EnvironLanguage = EnvironLanguage.split(";")
+                            break
+                    TargetLanguage = self.Configs["Language"] or EnvironLanguage or "zh_CN.UTF-8"
+                case _:
+                    TargetLanguage = self.Configs["Language"]
 
         if isinstance(TargetLanguage, str): TargetLanguage = [TargetLanguage]
 
@@ -90,6 +94,7 @@ class ClasetCommandLine(Cmd):
         RemoveAccount.add_argument("-I", "--UUID", default=None, help=self._("指定账户 UUID"))
         RemoveAccount.add_argument("-C", "--Confirm", action="store_false", help=self._("由于此命令有危害性, 您可以使用此参数以确认执行"))
         RemoveAccount.add_argument("--Now", action="store_false", help=self._("立即从配置文件中移除已被删除的账户, 默认为下次启动时移除"))
+        StopRunningGame.add_argument("RUNID", default=None, type=int, help=self._("运行 ID"))
         SetDefaultAccount.add_argument("-N", "--Name", default=None, help=self._("指定账户的游戏内名称, 使用此参数时将有可能删除多个账户"))
         SetDefaultAccount.add_argument("-T", "--Type", default=None, help=self._("指定账户类型, 使用此参数时将有可能删除多个账户"))
         SetDefaultAccount.add_argument("-i", "--ID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
@@ -164,7 +169,7 @@ class ClasetCommandLine(Cmd):
 
         GameTable = Table(self._("ID"), self._("实例名"), self._("实例版本"), self._("实例类型"), self._("实例位置"))
         for GameID in range(len(GameInfoList)):
-            GameTable.add_row(str(GameID), *GameInfoList[GameID].getInfoList())
+            GameTable.add_row(str(GameID), *GameInfoList[GameID].getInfoStr().split("|"))
 
         self.RichConsole.print(GameTable)
 
@@ -176,6 +181,37 @@ class ClasetCommandLine(Cmd):
             Claset.Game.Utils.removeGame(Name=init.GameName)
         except Claset.Game.Utils.Exceptions.TargetVersionNotFound:
             self.RichConsole.print(self._("游戏实例 \"{}\" 未找到").format(init.GameName))
+
+
+    def do_ListLaunchedGame(self, _: Namespace):
+        """列出运行过的游戏实例与状态"""
+        if len(Claset.LaunchedGames) >= 1:
+            GameInfoList = Claset.Game.Utils.getVersionInfoList()
+            LaunchedGameTable = Table(self._("运行 ID"), self._("游戏 ID"), self._("实例名"), self._("运行状态"), self._("实例版本"), self._("实例类型"), self._("实例位置"))
+            for LaunchedGameID in range(len(Claset.LaunchedGames)):
+                GameID = None
+                for GameInfoID in range(len(GameInfoList)):
+                    if GameInfoList[GameInfoID].Name == Claset.LaunchedGames[LaunchedGameID].VersionInfos.Name:
+                        GameID = GameInfoID
+                LaunchedGameTable.add_row(
+                    *Claset.LaunchedGames[LaunchedGameID].VersionInfos.getInfoStr(
+                        Format="{LaunchedGameID}|{GameID}|{Name}|{Status}|{Version}|{Type}|{Dir}",
+                        OtherKeys={
+                            "LaunchedGameID": LaunchedGameID,
+                            "GameID": GameID,
+                            "Status": Claset.LaunchedGames[LaunchedGameID].getStatus()
+                        }
+                    ).split("|")
+                )
+            self.RichConsole.print(LaunchedGameTable)
+        else:
+            self.RichConsole.print(self._("无运行过的游戏实例"))
+
+
+    @with_argparser(StopRunningGame)
+    def do_StopLaunchedGame(self, init: Namespace):
+        """停止运行中的游戏"""
+        Claset.LaunchedGames[init.RUNID].stopGame()
 
 
     @with_argparser(CreateAccount)
@@ -245,7 +281,7 @@ class ClasetCommandLine(Cmd):
                 AccountTable = Table(self._("ID"), self._("账户名"), self._("UUID"), self._("账户类型"), self._("账户状态"))
                 for Account in AccountList:
                     AccountTable.add_row(str(Account["ID"]), Account["Name"], Account["UUID"], Account["Type"], Account["Status"])
-                self.RichConsole.print(self._("[white]由于此命令有一定的[red]危险性[white]，默认不执行，请在确认输出后附加参数 \"--Confirm\" 以确认执行，确认执行后将删除账户:"), AccountTable)
+                self.RichConsole.print(self._("由于此命令有一定的[red]危险性[white]，默认不执行，请在确认输出后附加参数 \"--Confirm\" 以确认执行，确认执行后将删除账户:"), AccountTable)
             else:
                 for Account in AccountList:
                     self.AccountManager.remove(Account["ID"])

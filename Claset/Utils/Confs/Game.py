@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 2
+LastVersion = 3
 
 
 File = {
@@ -17,17 +17,24 @@ File = {
         "WindowsPriority": None
     },
     "UnableGlobal": {
-        "PrefixAndEnds": {
+        "VersionIndependent": False,
+        "PrefixAndSuffix": {
             "JvmPrefix": [],
-            "JvmEnd": [],
+            "JvmSuffix": [],
             "GamePrefix": [],
-            "GameEnd": []
+            "GameSuffix": []
         }
     }
 }
 
 
 Difference = {
+    "2->3": [
+        "REPLACE:[UnableGlobal, VersionIndependent]->False",
+        "RENAME:[UnableGlobal, PrefixAndEnds]->PrefixAndSuffix",
+        "RENAME:[UnableGlobal, PrefixAndSuffix, JvmEnd]->JvmSuffix",
+        "RENAME:[UnableGlobal, PrefixAndSuffix, GameEnd]->GameSuffix"
+    ],
     "1->2": [
         "REPLACE:[Global, WindowsPriority]->NORMAL",
         "DELETE:[UnableGlobal, NativesDir]"

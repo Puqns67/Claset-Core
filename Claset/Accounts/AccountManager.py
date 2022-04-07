@@ -50,7 +50,7 @@ class AccountManager():
 
         self.Configs["Accounts"].append(NewAccount)
 
-        # 如果新建用户后只有一个账户存在，则使其成为默认账户
+        # 如果新建用户后只有一个账户存在, 则使其成为默认账户
         if len(self.Configs["Accounts"]) == 1:
             Logger.debug("Set this account's status to \"DEFAULT\"")
             self.setDefault(ID=0)
@@ -119,7 +119,7 @@ class AccountManager():
         """获取默认账户 ID"""
         if self.Configs["DefaultAccount"] is None:
             raise NoAccountsFound
-        return self.Configs["DefaultAccount"]
+        return(self.Configs["DefaultAccount"])
 
 
     def updateInfo(self, UUID: Class_UUID, New: dict) -> None:

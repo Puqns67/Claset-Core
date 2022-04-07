@@ -7,7 +7,7 @@
 __author__ = "Puqns67"
 __productname__ = "Claset"
 __version__ = "0.1.0"
-__build__ = 174
+__build__ = 175
 __fullversion__ = __version__ + "_" + str(__build__)
 __all__ = (
     "Accounts", "Execution", "Utils", "Game",
@@ -20,16 +20,25 @@ LaunchedGames = list()
 Downloaders = list()
 
 def waitALLGames() -> None:
+    """设置游戏守护进程状态为等待"""
     for I in LaunchedGames:
         I.waitGame()
 
 
 def stopALLGames() -> None:
+    """停止游戏守护进程与游戏实例"""
+    for I in LaunchedGames:
+        I.stopGame()
+
+
+def killALLGames() -> None:
+    """杀死游戏守护进程与游戏实例"""
     for I in LaunchedGames:
         I.stopGame()
 
 
 def getDownloader(ID: int = 0):
+    """获取 Downloader, 若不存在已实例化的 Downloader 则创建新的"""
     try:
         Downloader = Downloaders[ID]
     except IndexError:
@@ -42,6 +51,7 @@ def getDownloader(ID: int = 0):
 
 
 def stopALLDownloader() -> None:
+    """停止所有 Downloader"""
     for I in Downloaders:
         I.stop()
 

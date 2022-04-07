@@ -4,7 +4,7 @@
 from logging import getLogger
 from os.path import basename as baseName
 
-from Claset.Utils import AdvancedPath, DownloadTask, path, pathAdder
+from Claset.Utils import AdvancedPath, DownloadTask, path, pathAdder, formatDollar
 
 from .Others import ResolveRule, getNativesObject
 from .Exceptions import TargetVersionNotFound
@@ -156,7 +156,7 @@ def getLog4j2Infos(InitFile: dict, Type: str, Platform: str | None = None) -> Do
     try:
         Target = InitFile["logging"][Platform]
     except KeyError:
-        return None
+        return(None)
 
     FilePath = pathAdder("$ASSETS", "log_configs", Target["file"]["id"])
 
@@ -170,5 +170,5 @@ def getLog4j2Infos(InitFile: dict, Type: str, Platform: str | None = None) -> Do
                 Overwrite = False
             ))
         case "Argument":
-            return(Target["argument"].replace("${path}", FilePath))
+            return(formatDollar(Target["argument"], path=FilePath))
 

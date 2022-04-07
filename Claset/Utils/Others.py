@@ -6,7 +6,7 @@ from re import compile
 
 __all__ = ("getValueFromDict", "setValueFromDict", "fixType", "encodeBase64", "decodeBase64", "formatDollar",)
 __fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
-ReMatchFormatDollar = compile(r"^(.*)\${([a-zA-Z\d]+)}(.*)$")
+ReMatchFormatDollar = compile(r"^(.*)\${([a-zA-Z_\d]+)}(.*)$")
 
 
 def getValueFromDict(Keys: list[str] | str, Dict: dict) -> Any:
@@ -37,7 +37,7 @@ def fixType(Input: str) -> Any:
     Output = Input
     if Input.lower() in __fixType_fixs:
         Output = __fixType_fixs[Input.lower()]
-    elif Input == str(): return None
+    elif Input == str(): return(None)
     elif Input[-1] in ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9",):
         try: Output = int(Input)
         except ValueError:

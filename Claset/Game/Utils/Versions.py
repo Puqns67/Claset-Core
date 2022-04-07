@@ -3,7 +3,7 @@
 from os import listdir
 from types import NoneType
 
-from Claset.Utils import Configs, path, pathAdder, dfCheck, loadFile
+from Claset.Utils import Configs, DownloadTask, path, pathAdder, dfCheck, loadFile
 
 __all__ = ("VersionInfos", "getVersionInfoList", "getVersionNameList",)
 
@@ -21,7 +21,7 @@ class VersionInfos():
     def full(self) -> None:
         """获取更多相关信息"""
         if self.ISFULL:
-            return(None)
+            return
 
         self.Dir = pathAdder("$VERSION", self.Name)
 
@@ -66,15 +66,28 @@ class VersionInfos():
         self.ISFULL = True
 
 
+    def getInfoStr(self, Format: str = "{Name}|{Version}|{Type}|{Dir}", OtherKeys: dict = {}) -> str:
+        """
+        获取信息字符串
+        * Format: 格式字符串
+        * OtherKeys: 其他的格式化键\n
+        默认格式化键
+        * Name: 版本名
+        * Version: 游戏版本
+        * Type: 版本类型
+        * Dir: 所在文件夹
+        """
+        self.full()
+        return(Format.format(Name=self.Name, Version=self.Version, Type=self.Type, Dir=self.Dir, **OtherKeys))
+
+
     def check(self) -> bool:
         """检查此版本是否可以正常被识别"""
         return(dfCheck(Path=pathAdder("$VERSION", self.Name, self.Name + ".json"), Type="f"))
 
 
-    def getInfoList(self) -> tuple:
-        """获取信息元组"""
-        self.full()
-        return((self.Name, self.Version, self.Type, self.Dir,))
+    def checkFull(self) -> list[DownloadTask]:
+        """检查此版本的内容缺失情况, 返回缺失文件的 DownloadTask 列表"""
 
 
 def getVersionNameList() -> list[str]:

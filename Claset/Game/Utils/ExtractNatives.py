@@ -33,8 +33,8 @@ def extractNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = No
 
             # 分离 sha1 文件, 并生成 File Sha1 的对应关系, 存入 FileSha1
             FileSha1 = dict()
-            FileListBackUp = deepCopy(FileList)
-            for FilePathInZip in FileListBackUp:
+            FileListBackup = deepCopy(FileList)
+            for FilePathInZip in FileListBackup:
                 Name, Ext = splitExt(FilePathInZip)
                 TheZipPath = ZipPath(File, at=FilePathInZip)
                 if Ext == ".git":
@@ -42,11 +42,8 @@ def extractNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = No
                     Logger.debug("Excluded: \"%s\" From \"%s\" By file extension name", FilePathInZip, BaseNameByPath)
                 elif Ext == ".sha1":
                     FileList.remove(FilePathInZip)
-                    # 读取对应的 sha1 值
-                    Sha1 = File.read(FilePathInZip).decode("utf-8")
-                    if Sha1[-1] == "\n": Sha1 = Sha1.rstrip()
-                    # 存入 FileSha1
-                    FileSha1[Name] = Sha1
+                    # 读取对应的 sha1 值, 并存入 FileSha1
+                    FileSha1[Name] = File.read(FilePathInZip).decode("utf-8").rstrip()
                 elif TheZipPath.is_dir():
                     FileList.remove(FilePathInZip)
                 elif ((Extract is not None) and ("exclude" in Extract)):

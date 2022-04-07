@@ -12,3 +12,9 @@ class UnsupportComplianceLevel(LauncherError):
 class LauncherVersionError(LauncherError):
     """此版本所要求的启动器版本不被本启动器所满足"""
 
+class UndefinedGameStatus(LauncherError):
+    """未定义的游戏状态"""
+
+class GameStatusError(LauncherError):
+    """游戏状态错误"""
+

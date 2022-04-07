@@ -44,7 +44,7 @@ def getJavaPath() -> list[str]:
     return(Output)
 
 
-def getJavaInfo(Path: str | None) -> tuple[str]:
+def getJavaInfo(Path: str | None) -> JavaInfo:
     """通过 Java 源文件获取 Java 版本"""
     Path = fixJavaPath(Path)
     JarPath = genJarFile("GetJavaInfo.jar")
@@ -53,9 +53,15 @@ def getJavaInfo(Path: str | None) -> tuple[str]:
     Logger.debug("Java from \"%s\" return: \"%s\"", Path, Return)
     DecodedReturn = Return.stdout.decode("utf-8")
     try:
-        return(ReMatchJavaInfos.match(DecodedReturn).groups())
+        JavaInfos = ReMatchJavaInfos.match(DecodedReturn).groups()
     except AttributeError:
         raise MatchStringError(DecodedReturn)
+    return({
+        "Path": Path,
+        "Arch": JavaInfos[0],
+        "Version": versionFormater(JavaInfos[1]),
+        "From": JavaInfos[2]
+    })
 
 
 def fixJavaPath(Path: str) -> str:
@@ -89,20 +95,15 @@ def versionFormater(Version: str) -> list:
 def getJavaInfoList(PathList: list[str] | None = None) -> list[JavaInfo]:
     """
     通过版本列表获取字典形式的 Java 信息, 如输入为空则通过 Claset.Utils.JavaHelper.getJavaPath() 获取\n
-    如获取过程中出现 JavaHelper.MatchStringError 将不在输出中附上出错的信息
+    如获取过程中出现 JavaHelper.MatchStringError 将忽略此版本
     """
     if PathList is None:
         PathList: list[str] = getJavaPath()
     Outputs: list[JavaInfo] = list()
     for Path in PathList:
-        try: Infos = getJavaInfo(Path)
+        try: JavaInfos = getJavaInfo(Path)
         except MatchStringError: continue
-        Outputs.append({
-            "Path": Path,
-            "Arch": Infos[0],
-            "Version": versionFormater(Infos[1]),
-            "From": Infos[2]
-        })
+        Outputs.append(JavaInfos)
     return(Outputs)
 
 

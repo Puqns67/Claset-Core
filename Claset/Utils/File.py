@@ -98,7 +98,7 @@ def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False) -
             else: removeFile(ToFile)
         else: To = ToFile
     elif isfile(To):
-        # 若为文件，此时 OverWrite 为 False 则触发 FileExistsError，若为 True 则覆盖
+        # 若为文件, 此时 OverWrite 为 False 则触发 FileExistsError, 若为 True 则覆盖
         if OverWrite == False: raise FileExistsError(To)
         else: removeFile(To)
     else:
@@ -174,8 +174,8 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
         if "m" in Type:
             try: makedirs(Path)
             except FileExistsError:
-                return True
-            return False
+                return(True)
+            return(False)
         return(exists(Path))
     elif "f" in Type:
         if "s" in Type:
@@ -189,8 +189,8 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
         elif "m" in Type:
             try: makedirs(dirname(Path))
             except FileExistsError:
-                return True
-            return False
+                return(True)
+            return(False)
         return(exists(Path))
     else:
         raise ValueError(Type)

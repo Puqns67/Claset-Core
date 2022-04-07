@@ -9,8 +9,8 @@ class ConfigUnregistered(ConfigErrors):
 class ConfigExist(ConfigErrors, FileExistsError):
     """配置文件已存在"""
 
-class UnknownDifferenceType(ConfigErrors):
-    """不存在的差异类型"""
+class UndefinedDifferenceType(ConfigErrors):
+    """未定义的差异类型"""
 
 class ConfigTypeError(ConfigErrors):
     """配置文件类型错误"""

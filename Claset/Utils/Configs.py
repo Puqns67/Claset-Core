@@ -198,11 +198,15 @@ class Configs():
         match Type:
             case "REPLACE":
                 Old, New = ReFindOldAndNew.search(Key).groups()
+            case "RENAME":
+                Old, New = ReFindOldAndNew.search(Key).groups()
+            # TODO: 在 Nuitka 支持在 match case 语句中使用联合符 "|" (https://github.com/Nuitka/Nuitka/issues/1507) 后转换格式为下:
+            # case "REPLACE" | "RENAME":
             case "DELETE":
                 Old = Key
                 New = None
             case _:
-                raise Ex_Configs.UnknownDifferenceType
+                raise Ex_Configs.UndefinedDifferenceType(Type)
 
         if ReIFStrList.search(Old.strip()) is not None: Old = self.__StrList2List(Old)
         else: Old = [Old]
@@ -237,6 +241,12 @@ class Configs():
                 case "DELETE":
                     try:
                         Dict.pop(Keys[0])
+                    except KeyError:
+                        pass
+                    return(Dict)
+                case "RENAME":
+                    try:
+                        Dict[Do] = Dict.pop(Keys[0])
                     except KeyError:
                         pass
                     return(Dict)
