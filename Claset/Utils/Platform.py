@@ -13,6 +13,12 @@ OriginalVersion = version()
 
 
 class Base():
+    """用于获取各类风格的 Platform 字符串基类"""
+    def getFormated(self, Format: str = "Python") -> str:
+        """用于获取各类风格的 Platform 字符串"""
+        return(str())
+
+
     def getLower(self, Format: str = "Python") -> str:
         return(self.getFormated(Format=Format).lower())
 

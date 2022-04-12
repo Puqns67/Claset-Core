@@ -19,8 +19,7 @@ def getVersionManifestTask(Ver: int = 1, Path: str | None = None) -> DownloadTas
             URL = APath.path("$LauncherMeta/mc/game/version_manifest_v2.json")
         case _:
             raise ValueError("Unknown Ver")
-    if Path is None: Path = "$MCVersionManifest/"
-    return(DownloadTask(URL=URL, OutputPaths=APath.pathAdder(Path, FileName)))
+    return(DownloadTask(URL=URL, OutputPaths=APath.pathAdder(Path or "$MCVersionManifest/", FileName)))
 
 
 def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
@@ -49,7 +48,7 @@ def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
 
 def getNativesObject(Libraries: dict, Features: dict | None = None, getExtract: bool = False) -> dict | None:
     # 判断是否需要输出
-    if not ("natives" in Libraries): return(None)
+    if "natives" not in Libraries: return(None)
     if "rules" in Libraries:
         if ResolveRule(Items=Libraries["rules"], Features=Features) == False: return(None)
 
@@ -69,6 +68,5 @@ def removeGame(Name: str):
     if dfCheck(Path=f"$VERSION\{Name}", Type="d"):
         removeDir(path(f"$VERSION\{Name}", IsPath=True))
     else:
-        raise TargetVersionNotFound
-
+        raise TargetVersionNotFound(Name)
 

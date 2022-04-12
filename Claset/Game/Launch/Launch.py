@@ -7,7 +7,7 @@ from typing import Any
 from uuid import uuid4
 from subprocess import Popen, DEVNULL
 
-from Claset import __fullversion__, __productname__, LaunchedGames
+from Claset import getDownloader, __fullversion__, __productname__, LaunchedGames
 from Claset.Accounts import AccountManager, Account
 from Claset.Game.Utils import VersionInfos, ResolveRule, getClassPath, extractNatives, getLog4j2Infos
 from Claset.Utils import Configs, path, getValueFromDict, OriginalSystem
@@ -51,6 +51,7 @@ class GameLauncher():
             raise LauncherVersionError(self.VersionInfos.MinimumLauncherVersion)
 
         self.Status: str = "UNRUNNING"
+        self.Downloader = None
 
 
     def launchGame(self, PrintToTerminal: bool = True) -> None:
@@ -58,15 +59,21 @@ class GameLauncher():
         self.checkStatus(("STOPPED", "UNRUNNING",), Raise=True)
         self.setStatus("STARTING")
         if not self.getConfig("NotCheckGame"):
-            self.VersionInfos.checkFull()
+            DownloadTasks = self.VersionInfos.checkFull()
+            if len(DownloadTasks) >= 1:
+                if self.Downloader is None:
+                    self.Downloader = getDownloader()
+                self.Downloader.waitProject(self.Downloader.addTask(DownloadTasks))
 
         self.PickedJava = self.getJavaPathAndInfo(NotCheck=self.getConfig("NotCheckJvm"))
 
         # 解析 Natives
-        extractNatives(VersionJson=self.VersionInfos.Json, ExtractTo=self.VersionInfos.NativesPath, Features=Features)
+        extractNatives(VersionJson=self.VersionInfos.VersionJson, ExtractTo=self.VersionInfos.NativesPath, Features=Features)
 
         # 获取启动命令行参数
-        self.RunArgs = self.getRunArgs()
+        self.RunArgs = [self.PickedJava["Path"]] + self.getRunArgs()
+        self.RunCommand = " ".join(self.RunArgs)
+
         # 获取工作目录
         if self.getConfig("VersionIndependent"): self.RunCwd = self.VersionInfos.Dir
         else: self.RunCwd = path("$MINECRFT", IsPath=True)
@@ -78,7 +85,7 @@ class GameLauncher():
         Logger.info("Launch Game: %s", self.VersionInfos.Name)
         Logger.debug("Run code: %s", self.RunArgs)
 
-        self.Game = Popen(args=[self.PickedJava["Path"]] + self.RunArgs, cwd=self.RunCwd, stdout=Stdout, creationflags=WindowsCreationFlags)
+        self.Game = Popen(args=self.RunArgs, cwd=self.RunCwd, stdout=Stdout, creationflags=WindowsCreationFlags)
 
         LaunchedGames.append(self)
         self.setStatus("RUNNING")
@@ -110,7 +117,7 @@ class GameLauncher():
 
 
     def getRunArgsList(self) -> list[str]:
-        """获取启动命令行参数"""
+        """获取启动命令行参数(不包含 Java 可执行项目)"""
         match self.VersionInfos.ComplianceLevel:
             case 0:
                 return(
@@ -122,13 +129,13 @@ class GameLauncher():
                         "-Dminecraft.launcher.version=${launcher_version}",
                         "-cp", "${classpath}",
                         "${MAINCLASS}", "${GAMEARGSPREFIX}"
-                    ] + self.VersionInfos.Json["minecraftArguments"].split() + ["${GAMEARGSSUFFIX}"]
+                    ] + self.VersionInfos.VersionJson["minecraftArguments"].split() + ["${GAMEARGSSUFFIX}"]
                 )
             case 1:
-                Arguments = ["${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}", "${MEMMAX}"]
-                Arguments.extend(self.VersionInfos.Json["arguments"]["jvm"])
-                Arguments.extend(("${LOG4J2CONFIG}", "${JVMSUFFIX}", "${MAINCLASS}", "${GAMEARGSPREFIX}",))
-                Arguments.extend(self.VersionInfos.Json["arguments"]["game"])
+                Arguments = ["${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}", "${MEMMAX}", "${LOG4J2CONFIG}"]
+                Arguments.extend(self.VersionInfos.VersionJson["arguments"]["jvm"])
+                Arguments.extend(("${JVMSUFFIX}", "${MAINCLASS}", "${GAMEARGSPREFIX}",))
+                Arguments.extend(self.VersionInfos.VersionJson["arguments"]["game"])
 
                 Output = list()
                 for Argument in Arguments:
@@ -184,12 +191,12 @@ class GameLauncher():
             case "GAMEARGSSUFFIX": return(self.VersionInfos.Configs["UnableGlobal"]["PrefixAndSuffix"]["GameSuffix"])
             case "MEMMIN": return("-Xms" + str(self.getConfig("MemoryMin")) + "M")
             case "MEMMAX": return("-Xmx" + str(self.getConfig("MemoryMax")) + "M")
-            case "LOG4J2CONFIG": return(getLog4j2Infos(InitFile=self.VersionInfos.Json, Type="Argument"))
+            case "LOG4J2CONFIG": return(getLog4j2Infos(InitFile=self.VersionInfos.VersionJson, Type="Argument"))
             case "MAINCLASS": return(self.VersionInfos.MainClass)
             case "launcher_name": return(__productname__)
             case "launcher_version": return(__fullversion__)
             case "assets_root": return(path("$ASSETS", IsPath=True))
-            case "assets_index_name": return(self.VersionInfos.AssetsVersion)
+            case "assets_index_name": return(self.VersionInfos.AssetIndexVersion)
             case "auth_xuid": return(uuid4().hex)
             case "auth_uuid": return(self.AccountObject.UUID.hex)
             case "auth_player_name": return(self.AccountObject.Name)
@@ -197,13 +204,14 @@ class GameLauncher():
             case "user_type": return(self.AccountObject.getShortType())
             case "version_name": return(self.VersionInfos.Name)
             case "version_type": return(self._replaces("launcher_name") + " " + self._replaces("launcher_version"))
-            case "classpath": return(getClassPath(VersionJson=self.VersionInfos.Json, VersionJarPath=self.VersionInfos.JarPath, Features=Features))
+            case "classpath": return(getClassPath(VersionJson=self.VersionInfos.VersionJson, VersionJarPath=self.VersionInfos.JarPath, Features=Features))
             case "natives_directory": return(self.VersionInfos.NativesPath)
             case "game_directory": return({True: self.VersionInfos.Dir, False: path("$MINECRFT", IsPath=True)}[self.getConfig("VersionIndependent")])
             case "clientid": return(uuid4().hex)
             case "resolution_width": return(self.getConfig("WindowWidth"))
             case "resolution_height": return(self.getConfig("WindowHeight"))
             case "library_directory": return(path("$LIBRERIES", IsPath=True))
+            case "user_properties": return("{}")
             case _: raise ValueError(Key)
 
 
@@ -220,7 +228,7 @@ class GameLauncher():
 
     def getJavaPathAndInfo(self, NotCheck: bool = False) -> JavaInfo:
         JavaPath = self.getConfig("JavaPath")
-        recommendJavaVersion: int = self.VersionInfos.Json["javaVersion"]["majorVersion"]
+        recommendJavaVersion: int = self.VersionInfos.VersionJson["javaVersion"]["majorVersion"]
         if JavaPath == "AUTOPICK":
             return(autoPickJava(recommendVersion=recommendJavaVersion))
         else:

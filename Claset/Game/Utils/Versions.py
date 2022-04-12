@@ -4,6 +4,7 @@ from os import listdir
 from types import NoneType
 
 from Claset.Utils import Configs, DownloadTask, path, pathAdder, dfCheck, loadFile
+from Claset.Game.Utils import Version_Client_DownloadList, AssetIndex_DownloadList
 
 __all__ = ("VersionInfos", "getVersionInfoList", "getVersionNameList",)
 
@@ -15,13 +16,12 @@ class VersionInfos():
         if FullIt:
             self.full()
         else:
-            self.ISFULL = False
+            self._FULL = False
 
 
     def full(self) -> None:
         """获取更多相关信息"""
-        if self.ISFULL:
-            return
+        if self._FULL is True: return
 
         self.Dir = pathAdder("$VERSION", self.Name)
 
@@ -30,21 +30,23 @@ class VersionInfos():
         self.Configs = Configs(ID="Game", FilePath=self.ConfigFilePath)
 
         # 版本 Json
-        self.JsonPath = pathAdder(self.Dir, self.Name + ".json")
-        self.Json: dict = loadFile(Path=self.JsonPath, Type="json")
+        self.VersionJsonPath = pathAdder(self.Dir, self.Name + ".json")
+        self.VersionJson: dict = loadFile(Path=self.VersionJsonPath, Type="json")
 
-        self.AssetsVersion = self.Json.get("assets")
-        self.ComplianceLevel = self.Json.get("complianceLevel")
-        self.MinimumLauncherVersion = self.Json.get("minimumLauncherVersion")
-        self.MainClass = self.Json.get("mainClass")
-        self.Type = self.Json.get("type")
-        self.Version = self.Json.get("version")
+        self.ID = self.VersionJson.get("id")
+        self.JarName = self.VersionJson.get("jar")
+        self.AssetIndexVersion = self.VersionJson.get("assets")
+        self.ComplianceLevel = self.VersionJson.get("complianceLevel")
+        self.MinimumLauncherVersion = self.VersionJson.get("minimumLauncherVersion")
+        self.MainClass = self.VersionJson.get("mainClass")
+        self.Type = self.VersionJson.get("type")
+        self.Version = self.VersionJson.get("version")
 
         # 兼容来自 HMCL 的配置文件
-        if "patches" in self.Json:
-            for i in self.Json["patches"]:
+        if "patches" in self.VersionJson:
+            for i in self.VersionJson["patches"]:
                 if i.get("id") == "game":
-                    if self.AssetsVersion is None: self.AssetsVersion = i.get("assets")
+                    if self.AssetIndexVersion is None: self.AssetIndexVersion = i.get("assets")
                     if self.ComplianceLevel is None: self.ComplianceLevel = i.get("complianceLevel")
                     if self.MinimumLauncherVersion is None: self.MinimumLauncherVersion = i.get("minimumLauncherVersion")
                     if self.MainClass is None: self.MainClass = i.get("mainClass")
@@ -52,8 +54,9 @@ class VersionInfos():
                     if self.Version is None: self.Version = i.get("version")
                     break
 
-        self.ID = self.Json.get("id")
-        self.JarName = self.Json.get("jar")
+        # AssetIndex Json
+        self.AssetIndexJsonPath = pathAdder("$MCAssetIndex", self.AssetIndexVersion + ".json")
+        self.AssetIndexJson = loadFile(Path=self.AssetIndexJsonPath, Type="json")
 
         # Natives 文件夹位置
         self.NativesPath = pathAdder(self.Dir, "natives")
@@ -63,7 +66,7 @@ class VersionInfos():
         else:
             self.JarPath = pathAdder(self.Dir, self.Name + ".jar")
 
-        self.ISFULL = True
+        self._FULL = True
 
 
     def getInfoStr(self, Format: str = "{Name}|{Version}|{Type}|{Dir}", OtherKeys: dict = {}) -> str:
@@ -88,6 +91,13 @@ class VersionInfos():
 
     def checkFull(self) -> list[DownloadTask]:
         """检查此版本的内容缺失情况, 返回缺失文件的 DownloadTask 列表"""
+        DownloadTaskList = list()
+        TempTaskList = Version_Client_DownloadList(InitFile=self.VersionJson, Name=self.Name)
+        TempTaskList.extend(AssetIndex_DownloadList(InitFile=self.AssetIndexJson))
+        for DownloadTask in TempTaskList:
+            if not (DownloadTask.checkExists() and DownloadTask.checkSha1()):
+                DownloadTaskList.append(DownloadTask)
+        return(DownloadTaskList)
 
 
 def getVersionNameList() -> list[str]:

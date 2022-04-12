@@ -68,11 +68,16 @@ def getSession(TheSession: Session | None = None) -> Session:
 
 
 class DownloadTask():
+    _FULL = False
+    _EXISTS = None
+    _VERIFY = None
+
     def __init__(
         self, URL: str, FileName: str | None = None, OutputPath: str | None = None, OutputPaths: str | None = None,
         Size: int | None = None, ProjectID: int | None = None, Overwrite: bool = True, Sha1: str | None = None,
         ConnectTimeout: int | None = None, ReadTimeout: int | None = None, Retry: int | None = None, Next: Any | None = None
         ) -> None:
+        """初始化数值"""
         self.URL = URL
         self.FileName = FileName
         self.OutputPath = OutputPath
@@ -81,15 +86,16 @@ class DownloadTask():
         self.ProjectID = ProjectID
         self.Overwrite = Overwrite
         self.Sha1 = Sha1
-        self.ConnectTimeout = ConnectTimeout
-        self.ReadTimeout = ReadTimeout
-        self.Retry = Retry
+        self.ConnectTimeout = ConnectTimeout or DownloadConfigs["Timeouts"]["Connect"]
+        self.ReadTimeout = ReadTimeout or DownloadConfigs["Timeouts"]["Read"]
+        self.Retry = Retry or DownloadConfigs["Retry"]
         self.Next = Next
-        self.ISFULL = False
 
 
     def full(self) -> None:
         """完善本 Task"""
+        if self._FULL is True: return
+
         # 处理缺失的项目
         if ((self.OutputPaths is None) or (self.OutputPaths == str())):
             # 如不存在 OutputPath 或 OutputPath 为空, 则使用当前位置
@@ -125,7 +131,31 @@ class DownloadTask():
         if "$" in self.OutputPaths:
             self.OutputPaths = Pathmd(self.OutputPaths, IsPath=True)
 
-        self.ISFULL = True
+        self._FULL = True
+
+
+    def checkExists(self) -> bool:
+        """检查文件是否存在"""
+        self.full()
+        if self._EXISTS is None:
+            self._EXISTS = dfCheck(Path=self.OutputPaths, Type="f")
+        return(self._EXISTS)
+
+
+    def checkSha1(self) -> bool:
+        """检查文件 Sha1 是否正确"""
+        self.full()
+        if not (self.checkExists() and (self.Sha1 is not None)): return(True)
+        if self._VERIFY is None:
+            self._VERIFY = sha1(loadFile(Path=self.OutputPaths, Type="bytes")).hexdigest() == self.Sha1
+        return(self._VERIFY)
+
+
+    def clear(self) -> None:
+        """清理属性"""
+        self._FULL = False
+        self._EXISTS = None
+        self._VERIFY = None
 
 
 class DownloadManager():
@@ -137,7 +167,7 @@ class DownloadManager():
 
     def __init__(self):
         # 线程池(ThreadPool)
-        self.ThreadPool = ThreadPoolExecutor(max_workers=DownloadConfigs["MaxThread"], thread_name_prefix="DownloadTask")
+        self.ThreadPool = ThreadPoolExecutor(max_workers=DownloadConfigs["MaxThread"], thread_name_prefix="DownloadTasks")
 
         # 定义全局 Requests Session
         if DownloadConfigs["UseGobalRequestsSession"] is True:
@@ -149,8 +179,9 @@ class DownloadManager():
 
     def Download(self, Task: DownloadTask) -> DownloadTask:
         """简易下载器 (Download) 的代理运行器"""
-        if not Task.ISFULL:
-            Task.full()
+        Task.full()
+        if Task.checkExists() and Task.checkSha1():
+            return(Task)
 
         Retry = True
         while Retry:
@@ -161,6 +192,7 @@ class DownloadManager():
                 self.download(
                     URL=Task.URL,
                     OutputPaths=Task.OutputPaths,
+                    NotCheck=False,
                     Size=Task.Size,
                     Sha1=Task.Sha1,
                     Overwrite=Task.Overwrite,
@@ -226,34 +258,41 @@ class DownloadManager():
                     case _: raise ValueError(StopType)
 
                 if StopType != "Stopping":
+                    Task.clear()
                     return(Task)
 
 
     def download(
-        self,
-        URL:            str, # 链接地址
-        OutputPaths:    str, # 输出路径
-        Size:           int | None = None, # 文件大小(字节)
-        Overwrite:     bool | None = None, # 覆盖已有的文件
-        Sha1:           str | None = None, # 使用sha1验证下载结果
-        ConnectTimeout: int | None = None, # 连接超时(若为空则使用全局设置)
-        ReadTimeout:    int | None = None  # 下载超时(若为空则使用全局设置)
+        self, URL: str, OutputPaths: str, NotCheck: bool = False, Size: int | None = None,
+        Overwrite: bool | None = None, Sha1: str | None = None, ConnectTimeout: int | None = None, ReadTimeout: int | None = None
         ) -> None:
-        """简易下载器"""
-        if dfCheck(Path=OutputPaths, Type="f"):
+        """
+        简易下载器
+        * URL: 链接地址
+        * OutputPaths: 输出路径
+        * NotCheck: 不检查已存在的文件的大小和 Sha1
+        * Size: 文件大小(字节)
+        * Overwrite: 覆盖已有的文件
+        * Sha1: 使用sha1验证下载结果
+        * ConnectTimeout: 连接超时(若为空则使用全局设置)
+        * ReadTimeout: 下载超时(若为空则使用全局设置)
+        """
+        if (not NotCheck) and dfCheck(Path=OutputPaths, Type="f"):
             if not Overwrite:
+                TheFile = loadFile(Path=OutputPaths, Type="bytes")
                 if Sha1 is not None:
-                    if (sha1(loadFile(Path=OutputPaths, Type="bytes")).hexdigest() == Sha1):
+                    if (sha1(TheFile).hexdigest() == Sha1):
                         raise Ex_Download.FileExist
                     else:
                         Logger.warning("File: \"%s\" sha1 verify Error! ReDownload it", baseName(OutputPaths))
+                elif Size is not None:
+                    if len(TheFile) != Size:
+                        raise Ex_Download.SizeError(len(TheFile))
                 else:
                     raise Ex_Download.FileExist
 
-        if ConnectTimeout is None:
-            ConnectTimeout = DownloadConfigs["Timeouts"]["Connect"]
-        if ReadTimeout is None:
-            ReadTimeout = DownloadConfigs["Timeouts"]["Read"]
+        ConnectTimeout = ConnectTimeout or DownloadConfigs["Timeouts"]["Connect"]
+        ReadTimeout = ReadTimeout or DownloadConfigs["Timeouts"]["Read"]
 
         if DownloadConfigs["UseGobalRequestsSession"]:
             UsedSession = self.RequestsSession
@@ -266,27 +305,21 @@ class DownloadManager():
 
         try:
             with UsedSession.get(URL, timeout=(ConnectTimeout, ReadTimeout,)) as Request:
-                StatusCode = str(Request.status_code)
-                if DownloadConfigs["ErrorByStatusCode"] and (StatusCode[0] in ["4", "5"]): Request.raise_for_status()
                 while True:
                     Temp = Request.raw.read(1024)
                     if self.Stopping: raise Ex_Download.Stopping
                     if Temp == bytes(): break
                     File.write(Temp)
+            if DownloadConfigs["ErrorByStatusCode"] and (str(Request.status_code)[0] in ("4", "5",)):
+                Request.raise_for_status()
         except Ex_Requests.ConnectTimeout:
             raise Ex_Download.ConnectTimeout
         except Ex_Requests.ReadTimeout:
             raise Ex_Download.ReadTimeout
-        except (
-            Ex_Requests.MissingSchema,
-            Ex_Requests.InvalidSchema
-        ): raise Ex_Download.SchemaError
-        except (
-            Ex_Requests.ProxyError,
-            Ex_Requests.HTTPError,
-            Ex_Requests.SSLError,
-            Ex_Requests.ConnectionError
-        ): raise Ex_Download.DownloadExceptions
+        except (Ex_Requests.MissingSchema, Ex_Requests.InvalidSchema):
+            raise Ex_Download.SchemaError
+        except (Ex_Requests.ProxyError, Ex_Requests.HTTPError, Ex_Requests.SSLError, Ex_Requests.ConnectionError):
+            raise Ex_Download.DownloadExceptions
 
         if ((Size is not None) and (len(File.getbuffer())) != Size): raise Ex_Download.SizeError
         if ((Sha1 is not None) and (sha1(File.getbuffer()).hexdigest() != Sha1)): raise Ex_Download.HashError

@@ -15,6 +15,7 @@ from .MinecraftAccount import MinecraftAccount
 from .Exceptions import *
 
 Logger = getLogger(__name__)
+Accounts = dict()
 
 
 class AccountManager():
@@ -132,7 +133,8 @@ class AccountManager():
     def getAccountObject(self, ID: int | None = None) -> Account:
         """通过用户 ID 获取对应的 AccountObject"""
         if ID is None: ID = self.getDefault()
-        return(Account(Account=self.Configs["Accounts"][ID], Manager=self))
+        if ID not in Accounts: Accounts[ID] = Account(Account=self.Configs["Accounts"][ID], Manager=self)
+        return(Accounts[ID])
 
 
     def getAccountList(self, ID: int | None = None, UUID: Class_UUID | str | None = None, Name: str | None = None, Type: str | None = None) -> list[dict]:

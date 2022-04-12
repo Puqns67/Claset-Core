@@ -81,7 +81,7 @@ def fixJavaPath(Path: str) -> str:
 
 def versionFormater(Version: str) -> list:
     """格式化 Java 的版本号"""
-    Version = Version.replace(".",  " ").split()
+    Version: list[str] = Version.replace(".",  " ").split()
     if Version[0] == "1":
         Version[0] = Version[1]
         Version[1] = "0"
@@ -125,7 +125,7 @@ def autoPickJava(recommendVersion: int, JavaInfoList: list[JavaInfo] | None = No
 
     if recommendVersion <= 16 and recommendVersion >= 8:
         for i in JavaInfoList: # 优先使用 LTS 版本
-            if i["Version"][0] in [8, 11, 16]:
+            if i["Version"][0] in [8, 11, 17]:
                 return(i)
         for i in JavaInfoList:
             if i["Version"][0] <= 16 and i["Version"][0] >= 8:
