@@ -14,49 +14,62 @@ OriginalVersion = version()
 
 class Base():
     """用于获取各类风格的 Platform 字符串基类"""
-    def getFormated(self, Format: str = "Python") -> str:
+    Source = str()
+    def formats(self, format: str) -> str:
+        """格式化方法"""
+        return(self.Source)
+
+    def get(self, Format: str | dict = "Python") -> str:
         """用于获取各类风格的 Platform 字符串"""
-        return(str())
+        if isinstance(Format, str):
+            return(self.formats(format=Format))
+        elif isinstance(Format, dict):
+            return(Format[self.Source])
+        else:
+            ValueError(Format)
 
 
     def getLower(self, Format: str = "Python") -> str:
-        return(self.getFormated(Format=Format).lower())
+        return(self.get(Format=Format).lower())
 
 
     def getUpper(self, Format: str = "Python") -> str:
-        return(self.getFormated(Format=Format).upper())
+        return(self.get(Format=Format).upper())
 
 
 class System(Base):
     """用于获取各类风格的 System 字符串"""
-    def getFormated(self, Format: str = "Python") -> str:
-        """返回已格式化的 System 字符串"""
-        match Format:
+    Source = OriginalSystem
+    def formats(self, format: str) -> str:
+        """格式化方法"""
+        match format:
             case "Minecraft":
                 try:
                     return(SystemFormats["Minecraft"][OriginalSystem])
                 except KeyError:
                     raise UnsupportSystemHost(system())
             case "Python": return(OriginalSystem)
-            case _: raise ValueError(Format)
+            case _: raise ValueError(format)
 
 
 class Arch(Base):
     """用于获取各类风格的 Arch 字符串"""
-    def getFormated(self, Format: str = "Python") -> str:
-        """返回已格式化的 Arch 字符串"""
-        match Format:
+    Source = OriginalArch
+    def formats(self, format: str) -> str:
+        """格式化方法"""
+        match format:
             case "Minecraft": return(ArchFormats["Minecraft"][OriginalArch.lower()])
-            case "PureNumbers": return(self.getFormated(Format="Minecraft").replace("x", str()))
+            case "PureNumbers": return(self.get(Format="Minecraft").replace("x", str()))
             case "Python": return(OriginalArch)
-            case _: raise ValueError(Format)
+            case _: raise ValueError(format)
 
 
 class Version(Base):
     """用于获取各类风格的 Version 字符串"""
-    def getFormated(self, Format: str = "Python") -> str:
-        """返回已格式化的 Version 字符串"""
-        match Format:
+    Source = OriginalVersion
+    def formats(self, format: str) -> str:
+        """格式化方法"""
+        match format:
             case "Python": return(OriginalVersion)
-            case _: raise ValueError(Format)
+            case _: raise ValueError(format)
 

@@ -117,7 +117,7 @@ class Auth():
         ).json()
 
         self.XboxLiveToken = XboxLiveReturned["Token"]
-        self.XboxLiveTokenExpiresTime = int(mktime(strptime(XboxLiveReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f"))) - 5
+        self.XboxLiveTokenExpiresTime = mktime(strptime(XboxLiveReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f")) - 5
         self.XboxLiveUserHash = XboxLiveReturned["DisplayClaims"]["xui"][0]["uhs"]
 
 
@@ -137,7 +137,7 @@ class Auth():
         ).json()
 
         self.XboxXstsToken = XboxXstsReturned["Token"]
-        self.XboxXstsTokenExpiresTime = int(mktime(strptime(XboxXstsReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f"))) - 5
+        self.XboxXstsTokenExpiresTime = mktime(strptime(XboxXstsReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f")) - 5
         self.XboxXstsUserHash = XboxXstsReturned["DisplayClaims"]["xui"][0]["uhs"]
 
 
@@ -154,5 +154,5 @@ class Auth():
         MinecraftRespons.raise_for_status()
         MinecraftReturned = MinecraftRespons.json()
         self.MinecraftAccessToken = MinecraftReturned["access_token"]
-        self.MinecraftAccessTokenExpiresTime = MinecraftReturned["expires_in"] + int(time()) - 5
+        self.MinecraftAccessTokenExpiresTime = MinecraftReturned["expires_in"] + time() - 5
 

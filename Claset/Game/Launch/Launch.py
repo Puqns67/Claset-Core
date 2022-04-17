@@ -6,17 +6,19 @@ from types import NoneType
 from typing import Any
 from uuid import uuid4
 from subprocess import Popen, DEVNULL
+from time import strftime, localtime
 
 from Claset import getDownloader, __fullversion__, __productname__, LaunchedGames
 from Claset.Accounts import AccountManager, Account
 from Claset.Game.Utils import VersionInfos, ResolveRule, getClassPath, extractNatives, getLog4j2Infos
-from Claset.Utils import Configs, path, getValueFromDict, OriginalSystem
+from Claset.Utils import Configs, System, path, pathAdder, safetyPath, getValueFromDict
+from Claset.Utils.File import saveFile
 from Claset.Utils.Others import ReMatchFormatDollar
 from Claset.Utils.JavaHelper import autoPickJava, getJavaInfo, JavaInfo
 
 from .Exceptions import *
 
-if OriginalSystem == "Windows":
+if System().get() == "Windows":
     from subprocess import (
         REALTIME_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, ABOVE_NORMAL_PRIORITY_CLASS,
         NORMAL_PRIORITY_CLASS, BELOW_NORMAL_PRIORITY_CLASS, IDLE_PRIORITY_CLASS
@@ -51,44 +53,62 @@ class GameLauncher():
             raise LauncherVersionError(self.VersionInfos.MinimumLauncherVersion)
 
         self.Status: str = "UNRUNNING"
-        self.Downloader = None
 
 
-    def launchGame(self, PrintToTerminal: bool = True) -> None:
-        """启动游戏"""
-        self.checkStatus(("STOPPED", "UNRUNNING",), Raise=True)
-        self.setStatus("STARTING")
+    def launchGame(self, Type: str = "SUBPROCESS", PrintToTerminal: bool = True, SaveTo: str | None = None) -> None:
+        """
+        启动游戏
+        * Type: 启动模式, 默认为 "SUBPROCESS"
+
+        启动模式：
+        * SUBPROCESS: 使用 Python 子进程 (subprocess) 库启动游戏, 支持对游戏进行管理
+            1. PrintToTerminal: 在终端中显示游戏日志输出, 默认为 True
+        * SAVESCRIPT: 将对应版本的启动脚本保存为文件
+            1. SaveTo: 保存至文件时的文件位置, 默认为 None, 为 None 时将以 {Name}-{DateAndTime}.[sh|bat] 格式的文件名保存至当前工作目录下
+        """
+        if Type != "SAVESCRIPT":
+            self.checkStatus(("STOPPED", "UNRUNNING",), Raise=True)
+            self.setStatus("STARTING")
         if not self.getConfig("NotCheckGame"):
             DownloadTasks = self.VersionInfos.checkFull()
             if len(DownloadTasks) >= 1:
-                if self.Downloader is None:
+                if not hasattr(self, "Downloader"):
                     self.Downloader = getDownloader()
                 self.Downloader.waitProject(self.Downloader.addTask(DownloadTasks))
 
-        self.PickedJava = self.getJavaPathAndInfo(NotCheck=self.getConfig("NotCheckJvm"))
+        if not hasattr(self, "PickedJava"):
+            self.PickedJava = self.getJavaPathAndInfo(NotCheck=self.getConfig("NotCheckJvm"))
 
-        # 解析 Natives
+        # 提取 Natives
         extractNatives(VersionJson=self.VersionInfos.VersionJson, ExtractTo=self.VersionInfos.NativesPath, Features=Features)
 
         # 获取启动命令行参数
-        self.RunArgs = [self.PickedJava["Path"]] + self.getRunArgs()
-        self.RunCommand = " ".join(self.RunArgs)
+        self.RunArgs = self.getRunArgs()
 
         # 获取工作目录
-        if self.getConfig("VersionIndependent"): self.RunCwd = self.VersionInfos.Dir
-        else: self.RunCwd = path("$MINECRFT", IsPath=True)
-        if PrintToTerminal: Stdout = None
-        else: Stdout = DEVNULL
-        if OriginalSystem == "Windows": WindowsCreationFlags = SubProcessPriorityClasses[self.getConfig("WindowsPriority")]
-        else: WindowsCreationFlags = 0
+        self.RunCwd = self.VersionInfos.Dir if self.getConfig("VersionIndependent") else path("$MINECRFT", IsPath=True)
 
-        Logger.info("Launch Game: %s", self.VersionInfos.Name)
+        Logger.info("Using Java %s to launch game: %s", self.PickedJava["Path"], self.VersionInfos.Name)
         Logger.debug("Run code: %s", self.RunArgs)
 
-        self.Game = Popen(args=self.RunArgs, cwd=self.RunCwd, stdout=Stdout, creationflags=WindowsCreationFlags)
-
-        LaunchedGames.append(self)
-        self.setStatus("RUNNING")
+        match Type:
+            case "SUBPROCESS":
+                Stdout = None if PrintToTerminal else DEVNULL
+                WindowsCreationFlags = SubProcessPriorityClasses[self.getConfig("WindowsPriority")] if System().get() else 0
+                self.Game = Popen(args=[self.PickedJava["Path"]] + self.RunArgs, cwd=self.RunCwd, stdout=Stdout, creationflags=WindowsCreationFlags)
+                LaunchedGames.append(self)
+                self.setStatus("RUNNING")
+            case "SAVESCRIPT":
+                SafetyRunCwd = safetyPath(self.RunCwd)
+                SafetyJavaPath = safetyPath(self.PickedJava["Path"])
+                SafetyRunCommand = str()
+                if SaveTo is None:
+                    NowTime = strftime("%Y-%m-%d-%H-%M-%S", localtime())
+                    FormatName = System().get(Format={"Linux": "sh", "Windows": "bat"})
+                    SaveTo = pathAdder("$PREFIX", f"{self.VersionInfos.Name}-{NowTime}.{FormatName}")
+                for i in self.RunArgs:
+                    SafetyRunCommand += " " + safetyPath(i)
+                saveFile(Path=SaveTo, Type="text", FileContent=f"cd {SafetyRunCwd}\n{SafetyJavaPath}{SafetyRunCommand}")
 
 
     def waitGame(self) -> None:
@@ -181,7 +201,7 @@ class GameLauncher():
         return(Output)
 
 
-    def _replaces(self, Key: str) -> str | tuple | list | None:
+    def _replaces(self, Key: str) -> Any:
         """替换"""
         match Key:
             case "CLASETJVMHEADER": return(ClasetJvmHeader)

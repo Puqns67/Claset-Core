@@ -18,7 +18,7 @@ Logger = getLogger(__name__)
 
 
 def extractNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = None):
-    """处理 Natives"""
+    """提取 Natives"""
     for Libraries in VersionJson["libraries"]:
         NativesObject = getNativesObject(Libraries=Libraries, Features=Features, getExtract=True)
         if NativesObject is not None:

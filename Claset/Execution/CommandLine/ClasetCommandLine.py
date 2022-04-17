@@ -67,7 +67,7 @@ class ClasetCommandLine(Cmd):
                 self.TranslateObj = GNUTranslations(fp=MoFile)
 
         self._ = self.TranslateObj.gettext
-        self.intro = self._("Claset - 内建命令行模式\n当前版本: {}".format(Claset.__fullversion__))
+        self.intro = self._("Claset - 内建命令行模式\n当前版本: {}").format(Claset.__fullversion__)
         self.prompt = self._("> ")
 
         # 为 Cmd2 进行部分汉化
@@ -80,10 +80,12 @@ class ClasetCommandLine(Cmd):
         """为参数解析器附加参数"""
         InstallGame.add_argument("-V", "--Version", help=self._("游戏版本, 不指定时使用最新的正式版"))
         InstallGame.add_argument("GameName", help=self._("游戏实例名"))
-        LaunchGame.add_argument("-S", "--ShowGameLogs", action="store_true", help=self._("输出运行日志至终端"))
+        LaunchGame.add_argument("-T", "--Type", default="SUBPROCESS", choices=("SUBPROCESS", "SAVESCRIPT",), help=self._("指定启动模式, 现支持 \"SUBPROCESS\" 和 \"SAVESCRIPT\", 默认为 SUBPROCESS"))
         LaunchGame.add_argument("-Un", "--UserName", default=None, help=self._("指定账户的类型为名称, 如有重复则按账户顺序取第一个"))
         LaunchGame.add_argument("-Uu", "--UserUUID", default=None, help=self._("指定账户的类型为 UUID"))
         LaunchGame.add_argument("-Ui", "--UserID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
+        LaunchGame.add_argument("--ShowGameLogs", action="store_true", help=self._("输出运行日志至终端"))
+        LaunchGame.add_argument("--SaveToFile", default=None, help=self._("指定保存运行脚本的路径"))
         LaunchGame.add_argument("GameName", help=self._("游戏实例名"))
         RemoveGame.add_argument("GameName", help=self._("游戏实例名"))
         CreateAccount.add_argument("-N", "--AccountName", help=self._("账户名称, 此选项仅可使用在账户类型为离线时使用"))
@@ -157,7 +159,7 @@ class ClasetCommandLine(Cmd):
             self.RichConsole.print("游戏实例 \"{}\" 未找到".format(init.GameName))
             return
 
-        GameLauncher.launchGame(PrintToTerminal=init.ShowGameLogs)
+        GameLauncher.launchGame(Type=init.Type, PrintToTerminal=init.ShowGameLogs, SaveTo=init.SaveToFile)
 
 
     def do_ListGame(self, _: Namespace):

@@ -3,6 +3,7 @@
 
 from logging import getLogger
 from os.path import basename as baseName
+from re import compile
 
 from Claset.Utils import AdvancedPath, DownloadTask, path, pathAdder, formatDollar
 
@@ -14,6 +15,7 @@ __all__ = (
     "Version_Client_DownloadList", "Version_Server_DownloadList", "Version_To_AssetIndex",
     "AssetIndex_DownloadList", "getClassPath", "getLog4j2Infos",
 )
+ReMatchLibraryName = compile(r"^([\S\d\.-]+):([\S\d-]+):([\S\d\.-]+)$")
 Logger = getLogger(__name__)
 
 
@@ -151,11 +153,13 @@ def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None =
             if ResolveRule(Items=Libraries["rules"], Features=Features) == False:
                 continue
         try:
-            Temp = pathAdder("$LIBRERIES/", Libraries["downloads"]["artifact"]["path"])
-        except KeyError:
+            LibraryPath, LibraryName, LibraryVersion = ReMatchLibraryName.match(Libraries["name"]).groups()
+        except (AttributeError, ValueError):
+            Logger.warning("Unpack Library name error, source string: %s", Libraries["name"])
             continue
-        if Temp not in Output:
-            Output += Temp + ";"
+        LibraryFullPath = pathAdder("$LIBRERIES", LibraryPath.split("."), f"{LibraryName}/{LibraryVersion}/{LibraryName}-{LibraryVersion}.jar")
+        if LibraryFullPath not in Output:
+            Output += LibraryFullPath + ";"
     Output += VersionJarPath
     return(Output)
 

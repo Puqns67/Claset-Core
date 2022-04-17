@@ -9,7 +9,7 @@ from re import compile as ReCompile
 from .Confs.Paths import File
 from .Exceptions.Path import SearchError, PrefixsMissingKey
 
-__all__ = ("PathRegex", "path", "pathAdder", "setPerfix")
+__all__ = ("PathRegex", "path", "pathAdder", "setPerfix", "safetyPath")
 PathRegex = ReCompile(r"^(.*)\$([a-zA-Z]*)(.*)$")
 PathConfigs = None
 
@@ -54,12 +54,16 @@ def pathAdder(*Paths: list | tuple | str) -> str:
             PathList.extend(i)
         elif isinstance(i, (int, float,)):
             PathList.append(str(i))
-    Path = "/".join(PathList)
-    if "$" in Path: Path = path(Path)
-    return(abspath(Path))
+    return(path("/".join(PathList), IsPath=True))
 
 
 def setPerfix(NewPerfix: str) -> None:
     """设置当前工作路径"""
     chdir(abspath(NewPerfix))
+
+
+def safetyPath(Input: str) -> str:
+    """获得更安全的路径"""
+    if " " in Input: Input = f"\"{Input}\""
+    return(Input)
 
