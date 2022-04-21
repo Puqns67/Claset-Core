@@ -4,7 +4,7 @@ from platform import system, machine, version
 
 from .Exceptions.Claset import UnsupportSystemHost
 
-__all__ = ("System", "Arch", "Version", "OriginalSystem", "OriginalArch", "OriginalVersion",)
+__all__ = ("System", "Arch", "Version", "OriginalSystem", "OriginalArch", "OriginalVersion", "formatPlatform")
 SystemFormats = {"Minecraft": {"Windows": "windows", "Darwin": "osx", "Linux": "linux"}}
 ArchFormats = {"Minecraft": {"amd64": "x64", "x86_64": "x64", "x64": "x64", "i386": "x86", "x86": "x86", "i686": "x86"}}
 OriginalSystem = system()
@@ -72,4 +72,19 @@ class Version(Base):
         match format:
             case "Python": return(OriginalVersion)
             case _: raise ValueError(format)
+
+
+def formatPlatform(String: str, Formats: dict) -> str:
+    """
+    使用各异的格式格式化字符串
+    * String: 格式字符串, 以 {KEYNAME} 格式输入
+    * Formats: 格式形如 {"KEYNAME": {"Type": "Type name", "Format": "Format name"}, ...}
+    """
+    Formated = dict()
+    """获取格式化后的对应字符串"""
+    for Key in Formats:
+        Formater = {"System": System, "Arch": Arch, "Version": Version}[Formats[Key]["Type"]]
+        Formated[Key] = Formater().get(Formats[Key]["Format"])
+
+    return(String.format_map(Formated))
 

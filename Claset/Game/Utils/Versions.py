@@ -4,7 +4,7 @@ from os import listdir
 from types import NoneType
 
 from Claset.Utils import Configs, DownloadTask, path, pathAdder, dfCheck, loadFile
-from Claset.Game.Utils import Version_Client_DownloadList, AssetIndex_DownloadList
+from Claset.Game.Utils import Version_Client_DownloadTasks, AssetIndex_DownloadTasks
 
 __all__ = ("VersionInfos", "getVersionInfoList", "getVersionNameList",)
 
@@ -20,7 +20,7 @@ class VersionInfos():
 
 
     def full(self) -> None:
-        """获取更多相关信息"""
+        """获取更多此版本的相关信息"""
         if self._FULL is True: return
 
         self.Dir = pathAdder("$VERSION", self.Name)
@@ -56,10 +56,13 @@ class VersionInfos():
 
         # AssetIndex Json
         self.AssetIndexJsonPath = pathAdder("$MCAssetIndex", self.AssetIndexVersion + ".json")
-        self.AssetIndexJson = loadFile(Path=self.AssetIndexJsonPath, Type="json")
+        if dfCheck(Path=self.AssetIndexJsonPath, Type="d"):
+            self.AssetIndexJson = loadFile(Path=self.AssetIndexJsonPath, Type="json")
+        else:
+            self.AssetIndexJson = None
 
         # Natives 文件夹位置
-        self.NativesPath = pathAdder(self.Dir, "natives")
+        self.NativesPath = pathAdder(self.Dir, self.Configs["UnableGlobal"]["NativesDir"])
 
         if self.JarName is not None:
             self.JarPath = pathAdder(self.Dir, self.JarName + ".jar")
@@ -91,13 +94,14 @@ class VersionInfos():
 
     def checkFull(self) -> list[DownloadTask]:
         """检查此版本的内容缺失情况, 返回缺失文件的 DownloadTask 列表"""
-        DownloadTaskList = list()
-        TempTaskList = Version_Client_DownloadList(InitFile=self.VersionJson, Name=self.Name)
-        TempTaskList.extend(AssetIndex_DownloadList(InitFile=self.AssetIndexJson))
-        for DownloadTask in TempTaskList:
+        self.full()
+        DownloadTasks = list()
+        TempTasks = Version_Client_DownloadTasks(InitFile=self.VersionJson, Name=self.Name)
+        TempTasks.extend(AssetIndex_DownloadTasks(InitFile=self.AssetIndexJson))
+        for DownloadTask in TempTasks:
             if not (DownloadTask.checkExists() and DownloadTask.checkSha1()):
-                DownloadTaskList.append(DownloadTask)
-        return(DownloadTaskList)
+                DownloadTasks.append(DownloadTask)
+        return(DownloadTasks)
 
 
 def getVersionNameList() -> list[str]:

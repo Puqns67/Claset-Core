@@ -9,7 +9,7 @@ from os.path import basename as baseName, split as splitPath
 from random import randint
 from re import search
 from time import sleep
-from typing import Any
+from typing import Iterable, Any
 
 from Claset import __fullversion__
 from requests import (
@@ -166,7 +166,7 @@ class DownloadManager():
     Stopping = False
 
     def __init__(self):
-        # 线程池(ThreadPool)
+        # 线程池 (ThreadPool)
         self.ThreadPool = ThreadPoolExecutor(max_workers=DownloadConfigs["MaxThread"], thread_name_prefix="DownloadTasks")
 
         # 定义全局 Requests Session
@@ -181,6 +181,7 @@ class DownloadManager():
         """简易下载器 (Download) 的代理运行器"""
         Task.full()
         if Task.checkExists() and Task.checkSha1():
+            self.addJobToProject(Task.ProjectID, CompletedTasksCount=1)
             return(Task)
 
         Retry = True
@@ -252,9 +253,9 @@ class DownloadManager():
                         Logger.warning("Next Error: ", exc_info=True)
 
                 match StopType:
-                    case "Downloaded": Logger.info("File \"%s\" Downloaded", Task.FileName)
+                    case "Downloaded": Logger.info("File \"%s\" Downloaded", Task.OutputPaths)
                     case "Stopping": pass
-                    case "FileExist": Logger.info("File \"%s\" is Exist, Skipping", Task.FileName)
+                    case "FileExist": Logger.info("File \"%s\" is Exist, Skipping", Task.OutputPaths)
                     case _: raise ValueError(StopType)
 
                 if StopType != "Stopping":
@@ -328,7 +329,7 @@ class DownloadManager():
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
 
 
-    def addTask(self, InputTasks: list[DownloadTask] | DownloadTask, MainProjectID: int | None = None) -> int:
+    def addTask(self, InputTasks: Iterable[DownloadTask] | DownloadTask, MainProjectID: int | None = None) -> int:
         """添加任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         # 如果正在添加任务则不等待添加完成
         if self.Stopping:
@@ -340,7 +341,7 @@ class DownloadManager():
         self.Adding = True
 
         if isinstance(InputTasks, DownloadTask):
-            InputTasks = [InputTasks]
+            InputTasks = (InputTasks,)
             JobTotal = 1
         else:
             JobTotal = len(InputTasks)
@@ -383,7 +384,7 @@ class DownloadManager():
         if setProjectID is None:
             while True:
                 NewProjectID = randint(1,4096)
-                if not (NewProjectID in self.Projects):
+                if NewProjectID not in self.Projects:
                     break
         else:
             if setProjectID in self.Projects:

@@ -111,13 +111,18 @@ class ClasetCommandLine(Cmd):
         """安装游戏实例"""
         Downloader = Claset.getDownloader()
         GameInstaller = Claset.Game.GameInstaller(VersionName=init.GameName, MinecraftVersion=init.Version, Downloader=Downloader, WaitDownloader=False)
-        GameInstaller.InstallVanilla()
+        self.RichConsole.print(self._("正在检查已存在的文件..."))
+        try:
+            GameInstaller.InstallVanilla()
+        except Claset.Game.Install.Exceptions.VanillaInstalled:
+            self.RichConsole.print(self._("指定的版本名 \"{}\" 重复, 请使用其他版本名!").format(init.GameName))
+            return
 
         InstallProgressBar = Progress(
             TextColumn(self._("[yellow]安装游戏实例 [bold blue]\"{task.description}\""), justify="right"),
             BarColumn(bar_width=None),
             "[progress.percentage]{task.percentage:>3.1f}%",
-            self._("[green]已完成[yellow]/[blue]需检查[cyan]文件数[white]:[green]{task.completed}[yellow]/[blue]{task.total}"),
+            self._("[green]已完成[yellow]/[blue]需下载[cyan]文件数[white]:[green]{task.completed}[yellow]/[blue]{task.total}"),
             console=self.RichConsole
         )
 

@@ -11,3 +11,7 @@ class DownloadError(InstallError):
 
 class UndefinedMirror(InstallError):
     """未定义的镜像源"""
+
+class VanillaInstalled(InstallError):
+    """原版已安装"""
+

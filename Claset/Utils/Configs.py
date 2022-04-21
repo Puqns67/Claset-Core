@@ -6,6 +6,7 @@ from re import compile as reCompile
 from typing import Any
 from json import JSONDecodeError
 
+from .Path import path
 from .File import loadFile, saveFile, dfCheck, removeFile
 from .Others import getValueFromDict, fixType
 
@@ -34,8 +35,8 @@ class Configs():
             if ConfigInfos["Path"][ID] == "$NONGLOBAL$":
                 raise Ex_Configs.ConfigNonGlobalMissingFilePath
             else:
-                self.FilePath = "$CONFIG/" + ConfigInfos["Path"][ID]
-        else: self.FilePath = FilePath
+                self.FilePath = path("$CONFIG/" + ConfigInfos["Path"][ID], IsPath=True)
+        else: self.FilePath = path(FilePath, IsPath=True)
 
         self.TheConfig = self.getConfig()
         self.NowVersion = self.TheConfig["VERSION"]
@@ -76,16 +77,17 @@ class Configs():
     def getConfig(self) -> dict:
         """取得配置文件"""
         # 判断配置文件是否存在, 存在则查看是否需要检查更新, 不存在则生成配置文件
-        if dfCheck(Path=self.FilePath, Type="f") == False:
-            self.genConfig(OverWrite=False)
+        if not dfCheck(Path=self.FilePath, Type="f"):
+            self.genConfig()
         # 读取文件并返回数据
         try:
             TheConfig = loadFile(Path=self.FilePath, Type="json")
         except JSONDecodeError:
             Logger.warning("Decode Config \"%s\" error, delete it", self.ID)
             removeFile(self.FilePath)
+            self.genConfig()
             TheConfig = loadFile(Path=self.FilePath, Type="json")
-        finally:
+        else:
             return(TheConfig)
 
 
@@ -132,15 +134,15 @@ class Configs():
 
     def updateConfig(self, TargetVersion: int | None = None, Differences: list | None = None) -> None:
         """更新或降级配置文件版本至目标版本(TargetVersion)"""
-        # 处理版本数据
-        if TargetVersion:
-            Logger.info("Update Config (%s) From Version %s to Version %s", self.ID, self.NowVersion, TargetVersion)
-        else:
-            Logger.info("Update Config (%s) From Version %s to last Version", self.ID, self.NowVersion)
-
         if Differences is not None:
             DifferenceS = Differences
         else:
+            # 处理版本数据
+            if TargetVersion:
+                Logger.info("Update Config (%s) From Version %s to Version %s", self.ID, self.NowVersion, TargetVersion)
+            else:
+                Logger.info("Update Config (%s) From Version %s to last Version", self.ID, self.NowVersion)
+
             if TargetVersion is None:
                 TargetVersion = self.TargetVersion
             if TargetVersion == 0:
@@ -151,14 +153,11 @@ class Configs():
             else:
                 Reverse = False
             DifferenceS = self.getDifferenceS(TargetVersion=TargetVersion, Reverse=Reverse)
-
-        if len(DifferenceS) >= 1:
-            for Difference in DifferenceS:
-                Type, Key = ReFindTypeAndKey.match(Difference).groups()
-                self.processConfig(Key=Key, Type=Type)
-
-        if Differences is None:
             self.TheConfig = self.setVersion(Config=self.TheConfig, Version=TargetVersion)
+
+        for Difference in DifferenceS:
+            Type, Key = ReFindTypeAndKey.match(Difference).groups()
+            self.processConfig(Key=Key, Type=Type)
 
         self.saveConfig()
 

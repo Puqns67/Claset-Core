@@ -86,12 +86,12 @@ class Logs():
         return(LogName)
 
 
-    def ThreadProcessLogs(self, Type: str | None = None) -> None:
+    def threadProcessLogs(self, Type: str | None = None) -> None:
         """使用独立线程处理老日志"""
-        Thread(target=self.ProcessLogs, kwargs={"Type": Type}).start()
+        Thread(target=self.processLogs, kwargs={"Type": Type}).start()
 
 
-    def ProcessLogs(self, Type: str | None = None) -> None:
+    def processLogs(self, Type: str | None = None) -> None:
         """处理老日志"""
         # 让日志文件名以时间排序
         FilelistForTime = dict()

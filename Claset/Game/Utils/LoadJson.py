@@ -12,8 +12,8 @@ from .Exceptions import TargetVersionNotFound
 
 __all__ = (
     "Versionmanifest_VersionList", "VersionManifest_To_Version",
-    "Version_Client_DownloadList", "Version_Server_DownloadList", "Version_To_AssetIndex",
-    "AssetIndex_DownloadList", "getClassPath", "getLog4j2Infos",
+    "Version_Client_DownloadTasks", "Version_Server_DownloadTasks", "Version_To_AssetIndex",
+    "AssetIndex_DownloadTasks", "getClassPath", "getLog4j2Infos",
 )
 ReMatchLibraryName = compile(r"^([\S\d\.-]+):([\S\d-]+):([\S\d\.-]+)$")
 Logger = getLogger(__name__)
@@ -45,7 +45,7 @@ def VersionManifest_To_Version(InitFile: dict, TargetVersion: str | None) -> Dow
     raise TargetVersionNotFound(TargetVersion)
 
 
-def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict()) -> list[DownloadTask]:
+def Version_Client_DownloadTasks(InitFile: dict, Name: str, Types: dict = dict()) -> list[DownloadTask]:
     Tasks = list()
 
     # Client
@@ -99,7 +99,7 @@ def Version_Client_DownloadList(InitFile: dict, Name: str, Types: dict = dict())
     return(Tasks)
 
 
-def Version_Server_DownloadList(InitFile: dict, SaveTo: str) -> list[DownloadTask]:
+def Version_Server_DownloadTasks(InitFile: dict, SaveTo: str) -> list[DownloadTask]:
     """从 Version 获取对应的 Server jar 下载列表"""
     Server = InitFile["downloads"]["server"]
     return([DownloadTask(
@@ -124,7 +124,7 @@ def Version_To_AssetIndex(InitFile: dict) -> DownloadTask:
     ))
 
 
-def AssetIndex_DownloadList(InitFile: dict) -> list[DownloadTask]:
+def AssetIndex_DownloadTasks(InitFile: dict) -> list[DownloadTask]:
     Objects = InitFile["objects"]
     Tasks: list[DownloadTask] = list()
     Pather = AdvancedPath(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
