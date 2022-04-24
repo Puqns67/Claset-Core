@@ -16,7 +16,7 @@ env:
   PYTHON_VERSION: ${{ '3.10.4' }}
   PYTHON_ARCHITECTURE: ${{ 'x64' }}
   RELEASES_NAME_PERFIX: ${{ 'Claset-Build' }}
-  CACHE_NUITKA_GCC: ${{ true }}
+  CACHE_NUITKA: ${{ true }}
   CACHE_PYPI: ${{ true }}
   CACHE_BUILD: ${{ true }}
   RETENTION_DAYS: ${{ 16 }}
@@ -81,34 +81,32 @@ jobs:
 
       - name: PyPI Cache
         if: ${{ env.CACHE_PYPI }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-cache-python-pip-${{ hashFiles('**/requirements_build.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cache-python-pip-${{ hashFiles('**/requirements_build.txt') }}
-            ${{ runner.os }}-cache-python-pip-
+          key: ${{ runner.os }}-python-pip-${{ hashFiles('**/requirements_build.txt') }}
+          restore-keys: ${{ runner.os }}-python-pip-
 
 
       - name: Nuitka Cache
-        if: ${{ env.CACHE_NUITKA_GCC }}
-        uses: actions/cache@v2
+        if: ${{ env.CACHE_NUITKA }}
+        uses: actions/cache@v3
         with:
           path: ~\AppData\Local\Nuitka\Nuitka
-          key: ${{ runner.os }}-cache-nuitka
-          restore-keys: ${{ runner.os }}-cache-nuitka
+          key: ${{ runner.os }}-nuitka-${{ steps.genReleaseTimes.outputs.tag }}
+          restore-keys: ${{ runner.os }}-nuitka-
 
 
       - name: Build Cache
         if: ${{ env.CACHE_BUILD }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ${{ github.workspace }}\Run.build
             ${{ github.workspace }}\Run.dist
             ${{ github.workspace }}\Run.onefile-build
-          key: ${{ runner.os }}-cache-nuitka-build-${{ steps.genReleaseTimes.outputs.tag }}
-          restore-keys: ${{ runner.os }}-cache-nuitka-build-
+          key: ${{ runner.os }}-nuitka-build-${{ steps.genReleaseTimes.outputs.tag }}
+          restore-keys: ${{ runner.os }}-nuitka-build-
 
 
       - name: Setting Build Environment
@@ -206,34 +204,34 @@ jobs:
 
       - name: PyPI Cache
         if: ${{ env.CACHE_PYPI }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-cache-python-pip-${{ hashFiles('**/requirements_build.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cache-python-pip-${{ hashFiles('**/requirements_build.txt') }}
-            ${{ runner.os }}-cache-python-pip-
+          key: ${{ runner.os }}-python-pip-${{ hashFiles('**/requirements_build.txt') }}
+          restore-keys: ${{ runner.os }}-python-pip-
 
 
       - name: Nuitka Cache
-        if: ${{ env.CACHE_NUITKA_GCC }}
-        uses: actions/cache@v2
+        if: ${{ env.CACHE_NUITKA }}
+        uses: actions/cache@v3
         with:
-          path: ~/.local/share/Nuitka
-          key: ${{ runner.os }}-cache-nuitka
-          restore-keys: ${{ runner.os }}-cache-nuitka
+          path: |
+            ~/.local/share/Nuitka
+            ~/.cache/Nuitka
+          key: ${{ runner.os }}-nuitka-${{ steps.genReleaseTimes.outputs.tag }}
+          restore-keys: ${{ runner.os }}-nuitka-
 
 
       - name: Build Cache
         if: ${{ env.CACHE_BUILD }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ${{ github.workspace }}/Run.build
             ${{ github.workspace }}/Run.dist
             ${{ github.workspace }}/Run.onefile-build
-          key: ${{ runner.os }}-cache-nuitka-build-${{ steps.genReleaseTimes.outputs.tag }}
-          restore-keys: ${{ runner.os }}-cache-nuitka-build-
+          key: ${{ runner.os }}-nuitka-build-${{ steps.genReleaseTimes.outputs.tag }}
+          restore-keys: ${{ runner.os }}-nuitka-build-
 
 
       - name: Setting Build Environment

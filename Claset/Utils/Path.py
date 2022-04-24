@@ -5,6 +5,7 @@ from json import load
 from os import getcwd, chdir
 from os.path import abspath
 from re import compile as ReCompile
+from typing import Iterable
 
 from .Confs.Paths import File
 from .Exceptions.Path import SearchError, PrefixsMissingKey
@@ -44,17 +45,21 @@ def path(Input: str, IsPath: bool = False) -> str:
     return(Input)
 
 
-def pathAdder(*Paths: list | tuple | str) -> str:
+def pathAdder(self, *Paths: str | Iterable | float | int) -> str:
     """拼接路径片段并格式化"""
     PathList = list()
     for i in Paths:
         if isinstance(i, str):
             PathList.append(i)
-        elif isinstance(i, (list, tuple,)):
+        elif isinstance(i, Iterable):
             PathList.extend(i)
-        elif isinstance(i, (int, float,)):
+        elif isinstance(i, int | float):
             PathList.append(str(i))
-    return(path("/".join(PathList), IsPath=True))
+        else:
+            raise TypeError(type(Paths))
+    Path = "/".join(PathList)
+    if "$" in Path: Path = self.path(Path)
+    return(abspath(Path))
 
 
 def setPerfix(NewPerfix: str) -> None:

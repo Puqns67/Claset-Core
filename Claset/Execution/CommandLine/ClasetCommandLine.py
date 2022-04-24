@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from argparse import Namespace
-from gettext import GNUTranslations, NullTranslations, find as FindMo
+from gettext import GNUTranslations, NullTranslations, find as findMoFile
 from os import environ
 from sys import exec_prefix
 from time import sleep
@@ -55,11 +55,11 @@ class ClasetCommandLine(Cmd):
                 case _:
                     TargetLanguage = self.Configs["Language"]
 
-        if isinstance(TargetLanguage, str): TargetLanguage = [TargetLanguage]
+        if isinstance(TargetLanguage, str): TargetLanguage = (TargetLanguage,)
 
-        MoFilePath = FindMo(domain="Default", localedir=Claset.Utils.path(Input=f"{exec_prefix}/Translations", IsPath=True), languages=TargetLanguage)
+        MoFilePath = findMoFile(domain="Default", localedir=Claset.Utils.path(Input=f"{exec_prefix}/Translations", IsPath=True), languages=TargetLanguage)
         if MoFilePath is None:
-            MoFilePath = FindMo(domain="Default", localedir=Claset.Utils.path(Input="$PREFIX/Translations", IsPath=True), languages=TargetLanguage)
+            MoFilePath = findMoFile(domain="Default", localedir=Claset.Utils.path(Input="$PREFIX/Translations", IsPath=True), languages=TargetLanguage)
         if MoFilePath is None:
             self.TranslateObj = NullTranslations()
         else:
@@ -80,7 +80,7 @@ class ClasetCommandLine(Cmd):
         """为参数解析器附加参数"""
         InstallGame.add_argument("-V", "--Version", help=self._("游戏版本, 不指定时使用最新的正式版"))
         InstallGame.add_argument("GameName", help=self._("游戏实例名"))
-        LaunchGame.add_argument("-T", "--Type", default="SUBPROCESS", choices=("SUBPROCESS", "SAVESCRIPT",), help=self._("指定启动模式, 现支持 \"SUBPROCESS\" 和 \"SAVESCRIPT\", 默认为 SUBPROCESS"))
+        LaunchGame.add_argument("-T", "--Type", default="SUBPROCESS", choices=("SUBPROCESS", "SAVESCRIPT",), help=self._("指定启动模式, 现支持 \"SUBPROCESS\" 和 \"SAVESCRIPT\", 默认为 \"SUBPROCESS\""))
         LaunchGame.add_argument("-Un", "--UserName", default=None, help=self._("指定账户的类型为名称, 如有重复则按账户顺序取第一个"))
         LaunchGame.add_argument("-Uu", "--UserUUID", default=None, help=self._("指定账户的类型为 UUID"))
         LaunchGame.add_argument("-Ui", "--UserID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
@@ -101,6 +101,7 @@ class ClasetCommandLine(Cmd):
         SetDefaultAccount.add_argument("-T", "--Type", default=None, help=self._("指定账户类型, 使用此参数时将有可能删除多个账户"))
         SetDefaultAccount.add_argument("-i", "--ID", default=None, type=int, help=self._("指定账户 ID, 此 ID 为在配置文件中的序列号"))
         SetDefaultAccount.add_argument("-I", "--UUID", default=None, help=self._("指定账户 UUID"))
+        SetWorkDir.add_argument("-R", "--ReloadConfigs", action="store_false", help=self._("重载部分配置文件"))
         SetWorkDir.add_argument("NewWorkDir", default=None, help=self._("新的工作目录路径"))
         Exit.add_argument("-W", "--WaitGames", action="store_false", help=self._("等待游戏结束后再退出 Claset, 默认将等待游戏结束"))
 
@@ -156,15 +157,16 @@ class ClasetCommandLine(Cmd):
             UserID = self.AccountManager.getAccountOtherInfo(Input=init.UserName, InputType="Name", ReturnType="ID")
         elif init.UserID is not None:
             UserID = init.UserID
-        TheAccount = self.AccountManager.getAccountObject(UserID)
 
         try:
+            TheAccount = self.AccountManager.getAccountObject(UserID)
             GameLauncher = Claset.Game.GameLauncher(VersionName=init.GameName, Account=TheAccount)
+        except Claset.Accounts.Exceptions.NoAccountsFound:
+            self.RichConsole.print("未找到任何可用的账户, 请先使用 \"CreateAccount\" 命令新建账户")
         except Claset.Game.Launch.Exceptions.VersionNotFound:
             self.RichConsole.print("游戏实例 \"{}\" 未找到".format(init.GameName))
-            return
-
-        GameLauncher.launchGame(Type=init.Type, PrintToTerminal=init.ShowGameLogs, SaveTo=init.SaveToFile)
+        else:
+            GameLauncher.launchGame(Type=init.Type, PrintToTerminal=init.ShowGameLogs, SaveTo=init.SaveToFile)
 
 
     def do_ListGame(self, _: Namespace):
@@ -263,13 +265,11 @@ class ClasetCommandLine(Cmd):
 
         if len(AccountList) == 0:
             self.RichConsole.print(self._("未找到符合输入的账户"))
-            return
         elif len(AccountList) >= 2:
             self.RichConsole.print(self._("无法设置多个账户为默认"))
-            return
-
-        self.AccountManager.setDefault(AccountList[0]["ID"])
-        self.AccountManager.save()
+        else:
+            self.AccountManager.setDefault(AccountList[0]["ID"])
+            self.AccountManager.save()
 
 
     @with_argparser(RemoveAccount)
@@ -304,6 +304,11 @@ class ClasetCommandLine(Cmd):
             Claset.Utils.setPerfix(init.NewWorkDir)
         except FileNotFoundError:
             self.RichConsole.print(self._("指定的新工作目录 \"{}\" 未找到").format(init.NewWorkDir))
+        else:
+            # 重载部分配置
+            if init.ReloadConfigs:
+                self.AccountManager.Configs.reload()
+                Claset.Utils.reloadDownloadConfig()
 
 
     def do_GetWorkDir(self, _: Namespace):

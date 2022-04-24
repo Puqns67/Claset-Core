@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 3
+LastVersion = 4
 
 
 File = {
@@ -17,6 +17,7 @@ File = {
         "WindowsPriority": None
     },
     "UnableGlobal": {
+        "NativesDir": "AUTOSET",
         "VersionIndependent": False,
         "PrefixAndSuffix": {
             "JvmPrefix": [],
@@ -29,6 +30,9 @@ File = {
 
 
 Difference = {
+    "3->4": [
+        "REPLACE:[UnableGlobal, NativesDir]->AUTOSET"
+    ],
     "2->3": [
         "REPLACE:[UnableGlobal, VersionIndependent]->False",
         "RENAME:[UnableGlobal, PrefixAndEnds]->PrefixAndSuffix",

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from Claset.Utils import AdvancedPath, DownloadTask, System, Arch, formatDollar, dfCheck, removeDir, path, OriginalVersion
+from Claset.Utils import AdvancedPath, DownloadTask, System, Arch, formatDollar, dfCheck, removeDir, path, OriginalSystem, OriginalVersion, OriginalArch
 
 from .Exceptions import UnsupportSystemHost, FeaturesContinue, FeaturesMissingKey, TargetVersionNotFound
 
-__all__ = ("getVersionManifestTask", "ResolveRule", "getNativesObject", "removeGame",)
+__all__ = ("getVersionManifestTask", "ResolveRule", "getNativesObject", "removeGame", "genNativeDirName",)
 
 
 def getVersionManifestTask(Ver: int = 1, Path: str | None = None) -> DownloadTask:
@@ -69,4 +69,9 @@ def removeGame(Name: str):
         removeDir(path(f"$VERSION\{Name}", IsPath=True))
     else:
         raise TargetVersionNotFound(Name)
+
+
+def genNativeDirName() -> str:
+    """生成适用于当前平台的 Native 文件夹名"""
+    return(f"Natives-{OriginalSystem}-{OriginalArch}")
 

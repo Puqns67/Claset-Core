@@ -2,9 +2,10 @@
 
 from os import listdir
 from types import NoneType
+from typing import Iterable, Any
 
-from Claset.Utils import Configs, DownloadTask, path, pathAdder, dfCheck, loadFile
-from Claset.Game.Utils import Version_Client_DownloadTasks, AssetIndex_DownloadTasks
+from Claset.Utils import Configs, DownloadTask, path, pathAdder, dfCheck, loadFile, getValueFromDict, setValueToDict
+from Claset.Game.Utils import Version_Client_DownloadTasks, AssetIndex_DownloadTasks, genNativeDirName
 
 __all__ = ("VersionInfos", "getVersionInfoList", "getVersionNameList",)
 
@@ -26,8 +27,9 @@ class VersionInfos():
         self.Dir = pathAdder("$VERSION", self.Name)
 
         # 配置文件相关处理
-        self.ConfigFilePath = pathAdder(self.Dir, "ClasetVersionConfig.json")
-        self.Configs = Configs(ID="Game", FilePath=self.ConfigFilePath)
+        self.GlobalConfig = Configs(ID="Settings")
+        self.ConfigPath = pathAdder(self.Dir, "ClasetVersionConfig.json")
+        self.Configs = Configs(ID="Game", FilePath=self.ConfigPath)
 
         # 版本 Json
         self.VersionJsonPath = pathAdder(self.Dir, self.Name + ".json")
@@ -55,14 +57,18 @@ class VersionInfos():
                     break
 
         # AssetIndex Json
-        self.AssetIndexJsonPath = pathAdder("$MCAssetIndex", self.AssetIndexVersion + ".json")
-        if dfCheck(Path=self.AssetIndexJsonPath, Type="d"):
-            self.AssetIndexJson = loadFile(Path=self.AssetIndexJsonPath, Type="json")
+        if self.AssetIndexVersion is not None:
+            self.AssetIndexJsonPath = pathAdder("$MCAssetIndex", self.AssetIndexVersion + ".json")
+            if dfCheck(Path=self.AssetIndexJsonPath, Type="d"):
+                self.AssetIndexJson = loadFile(Path=self.AssetIndexJsonPath, Type="json")
+            else:
+                self.AssetIndexJson = None
         else:
+            self.AssetIndexVersion = None
             self.AssetIndexJson = None
 
         # Natives 文件夹位置
-        self.NativesPath = pathAdder(self.Dir, self.Configs["UnableGlobal"]["NativesDir"])
+        self.NativesPath = pathAdder(self.Dir, genNativeDirName() if self.Configs["UnableGlobal"]["NativesDir"] == "AUTOSET" else self.Configs["UnableGlobal"]["NativesDir"])
 
         if self.JarName is not None:
             self.JarPath = pathAdder(self.Dir, self.JarName + ".jar")
@@ -75,7 +81,7 @@ class VersionInfos():
     def getInfoStr(self, Format: str = "{Name}|{Version}|{Type}|{Dir}", OtherKeys: dict = {}) -> str:
         """
         获取信息字符串
-        * Format: 格式字符串
+        * Format: 格式字符串, 默认为 "{Name}|{Version}|{Type}|{Dir}"
         * OtherKeys: 其他的格式化键\n
         默认格式化键
         * Name: 版本名
@@ -104,6 +110,43 @@ class VersionInfos():
         return(DownloadTasks)
 
 
+    def getConfig(self, Keys: str | Iterable[str]) -> Any:
+        """获取配置"""
+        self.full()
+        BaseKeys = Keys[0] if isinstance(Keys, list) else Keys
+
+        if BaseKeys in self.Configs["Global"]:
+            if self.Configs["UseGlobalConfig"]:
+                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
+            else:
+                Return = getValueFromDict(Keys=Keys, Dict=self.Configs["Global"])
+                if Return is not None: return(Return)
+                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
+        else:
+            return(getValueFromDict(Keys=Keys, Dict=self.Configs["UnableGlobal"]))
+
+
+    def setConfig(self, Keys: str | Iterable[str], Value: Any, Save: bool = True) -> None:
+        """设置配置"""
+        self.full()
+        BaseKeys = Keys[0] if isinstance(Keys, list) else Keys
+
+        if BaseKeys in self.Configs["Global"]:
+            if self.Configs["UseGlobalConfig"]:
+                self.Configs["UseGlobalConfig"] = False
+            self.Configs["Global"]  = setValueToDict(Keys=Keys, Value=Value, Dict=self.Configs["Global"])
+        else:
+            self.Configs["UnableGlobal"] = setValueToDict(Keys=Keys, Value=Value, Dict=self.Configs["UnableGlobal"])
+
+        if Save: self.Configs.save()
+
+
+    def reloadConfig(self) -> None:
+        """重载配置文件"""
+        self.Configs.reload()
+        self.GlobalConfig.reload()
+
+
 def getVersionNameList() -> list[str]:
     """获取已被识别的版本名列表"""
     Output: list[str] = list()
@@ -116,15 +159,15 @@ def getVersionNameList() -> list[str]:
     return(Output)
 
 
-def getVersionInfoList(VersionNames: list[str] | str | None = None) -> list[VersionInfos]:
+def getVersionInfoList(VersionNames: Iterable[str] | str | None = None) -> list[VersionInfos]:
     """获取输入的多个版本中已被识别的版本的信息"""
     if isinstance(VersionNames, NoneType):
         try:
             VersionNames = listdir(path=path("$VERSION"))
         except FileNotFoundError:
-            return(list())
+            return(tuple())
     elif isinstance(VersionNames, str):
-        VersionNames = [VersionNames]
+        VersionNames = (VersionNames,)
     Output: list[VersionInfos] = list()
     for VersionName in VersionNames:
         VersionInfosObject = VersionInfos(VersionName=VersionName)

@@ -1,11 +1,10 @@
 # Cache
+Logs/
 Cache/
 __pycache__/
 .git/
 .history/
 .minecraft/
-
-Logs/
 
 # Configs
 *.json
@@ -19,6 +18,6 @@ Claset-Build*
 # Other
 .vscode/
 !.vscode/launch.json
+!.vscode/extensions.json
 temp*
 *.jar
-!template.pot

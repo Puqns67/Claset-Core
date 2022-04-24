@@ -64,7 +64,7 @@ reference = "tuna"
 
 [[package]]
 name = "cmd2"
-version = "2.4.0"
+version = "2.4.1"
 description = "cmd2 - quickly build feature-rich and user-friendly interactive command line applications in Python"
 category = "main"
 optional = false
@@ -357,8 +357,8 @@ charset-normalizer = [
     {file = "charset_normalizer-2.0.12-py3-none-any.whl", hash = "sha256:6881edbebdb17b39b4eaaa821b438bf6eddffb4468cf344f09f89def34a8b1df"},
 ]
 cmd2 = [
-    {file = "cmd2-2.4.0-py3-none-any.whl", hash = "sha256:6fe6d46099edaf4a99163c191aeb4babfd7e4dfbac6009f423ecc8370895b58f"},
-    {file = "cmd2-2.4.0.tar.gz", hash = "sha256:090909ab6c8ecee40813cec759e61dd6e70c8227a1a8e96082f5f2b0d394bc77"},
+    {file = "cmd2-2.4.1-py3-none-any.whl", hash = "sha256:e6f49b0854b6aec2f20073bae99f1deede16c24b36fde682045d73c80c4cfb51"},
+    {file = "cmd2-2.4.1.tar.gz", hash = "sha256:f3b0467daca18fca0dc7838de7726a72ab64127a018a377a86a6ed8ebfdbb25f"},
 ]
 commonmark = [
     {file = "commonmark-0.9.1-py2.py3-none-any.whl", hash = "sha256:da2f38c92590f83de410ba1a3cbceafbc74fee9def35f9251ba9a971d6d66fd9"},

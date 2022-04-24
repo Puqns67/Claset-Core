@@ -1,35 +1,47 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any
+from typing import Iterable, Any
 from base64 import b64encode, b64decode
 from re import compile
 
-__all__ = ("getValueFromDict", "setValueFromDict", "fixType", "encodeBase64", "decodeBase64", "formatDollar",)
+__all__ = ("getValueFromDict", "setValueToDict", "fixType", "encodeBase64", "decodeBase64", "formatDollar",)
 __fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
 ReMatchFormatDollar = compile(r"^(.*)\${([a-zA-Z_\d]+)}(.*)$")
 
 
-def getValueFromDict(Keys: list[str] | str, Dict: dict) -> Any:
+def getValueFromDict(Keys: Iterable[str] | str, Dict: dict) -> Any:
     """使用列表从字典获取数据"""
-    if isinstance(Keys, list):
-        if len(Keys) > 1:
+    if isinstance(Keys, Iterable):
+        if len(Keys) >= 2:
             return(getValueFromDict(Keys=Keys[1:], Dict=Dict[Keys[0]]))
-        else:
+        elif len(Keys) == 1:
             return(Dict[Keys[0]])
+        else:
+            raise ValueError("Keys's count must be greater than 0")
     elif isinstance(Keys, str):
         return(Dict[Keys])
+    else:
+        raise TypeError(type(Keys))
 
 
-def setValueFromDict(Keys: list, Value: Any, Dict: dict | None = None, ) -> dict:
+def setValueToDict(Keys: Iterable[str] | str, Value: Any, Dict: dict | None = None) -> dict:
     """使用列表向字典填充数据"""
     if not isinstance(Dict, dict): Dict = dict()
-    if len(Keys) > 1:
-        if Dict.get(Keys[0]) is None: Dict[Keys[0]] = dict()
-        Dict[Keys[0]] = setValueFromDict(Keys=Keys[1:], Value=Value, Dict=Dict[Keys[0]], )
+    if isinstance(Keys, Iterable):
+        if len(Keys) >= 2:
+            if Dict.get(Keys[0]) is None: Dict[Keys[0]] = dict()
+            Dict[Keys[0]] = setValueToDict(Keys=Keys[1:], Value=Value, Dict=Dict[Keys[0]])
+            return(Dict)
+        elif len(Keys) == 1:
+            Dict[Keys[0]] = Value
+            return(Dict)
+        else:
+            raise ValueError("Keys's count must be greater than 0")
+    elif isinstance(Keys, str):
+        Dict[Keys] = Value
         return(Dict)
     else:
-        Dict[Keys[0]] = Value
-        return(Dict)
+        raise TypeError(type(Keys))
 
 
 def fixType(Input: str) -> Any:

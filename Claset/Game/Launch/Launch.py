@@ -3,7 +3,7 @@
 
 from logging import getLogger
 from types import NoneType
-from typing import Any
+from typing import Iterable, Any
 from uuid import uuid4
 from subprocess import Popen, DEVNULL
 from time import strftime, localtime
@@ -11,8 +11,9 @@ from time import strftime, localtime
 from Claset import getDownloader, __fullversion__, __productname__, LaunchedGames
 from Claset.Accounts import AccountManager, Account
 from Claset.Game.Utils import VersionInfos, ResolveRule, getClassPath, extractNatives, getLog4j2Infos
-from Claset.Utils import Configs, System, path, pathAdder, safetyPath, getValueFromDict
-from Claset.Utils.File import saveFile
+from Claset.Utils.Platform import System
+from Claset.Utils.Path import path, pathAdder, safetyPath
+from Claset.Utils.File import dfCheck, saveFile
 from Claset.Utils.Others import ReMatchFormatDollar
 from Claset.Utils.JavaHelper import autoPickJava, getJavaInfo, JavaInfo
 
@@ -47,10 +48,11 @@ class GameLauncher():
         else:
             self.AccountObject = Account
 
-        self.GlobalConfig = Configs(ID="Settings")
-
-        if self.VersionInfos.MinimumLauncherVersion > 21:
-            raise LauncherVersionError(self.VersionInfos.MinimumLauncherVersion)
+        if self.VersionInfos.MinimumLauncherVersion is not None:
+            if self.VersionInfos.MinimumLauncherVersion > 21:
+                raise LauncherVersionError(self.VersionInfos.MinimumLauncherVersion)
+        else:
+            Logger.warning("Version (\"%s\")'s \"MinimumLauncherVersion\" is Null, please check file: \"%s\"", self.VersionInfos.Name, self.VersionInfos.VersionJsonPath)
 
         self.Status: str = "UNRUNNING"
 
@@ -69,7 +71,7 @@ class GameLauncher():
         if Type != "SAVESCRIPT":
             self.checkStatus(("STOPPED", "UNRUNNING",), Raise=True)
             self.setStatus("STARTING")
-        if not self.getConfig("NotCheckGame"):
+        if not self.VersionInfos.getConfig("NotCheckGame"):
             DownloadTasks = self.VersionInfos.checkFull()
             if len(DownloadTasks) >= 1:
                 if not hasattr(self, "Downloader"):
@@ -77,7 +79,7 @@ class GameLauncher():
                 self.Downloader.waitProject(self.Downloader.addTask(DownloadTasks))
 
         if not hasattr(self, "PickedJava"):
-            self.PickedJava = self.getJavaPathAndInfo(NotCheck=self.getConfig("NotCheckJvm"))
+            self.PickedJava = self.getJavaPathAndInfo(NotCheck=self.VersionInfos.getConfig("NotCheckJvm"))
 
         # 提取 Natives
         extractNatives(VersionJson=self.VersionInfos.VersionJson, ExtractTo=self.VersionInfos.NativesPath, Features=Features)
@@ -86,15 +88,15 @@ class GameLauncher():
         self.RunArgs = self.getRunArgs()
 
         # 获取工作目录
-        self.RunCwd = self.VersionInfos.Dir if self.getConfig("VersionIndependent") else path("$MINECRFT", IsPath=True)
+        self.RunCwd = self.VersionInfos.Dir if self.VersionInfos.getConfig("VersionIndependent") else path("$MINECRFT", IsPath=True)
 
-        Logger.info("Using Java %s to launch game: %s", self.PickedJava["Path"], self.VersionInfos.Name)
+        Logger.info("Using Java \"%s\" to launch game \"%s\"", self.PickedJava["Path"], self.VersionInfos.Name)
         Logger.debug("Run code: %s", self.RunArgs)
 
         match Type:
             case "SUBPROCESS":
                 Stdout = None if PrintToTerminal else DEVNULL
-                WindowsCreationFlags = SubProcessPriorityClasses[self.getConfig("WindowsPriority")] if System().get() else 0
+                WindowsCreationFlags = SubProcessPriorityClasses[self.VersionInfos.getConfig("WindowsPriority")] if System().get() else 0
                 self.Game = Popen(args=[self.PickedJava["Path"]] + self.RunArgs, cwd=self.RunCwd, stdout=Stdout, creationflags=WindowsCreationFlags)
                 LaunchedGames.append(self)
                 self.setStatus("RUNNING")
@@ -178,7 +180,7 @@ class GameLauncher():
                 raise UnsupportComplianceLevel(self.VersionInfos.ComplianceLevel)
 
 
-    def processRunArgsList(self, RunCodeList: list[str] = list()) -> list[str]:
+    def processRunArgsList(self, RunCodeList: Iterable[str] = tuple()) -> list[str]:
         """处理获取到的启动命令行参数"""
         Output = list()
         for RunCode in RunCodeList:
@@ -205,12 +207,12 @@ class GameLauncher():
         """替换"""
         match Key:
             case "CLASETJVMHEADER": return(ClasetJvmHeader)
-            case "JVMPREFIX": return(self.VersionInfos.Configs["UnableGlobal"]["PrefixAndSuffix"]["JvmPrefix"])
-            case "JVMSUFFIX": return(self.VersionInfos.Configs["UnableGlobal"]["PrefixAndSuffix"]["JvmSuffix"])
-            case "GAMEARGSPREFIX": return(self.VersionInfos.Configs["UnableGlobal"]["PrefixAndSuffix"]["GamePrefix"])
-            case "GAMEARGSSUFFIX": return(self.VersionInfos.Configs["UnableGlobal"]["PrefixAndSuffix"]["GameSuffix"])
-            case "MEMMIN": return("-Xms" + str(self.getConfig("MemoryMin")) + "M")
-            case "MEMMAX": return("-Xmx" + str(self.getConfig("MemoryMax")) + "M")
+            case "JVMPREFIX": return(self.VersionInfos.getConfig(["UnableGlobal", "PrefixAndSuffix", "JvmPrefix"]))
+            case "JVMSUFFIX": return(self.VersionInfos.getConfig(["UnableGlobal", "PrefixAndSuffix", "JvmSuffix"]))
+            case "GAMEARGSPREFIX": return(self.VersionInfos.getConfig(["UnableGlobal", "PrefixAndSuffix", "GamePrefix"]))
+            case "GAMEARGSSUFFIX": return(self.VersionInfos.getConfig(["UnableGlobal", "PrefixAndSuffix", "GameSuffix"]))
+            case "MEMMIN": return("-Xms" + str(self.VersionInfos.getConfig("MemoryMin")) + "M")
+            case "MEMMAX": return("-Xmx" + str(self.VersionInfos.getConfig("MemoryMax")) + "M")
             case "LOG4J2CONFIG": return(getLog4j2Infos(InitFile=self.VersionInfos.VersionJson, Type="Argument"))
             case "MAINCLASS": return(self.VersionInfos.MainClass)
             case "launcher_name": return(__productname__)
@@ -223,47 +225,40 @@ class GameLauncher():
             case "auth_access_token": return(self.AccountObject.getAccessToken())
             case "user_type": return(self.AccountObject.getShortType())
             case "version_name": return(self.VersionInfos.Name)
-            case "version_type": return(self._replaces("launcher_name") + " " + self._replaces("launcher_version"))
+            case "version_type": return(self._replaces("launcher_name") + "-" + self._replaces("launcher_version"))
             case "classpath": return(getClassPath(VersionJson=self.VersionInfos.VersionJson, VersionJarPath=self.VersionInfos.JarPath, Features=Features))
             case "natives_directory": return(self.VersionInfos.NativesPath)
-            case "game_directory": return({True: self.VersionInfos.Dir, False: path("$MINECRFT", IsPath=True)}[self.getConfig("VersionIndependent")])
+            case "game_directory": return(self.VersionInfos.Dir if self.VersionInfos.getConfig("VersionIndependent") else path("$MINECRFT", IsPath=True))
             case "clientid": return(uuid4().hex)
-            case "resolution_width": return(self.getConfig("WindowWidth"))
-            case "resolution_height": return(self.getConfig("WindowHeight"))
+            case "resolution_width": return(self.VersionInfos.getConfig("WindowWidth"))
+            case "resolution_height": return(self.VersionInfos.getConfig("WindowHeight"))
             case "library_directory": return(path("$LIBRERIES", IsPath=True))
             case "user_properties": return("{}")
             case _: raise ValueError(Key)
 
 
-    def getConfig(self, Keys: str) -> Any:
-        if Keys in self.VersionInfos.Configs["Global"]:
-            if self.VersionInfos.Configs["UseGlobalConfig"]:
-                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
-            else:
-                Return = getValueFromDict(Keys=Keys, Dict=self.VersionInfos.Configs["Global"])
-                if Return is not None: return(Return)
-                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
-        else: return(getValueFromDict(Keys=Keys, Dict=self.VersionInfos.Configs["UnableGlobal"]))
-
-
     def getJavaPathAndInfo(self, NotCheck: bool = False) -> JavaInfo:
-        JavaPath = self.getConfig("JavaPath")
-        recommendJavaVersion: int = self.VersionInfos.VersionJson["javaVersion"]["majorVersion"]
+        JavaPath = self.VersionInfos.getConfig("JavaPath")
+        recommendJavaVersion: int | None = self.VersionInfos.VersionJson["javaVersion"]["majorVersion"]
         if JavaPath == "AUTOPICK":
             return(autoPickJava(recommendVersion=recommendJavaVersion))
         else:
             if not NotCheck:
+                if not dfCheck(Path=JavaPath, Type="f"):
+                    self.VersionInfos.setConfig(Keys="JavaPath", Value="AUTOPICK")
+                    return(self.getJavaPathAndInfo())
                 JavaInfo = getJavaInfo(Path=JavaPath)
-                if recommendJavaVersion > JavaInfo["Version"][0]:
-                    Logger.warning("Java version %s too old, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
-                elif recommendJavaVersion < JavaInfo["Version"][0]:
-                    Logger.warning("Java version %s too new, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
+                if isinstance(recommendJavaVersion, int):
+                    if recommendJavaVersion > JavaInfo["Version"][0]:
+                        Logger.warning("Java version %s too old, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
+                    elif recommendJavaVersion < JavaInfo["Version"][0]:
+                        Logger.warning("Java version %s too new, recommend Java Version is [%s, 0, 0]", JavaInfo["Version"], recommendJavaVersion)
                 return(JavaInfo)
             else:
                 return({"Path": JavaPath})
 
 
-    def setStatus(self, Status: str | int) -> None:
+    def setStatus(self, Status: str) -> None:
         """设置游戏状态"""
         if Status in GameStatus:
             self.Status = Status
@@ -271,7 +266,7 @@ class GameLauncher():
             raise UndefinedGameStatus(Status)
 
 
-    def checkStatus(self, Status: tuple[str] | str, Reverse: bool = False, Raise: Any | None = None) -> bool:
+    def checkStatus(self, Status: Iterable[str] | str, Reverse: bool = False, Raise: Any | None = None) -> bool:
         """检查游戏状态"""
         if isinstance(Status, str): Status = (Status,)
 

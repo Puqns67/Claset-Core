@@ -3,7 +3,7 @@
 
 from logging import getLogger
 from re import compile as reCompile
-from typing import Any
+from typing import Iterable, Any
 from json import JSONDecodeError
 
 from .Path import path
@@ -53,12 +53,12 @@ class Configs():
         return(self.ID)
 
 
-    def __getitem__(self, Key) -> Any:
+    def __getitem__(self, Key: Any) -> Any:
         """实现下标获取"""
         return(self.TheConfig[Key])
 
 
-    def __setitem__(self, Key, Value) -> None:
+    def __setitem__(self, Key: Any, Value: Any) -> None:
         """实现下标写入"""
         self.TheConfig[Key] = Value
 
@@ -68,10 +68,10 @@ class Configs():
         return(self.TheConfig.keys())
 
 
-    def get(self, Keys: list | str) -> Any:
-        if isinstance(Keys, str): Keys = [Keys]
+    def get(self, Keys: Iterable | str, Fallback: Any | None = None) -> Any:
+        if isinstance(Keys, str): Keys = (Keys,)
         try: return(getValueFromDict(Keys=Keys, Dict=self.TheConfig))
-        except KeyError: return(None)
+        except KeyError: return(Fallback)
 
 
     def getConfig(self) -> dict:
@@ -98,10 +98,12 @@ class Configs():
         若更新了配置文件则返回True, 反之则返回False
         """
         # 判断是否需要更新
-        if ((Type == "!=") and (self.NowVersion != self.TargetVersion)): pass
-        elif ((Type == ">=") and (self.NowVersion >= self.TargetVersion)): pass
-        elif ((Type == "<=") and (self.NowVersion <= self.TargetVersion)): pass
-        else: return(False)
+        if (
+            not ((Type == "!=") and (self.NowVersion != self.TargetVersion)
+            or (Type == ">=") and (self.NowVersion >= self.TargetVersion)
+            or (Type == "<=") and (self.NowVersion <= self.TargetVersion))
+        ):
+            return(False)
 
         # 尝试进行更新
         try:
@@ -122,18 +124,18 @@ class Configs():
         Logger.info("Created Config: %s", self.ID)
 
 
-    def saveConfig(self) -> None:
+    def save(self) -> None:
         """保存配置文件"""
         saveFile(Path=self.FilePath, FileContent=self.TheConfig, Type="json")
 
 
-    def reloadConfig(self) -> None:
+    def reload(self) -> None:
         """从文件重载配置文件"""
         self.TheConfig = self.getConfig()
 
 
-    def updateConfig(self, TargetVersion: int | None = None, Differences: list | None = None) -> None:
-        """更新或降级配置文件版本至目标版本(TargetVersion)"""
+    def updateConfig(self, TargetVersion: int | None = None, Differences: Iterable[str] | None = None) -> None:
+        """更新或降级配置文件版本至目标版本(TargetVersion), 或是执行差异"""
         if Differences is not None:
             DifferenceS = Differences
         else:
@@ -159,7 +161,7 @@ class Configs():
             Type, Key = ReFindTypeAndKey.match(Difference).groups()
             self.processConfig(Key=Key, Type=Type)
 
-        self.saveConfig()
+        self.save()
 
 
     def getDifferenceS(self, TargetVersion: int | None = None, Reverse: bool = False) -> list[str]:
@@ -199,8 +201,9 @@ class Configs():
                 Old, New = ReFindOldAndNew.search(Key).groups()
             case "RENAME":
                 Old, New = ReFindOldAndNew.search(Key).groups()
-            # TODO: 在 Nuitka 支持在 match case 语句中使用联合符 "|" (https://github.com/Nuitka/Nuitka/issues/1507) 后转换格式为下:
+            # TODO: 在 Nuitka 支持在 match case 语句中使用联合符 "|" 后转换格式为下: 
             # case "REPLACE" | "RENAME":
+            # 已在 Nuitka 的 Issue 中: https://github.com/Nuitka/Nuitka/issues/1507
             case "DELETE":
                 Old = Key
                 New = None

@@ -92,7 +92,7 @@ class AccountManager():
 
     def save(self) -> None:
         """保存账户数据"""
-        self.Configs.saveConfig()
+        self.Configs.save()
 
 
     def setDefault(self, ID: int, RaiseException=True) -> None:
@@ -160,7 +160,7 @@ class AccountManager():
 
     def getAccountOtherInfo(self, Input: Any, InputType: str, ReturnType: str) -> Any:
         """获取账户相关信息, 如有重复则返回第一个"""
-        Kwarg = dict()
-        Kwarg[InputType] = Input
-        return(self.getAccountList(**Kwarg)[0][ReturnType])
+        kwarg = dict()
+        kwarg[InputType] = Input
+        return(self.getAccountList(**kwarg)[0][ReturnType])
 

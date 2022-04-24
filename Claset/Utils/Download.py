@@ -23,14 +23,14 @@ from .Exceptions import Download as Ex_Download
 from .File import dfCheck, loadFile, saveFile
 from .Path import pathAdder, path as Pathmd
 
-__all__ = ("reloadConfig", "getSession", "DownloadTask", "DownloadManager",)
+__all__ = ("reloadDownloadConfig", "getSession", "DownloadTask", "DownloadManager",)
 Logger = getLogger(__name__)
 DownloadConfigs = Configs(ID="Download")
 
 
-def reloadConfig() -> None:
-    """重载配置文件"""
-    DownloadConfigs.reloadConfig()
+def reloadDownloadConfig() -> None:
+    """重载下载功能的配置文件"""
+    DownloadConfigs.reload()
 
 
 def getSession(TheSession: Session | None = None) -> Session:

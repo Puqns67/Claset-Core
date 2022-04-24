@@ -3,6 +3,7 @@
 
 from os import getcwd
 from os.path import abspath
+from typing import Iterable
 from re import compile as reCompile
 
 from .File import loadFile
@@ -17,12 +18,13 @@ ReMatchLoadString = reCompile(r"^&F<([a-zA-Z_\d]+)>&V<(.+)>$")
 
 
 class AdvancedPath():
-    def __init__(self, Others: list | None = None, IsPath: bool = False):
+    def __init__(self, Others: Iterable | None = None, IsPath: bool = False):
         self.Configs = Configs(ID="Paths")
         self.IsPath = IsPath
         self.CompleteConfigs: dict = self.Configs["Prefixs"]
 
-        if Others is not None: self.getFromOthersKeys(Others)
+        if Others is not None:
+            self.getFromOthersKeys(Others)
 
 
     def loadOtherString(self, Objects: str) -> dict:
@@ -41,7 +43,7 @@ class AdvancedPath():
         return(File[Value])
 
 
-    def getFromOthersKeys(self, OtherTypes: list) -> None:
+    def getFromOthersKeys(self, OtherTypes: Iterable) -> None:
         """从 Others 字符串列表取得额外的 Key"""
         if len(self.Configs["Others"]) == 0:
             OthersKeys = OtherTypes
@@ -59,16 +61,14 @@ class AdvancedPath():
         for i in CompleteConfigsList:
             CompleteConfigs[i] = self.CompleteConfigs[i]
 
-        self.OthersType = True
-
         # 刷新数据
         self.CompleteConfigs = CompleteConfigs
 
 
-    def path(self, Input: str, Others: list | None = None, IsPath: bool | None = None) -> str:
+    def path(self, Input: str, Others: Iterable | None = None, IsPath: bool | None = None) -> str:
         """高级格式化路径"""
         # 如果启用了 Others 且未载过 Others 则通过 getFromOthersKeys 取得额外的 Key
-        if (Others is not None) and (not self.OthersType): self.getFromOthersKeys(Others)
+        if (Others is not None): self.getFromOthersKeys(Others)
         if (not IsPath) and self.IsPath: self.IsPath = False
 
         while "$" in Input:
@@ -90,16 +90,18 @@ class AdvancedPath():
         return(Input)
 
 
-    def pathAdder(self, *Paths: list | tuple | str) -> str:
+    def pathAdder(self, *Paths: str | Iterable | float | int) -> str:
         """拼接路径片段并格式化"""
         PathList = list()
         for i in Paths:
             if isinstance(i, str):
                 PathList.append(i)
-            elif isinstance(i, (list, tuple,)):
+            elif isinstance(i, Iterable):
                 PathList.extend(i)
-            elif isinstance(i, (int, float,)):
+            elif isinstance(i, int | float):
                 PathList.append(str(i))
+            else:
+                raise TypeError(type(Paths))
         Path = "/".join(PathList)
         if "$" in Path: Path = self.path(Path)
         return(abspath(Path))
