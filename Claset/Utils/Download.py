@@ -10,6 +10,7 @@ from random import randint
 from re import search
 from time import sleep
 from typing import Iterable, Any
+from enum import Enum
 
 from Claset import __fullversion__
 from requests import (
@@ -67,6 +68,14 @@ def getSession(TheSession: Session | None = None) -> Session:
     return(TheSession)
 
 
+class StopTypes(Enum):
+    """停止类型"""
+    Downloaded = 0
+    Errored = 1
+    Stopping = 2
+    FileExist = 3
+
+
 class DownloadTask():
     _FULL = False
     _EXISTS = None
@@ -88,8 +97,10 @@ class DownloadTask():
         self.Sha1 = Sha1
         self.ConnectTimeout = ConnectTimeout or DownloadConfigs["Timeouts"]["Connect"]
         self.ReadTimeout = ReadTimeout or DownloadConfigs["Timeouts"]["Read"]
-        self.Retry = Retry or DownloadConfigs["Retry"]
         self.Next = Next
+
+        self._Retry = Retry or DownloadConfigs["Retry"]
+        self.Retry = self._Retry
 
 
     def full(self) -> None:
@@ -156,6 +167,7 @@ class DownloadTask():
         self._FULL = False
         self._EXISTS = None
         self._VERIFY = None
+        self.Retry = self._Retry
 
 
 class DownloadManager():
@@ -184,16 +196,12 @@ class DownloadManager():
             self.addJobToProject(Task.ProjectID, CompletedTasksCount=1)
             return(Task)
 
-        Retry = True
-        while Retry:
-            Retry = False
-            Errored = False
-            StopType = "Downloaded"
+        while Task.Retry >= 1:
             try:
                 self.download(
                     URL=Task.URL,
                     OutputPaths=Task.OutputPaths,
-                    NotCheck=False,
+                    NotCheck=True,
                     Size=Task.Size,
                     Sha1=Task.Sha1,
                     Overwrite=Task.Overwrite,
@@ -202,49 +210,38 @@ class DownloadManager():
                 )
             # 错误处理
             except Ex_Download.Stopping:
-                StopType = "Stopping"
-            except Ex_Download.SizeError:
-                Errored = True
-                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
-                Logger.warning("File \"%s\" Download failure, By SizeError, From \"%s\"", Task.FileName, Task.URL)
+                StopType = StopTypes.Stopping
             except Ex_Download.FileExist:
-                StopType = "FileExist"
+                StopType = StopTypes.FileExist
+            except Ex_Download.SizeError:
+                StopType = StopTypes.Errored
+                Logger.warning("File \"%s\" Download failure, By SizeError, From \"%s\"", Task.FileName, Task.URL)
             except Ex_Download.SchemaError:
-                Errored = True
-                self.addJobToProject(Task.ProjectID, ErrorTasksCount=1)
+                StopType = StopTypes.Errored
                 Logger.error("URL \"%s\" Formart Error", Task.URL)
             except Ex_Download.HashError:
-                Errored = True
-                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                StopType = StopTypes.Errored
                 Logger.warning("File \"%s\" hash verification failed", Task.FileName)
             except Ex_Download.ReadTimeout:
-                Errored = True
-                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
-                Logger.warning("File \"%s\" Download timeout,  From \"%s\"", Task.FileName, Task.URL)
+                StopType = StopTypes.Errored
+                Logger.warning("File \"%s\" Download timeout, From \"%s\"", Task.FileName, Task.URL)
             except Ex_Download.ConnectTimeout:
-                Errored = True
-                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                StopType = StopTypes.Errored
                 Logger.warning("File \"%s\" Connect timeout, From \"%s\"", Task.FileName, Task.URL)
             except Ex_Download.DownloadExceptions:
-                Errored = True
-                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                StopType = StopTypes.Errored
                 Logger.warning("File \"%s\" Download failure, By ConnectionError, From \"%s\"", Task.FileName, Task.URL)
             except Exception:
-                Errored = True
-                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                StopType = StopTypes.Errored
                 Logger.warning("Unknown Error:", exc_info=True)
-
-            if Errored:
-                if Task.Retry > 0:
-                    Task.Retry -= 1
-                    Retry = True
-                    continue
-                else:
-                    Logger.error("File \"%s\" Retry Count Max", Task.FileName)
-                    self.addJobToProject(Task.ProjectID, ErrorTasksCount=1)
-                    raise Ex_Download.DownloadExceptions
             else:
-                self.addJobToProject(Task.ProjectID, CompletedTasksCount=1)
+                StopType = StopTypes.Downloaded
+
+            if StopType == StopTypes.Errored:
+                self.addJobToProject(Task.ProjectID, FailuredTasksCount=1)
+                Task.Retry -= 1
+                continue
+            else:
                 # 没有出现下载错误之后尝试执行 Task.Next
                 if Task.Next is not None:
                     try:
@@ -253,14 +250,20 @@ class DownloadManager():
                         Logger.warning("Next Error: ", exc_info=True)
 
                 match StopType:
-                    case "Downloaded": Logger.info("File \"%s\" Downloaded", Task.OutputPaths)
-                    case "Stopping": pass
-                    case "FileExist": Logger.info("File \"%s\" is Exist, Skipping", Task.OutputPaths)
+                    case StopTypes.Downloaded: Logger.info("File \"%s\" Downloaded", Task.OutputPaths)
+                    case StopTypes.Stopping: pass
+                    case StopTypes.FileExist: Logger.info("File \"%s\" is Exist, Skipping", Task.OutputPaths)
                     case _: raise ValueError(StopType)
 
-                if StopType != "Stopping":
+                self.addJobToProject(Task.ProjectID, CompletedTasksCount=1)
+
+                if StopType != StopTypes.Stopping:
                     Task.clear()
                     return(Task)
+
+        Logger.error("File \"%s\" Retry Count Max", Task.FileName)
+        self.addJobToProject(Task.ProjectID, ErrorTasksCount=1)
+        raise Ex_Download.DownloadExceptions
 
 
     def download(

@@ -113,7 +113,7 @@ class VersionInfos():
     def getConfig(self, Keys: str | Iterable[str]) -> Any:
         """获取配置"""
         self.full()
-        BaseKeys = Keys[0] if isinstance(Keys, list) else Keys
+        BaseKeys = Keys if isinstance(Keys, str) else Keys[0]
 
         if BaseKeys in self.Configs["Global"]:
             if self.Configs["UseGlobalConfig"]:
@@ -129,7 +129,7 @@ class VersionInfos():
     def setConfig(self, Keys: str | Iterable[str], Value: Any, Save: bool = True) -> None:
         """设置配置"""
         self.full()
-        BaseKeys = Keys[0] if isinstance(Keys, list) else Keys
+        BaseKeys = Keys if isinstance(Keys, str) else Keys[0]
 
         if BaseKeys in self.Configs["Global"]:
             if self.Configs["UseGlobalConfig"]:

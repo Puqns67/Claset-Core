@@ -38,6 +38,11 @@ class ClasetCommandLine(Cmd):
     delattr(Cmd, "do_quit")
 
 
+    def getConsole(self):
+        """获取用于输出的 Rich Console"""
+        return(self.RichConsole)
+
+
     def i18n(self, ForceLanguage: str | list | None = None) -> None:
         """多国语言支持"""
         if ForceLanguage is not None:
@@ -166,7 +171,10 @@ class ClasetCommandLine(Cmd):
         except Claset.Game.Launch.Exceptions.VersionNotFound:
             self.RichConsole.print("游戏实例 \"{}\" 未找到".format(init.GameName))
         else:
-            GameLauncher.launchGame(Type=init.Type, PrintToTerminal=init.ShowGameLogs, SaveTo=init.SaveToFile)
+            try:
+                GameLauncher.launchGame(Type=init.Type, PrintToTerminal=init.ShowGameLogs, SaveTo=init.SaveToFile)
+            except Claset.Game.Launch.Exceptions.UnsupportVersion:
+                self.RichConsole.print("")
 
 
     def do_ListGame(self, _: Namespace):
@@ -322,6 +330,7 @@ class ClasetCommandLine(Cmd):
         Claset.stopALLDownloader()
         if init.WaitGames:
             Claset.waitALLGames()
+        self.exit_code
         raise SystemExit
     do_exit = do_Exit
     do_quit = do_Exit

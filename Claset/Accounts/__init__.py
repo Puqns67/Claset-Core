@@ -2,17 +2,18 @@
 
 from . import Exceptions
 
-from .Auth import Auth
+from .AccountAPIs import *
 from .Account import Account
 from .AccountManager import AccountManager
-from .MinecraftAccount import MinecraftAccount
 
 ACCOUNT_TYPES = ("OFFLINE", "MICROSOFT",)
 ACCOUNT_STATUS = ("DELETE", "NORMAL", "DEFAULT")
 
 __all__ = (
     "Exceptions",
-    "Account", "AccountManager", "Auth", "MinecraftAccount",
+    "Account", "AccountManager", "AccountAPIs", "MinecraftAccount",
     "ACCOUNT_TYPES", "ACCOUNT_STATUS"
+) + (
+    AccountAPIs.__all__
 )
 

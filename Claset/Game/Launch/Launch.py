@@ -140,44 +140,46 @@ class GameLauncher():
 
     def getRunArgsList(self) -> list[str]:
         """获取启动命令行参数(不包含 Java 可执行项目)"""
-        match self.VersionInfos.ComplianceLevel:
-            case 0:
-                return(
-                    [
-                        "${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}",
-                        "${MEMMAX}", "${LOG4J2CONFIG}", "${JVMSUFFIX}",
-                        "-Djava.library.path=${natives_directory}",
-                        "-Dminecraft.launcher.brand=${launcher_name}",
-                        "-Dminecraft.launcher.version=${launcher_version}",
-                        "-cp", "${classpath}",
-                        "${MAINCLASS}", "${GAMEARGSPREFIX}"
-                    ] + self.VersionInfos.VersionJson["minecraftArguments"].split() + ["${GAMEARGSSUFFIX}"]
-                )
-            case 1:
+        if self.VersionInfos.VersionJson.get("arguments") is None:
+            Output = [
+                "${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}",
+                "${MEMMAX}", "${LOG4J2CONFIG}", "${JVMSUFFIX}",
+                "-Djava.library.path=${natives_directory}",
+                "-Dminecraft.launcher.brand=${launcher_name}",
+                "-Dminecraft.launcher.version=${launcher_version}",
+                "-cp", "${classpath}",
+                "${MAINCLASS}", "${GAMEARGSPREFIX}"
+            ]
+            try:
+                Output.extend(self.VersionInfos.VersionJson["minecraftArguments"].split())
+            except KeyError:
+                raise UnsupportVersion(self.VersionInfos.Name)
+            Output.append("${GAMEARGSSUFFIX}")
+        else:
+            try:
                 Arguments = ["${CLASETJVMHEADER}", "${JVMPREFIX}", "${MEMMIN}", "${MEMMAX}", "${LOG4J2CONFIG}"]
                 Arguments.extend(self.VersionInfos.VersionJson["arguments"]["jvm"])
                 Arguments.extend(("${JVMSUFFIX}", "${MAINCLASS}", "${GAMEARGSPREFIX}",))
                 Arguments.extend(self.VersionInfos.VersionJson["arguments"]["game"])
+            except KeyError:
+                raise UnsupportVersion(self.VersionInfos.Name)
 
-                Output = list()
-                for Argument in Arguments:
-                    if isinstance(Argument, dict):
-                        if (ResolveRule(Items=Argument["rules"], Features=Features)):
-                            if isinstance(Argument["value"], str):
-                                Output.append(Argument["value"])
-                            elif isinstance(Argument["value"], list):
-                                Output.extend(Argument["value"])
-                            else:
-                                raise(ValueError("Argument[\"value\"] type error"))
-                    elif isinstance(Argument, str):
-                        Output.append(Argument)
-                    else:
-                        raise(ValueError("Argument type error"))
-                Output.append("${GAMEARGSSUFFIX}")
-
-                return(Output)
-            case _:
-                raise UnsupportComplianceLevel(self.VersionInfos.ComplianceLevel)
+            Output = list()
+            for Argument in Arguments:
+                if isinstance(Argument, dict):
+                    if (ResolveRule(Items=Argument["rules"], Features=Features)):
+                        if isinstance(Argument["value"], str):
+                            Output.append(Argument["value"])
+                        elif isinstance(Argument["value"], list):
+                            Output.extend(Argument["value"])
+                        else:
+                            raise(ValueError("Argument[\"value\"] type error"))
+                elif isinstance(Argument, str):
+                    Output.append(Argument)
+                else:
+                    raise(ValueError("Argument type error"))
+            Output.append("${GAMEARGSSUFFIX}")
+        return(Output)
 
 
     def processRunArgsList(self, RunCodeList: Iterable[str] = tuple()) -> list[str]:
@@ -207,10 +209,10 @@ class GameLauncher():
         """替换"""
         match Key:
             case "CLASETJVMHEADER": return(ClasetJvmHeader)
-            case "JVMPREFIX": return(self.VersionInfos.getConfig(["UnableGlobal", "PrefixAndSuffix", "JvmPrefix"]))
-            case "JVMSUFFIX": return(self.VersionInfos.getConfig(["UnableGlobal", "PrefixAndSuffix", "JvmSuffix"]))
-            case "GAMEARGSPREFIX": return(self.VersionInfos.getConfig(["UnableGlobal", "PrefixAndSuffix", "GamePrefix"]))
-            case "GAMEARGSSUFFIX": return(self.VersionInfos.getConfig(["UnableGlobal", "PrefixAndSuffix", "GameSuffix"]))
+            case "JVMPREFIX": return(self.VersionInfos.getConfig(("PrefixAndSuffix", "JvmPrefix",)))
+            case "JVMSUFFIX": return(self.VersionInfos.getConfig(("PrefixAndSuffix", "JvmSuffix",)))
+            case "GAMEARGSPREFIX": return(self.VersionInfos.getConfig(("PrefixAndSuffix", "GamePrefix",)))
+            case "GAMEARGSSUFFIX": return(self.VersionInfos.getConfig(("PrefixAndSuffix", "GameSuffix",)))
             case "MEMMIN": return("-Xms" + str(self.VersionInfos.getConfig("MemoryMin")) + "M")
             case "MEMMAX": return("-Xmx" + str(self.VersionInfos.getConfig("MemoryMax")) + "M")
             case "LOG4J2CONFIG": return(getLog4j2Infos(InitFile=self.VersionInfos.VersionJson, Type="Argument"))

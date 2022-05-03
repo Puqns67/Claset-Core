@@ -10,7 +10,7 @@ from typing import Iterable
 from .Confs.Paths import File
 from .Exceptions.Path import SearchError, PrefixsMissingKey
 
-__all__ = ("PathRegex", "path", "pathAdder", "setPerfix", "safetyPath")
+__all__ = ("PathRegex", "path", "pathAdder", "setPerfix", "safetyPath",)
 PathRegex = ReCompile(r"^(.*)\$([a-zA-Z]*)(.*)$")
 PathConfigs = None
 
@@ -45,7 +45,7 @@ def path(Input: str, IsPath: bool = False) -> str:
     return(Input)
 
 
-def pathAdder(self, *Paths: str | Iterable | float | int) -> str:
+def pathAdder(*Paths: str | Iterable | float | int) -> str:
     """拼接路径片段并格式化"""
     PathList = list()
     for i in Paths:
@@ -58,7 +58,7 @@ def pathAdder(self, *Paths: str | Iterable | float | int) -> str:
         else:
             raise TypeError(type(Paths))
     Path = "/".join(PathList)
-    if "$" in Path: Path = self.path(Path)
+    if "$" in Path: Path = path(Path)
     return(abspath(Path))
 
 

@@ -2,23 +2,19 @@
 
 from logging import getLogger
 from time import sleep, time, strptime, mktime
+from uuid import UUID
 
 from Claset.Utils import getSession
 
+from .AccountAPIURLSets import *
+
 from .Exceptions import MicrosoftOAuthDeclined, MicrosoftOAuthTimeOut
 
-CLASET_CLIENT_ID = "baadb158-b1d7-424d-b2cd-a5957c70348a"
-CLASET_SCOPE = "XboxLive.signin offline_access"
-MICROSOFT_TENANT = "consumers"
-MICROSOFT_DEVICE_CODE_URL = f"https://login.microsoftonline.com/{MICROSOFT_TENANT}/oauth2/v2.0/devicecode"
-MICROSOFT_TOKEN_URL = f"https://login.microsoftonline.com/{MICROSOFT_TENANT}/oauth2/v2.0/token"
-XBOX_LIVE_AUTH_URL = "https://user.auth.xboxlive.com/user/authenticate"
-XBOX_XSTS_AUTH_URL = "https://xsts.auth.xboxlive.com/xsts/authorize"
-MINECRAFT_AUTH_SERVICES_URL = "https://api.minecraftservices.com/authentication/login_with_xbox"
+__all__ = ("MicrosoftAuthAPI", "MinecraftAccountAPI",)
 Logger = getLogger(__name__)
 
 
-class Auth():
+class MicrosoftAuthAPI():
     """提供正版验证功能"""
     def __init__(self, MicrosoftAccountRefreshToken: str | None = None):
         self.RequestsSession = getSession()
@@ -144,7 +140,7 @@ class Auth():
     def getToken_Minecreaft(self) -> None:
         """获取来自 Mojang 的 Minecraft Access Token, 需先获取 XBox XSTS 的 Access Token"""
         MinecraftRespons = self.RequestsSession.post(
-            url=MINECRAFT_AUTH_SERVICES_URL,
+            url=MOJANG_AUTH_SERVICES_URL,
             headers={"content-type": "application/json", "charset": "UTF-8"},
             json={
                 "identityToken": f"XBL3.0 x={self.XboxXstsUserHash};{self.XboxXstsToken}"
@@ -155,4 +151,25 @@ class Auth():
         MinecraftReturned = MinecraftRespons.json()
         self.MinecraftAccessToken = MinecraftReturned["access_token"]
         self.MinecraftAccessTokenExpiresTime = MinecraftReturned["expires_in"] + time() - 5
+
+
+class MinecraftAccountAPI():
+    """Minecraft 账户相关 API"""
+    def __init__(self, MinecraftAccessToken: str):
+        self.AccessToken = MinecraftAccessToken
+        self.RequestsSession = getSession()
+        self.UUID, self.Name, self.Skins, self.Capes = self.getAccountInfos()
+
+
+    def getAccountInfos(self, MinecraftAccessToken: str | None = None) -> tuple[UUID, str, list, list]:
+        """获取账户相关信息"""
+        if MinecraftAccessToken is None:
+            MinecraftAccessToken = self.AccessToken
+
+        Infos = self.RequestsSession.get(
+            url=MOJANG_PROFILE_URL,
+            headers={"Authorization": "Bearer " + MinecraftAccessToken}
+        ).json()
+
+        return((UUID(Infos["id"]), Infos["name"], Infos["skins"], Infos["capes"],))
 

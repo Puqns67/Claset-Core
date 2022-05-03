@@ -8,9 +8,8 @@ from copy import deepcopy
 
 from Claset.Utils import Configs
 
-from .Auth import Auth
+from .AccountAPIs import MicrosoftAuthAPI, MinecraftAccountAPI
 from .Account import Account
-from .MinecraftAccount import MinecraftAccount
 
 from .Exceptions import *
 
@@ -38,10 +37,10 @@ class AccountManager():
                     NewAccount["Name"] = Name
                     NewAccount["UUID"] = uuid4().hex
             case "MICROSOFT":
-                MicrosoftOAuthTask = Auth()
+                MicrosoftOAuthTask = MicrosoftAuthAPI()
                 MicrosoftOAuthTask.auth()
                 MicrosoftOAuthTask.authToMinectaft()
-                Account = MinecraftAccount(MicrosoftOAuthTask.MinecraftAccessToken)
+                Account = MinecraftAccountAPI(MicrosoftOAuthTask.MinecraftAccessToken)
                 NewAccount["Name"] = Account.Name
                 NewAccount["UUID"] = Account.UUID.hex
                 NewAccount["MicrosoftAccountAccessToken"] = MicrosoftOAuthTask.MicrosoftAccountAccessToken

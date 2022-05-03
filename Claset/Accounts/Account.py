@@ -4,7 +4,7 @@ from typing import Any
 from uuid import UUID, uuid4
 from time import time
 
-from .Auth import Auth
+from .AccountAPIs import MicrosoftAuthAPI
 
 from .Exceptions import UnsupportedAccountType
 
@@ -19,7 +19,7 @@ class Account():
         self.TheManager = Manager
 
         if self.Type == "MICROSOFT":
-            self.MicrosoftOAuthTask = Auth(self.TheAccount["MicrosoftAccountRefreshToken"])
+            self.MicrosoftAuthAPI = MicrosoftAuthAPI(self.TheAccount["MicrosoftAccountRefreshToken"])
 
 
     def refreshToken(self, WithMicrosoft: bool = False) -> None:
@@ -28,14 +28,14 @@ class Account():
             raise UnsupportedAccountType(self.Type)
 
         if WithMicrosoft:
-            self.MicrosoftOAuthTask.refresh()
-            self.TheAccount["MicrosoftAccountAccessToken"] = self.MicrosoftOAuthTask.MicrosoftAccountAccessToken
-            self.TheAccount["MicrosoftAccountRefreshToken"] = self.MicrosoftOAuthTask.MicrosoftAccountRefreshToken
-            self.TheAccount["MicrosoftAccountAccessTokenExpiresTime"] = self.MicrosoftOAuthTask.MicrosoftAccountAccessTokenExpiresTime
+            self.MicrosoftAuthAPI.refresh()
+            self.TheAccount["MicrosoftAccountAccessToken"] = self.MicrosoftAuthAPI.MicrosoftAccountAccessToken
+            self.TheAccount["MicrosoftAccountRefreshToken"] = self.MicrosoftAuthAPI.MicrosoftAccountRefreshToken
+            self.TheAccount["MicrosoftAccountAccessTokenExpiresTime"] = self.MicrosoftAuthAPI.MicrosoftAccountAccessTokenExpiresTime
 
-        self.MicrosoftOAuthTask.authToMinectaft()
-        self.TheAccount["MinecraftAccessToken"] = self.MicrosoftOAuthTask.MinecraftAccessToken
-        self.TheAccount["MinecraftAccessTokenExpiresTime"] = self.MicrosoftOAuthTask.MinecraftAccessTokenExpiresTime
+        self.MicrosoftAuthAPI.authToMinectaft()
+        self.TheAccount["MinecraftAccessToken"] = self.MicrosoftAuthAPI.MinecraftAccessToken
+        self.TheAccount["MinecraftAccessTokenExpiresTime"] = self.MicrosoftAuthAPI.MinecraftAccessTokenExpiresTime
 
         self.TheManager.updateInfo(UUID=self.UUID, New=self.TheAccount)
         self.TheManager.save()

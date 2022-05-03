@@ -9,5 +9,5 @@ from Claset.Execution.CommandLine.Run import main
 
 
 if __name__ == "__main__":
-    main()
+    main(Debug=True)
 

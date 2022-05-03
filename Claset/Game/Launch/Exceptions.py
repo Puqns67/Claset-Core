@@ -6,8 +6,8 @@ class LauncherError(Exception):
 class VersionNotFound(LauncherError):
     """版本不存在"""
 
-class UnsupportComplianceLevel(LauncherError):
-    """不支持的 ComplianceLevel"""
+class UnsupportVersion(LauncherError):
+    """不支持的版本文件"""
 
 class LauncherVersionError(LauncherError):
     """此版本所要求的启动器版本不被本启动器所满足"""

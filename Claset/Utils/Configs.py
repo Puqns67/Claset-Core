@@ -8,16 +8,15 @@ from json import JSONDecodeError
 
 from .Path import path
 from .File import loadFile, saveFile, dfCheck, removeFile
-from .Others import getValueFromDict, fixType
+from .Others import getValueFromDict, fixType, ReMatchStrList
 
 from .Confs import ConfigIDs, ConfigInfos
 from .Exceptions import Configs as Ex_Configs
 
 __all__ = ("Configs",)
 Logger = getLogger(__name__)
-ReFindTypeAndKey = reCompile(r"^([a-zA-Z0-9_]+):(.+)$")
-ReFindOldAndNew = reCompile(r"^(.+)->(.*)$")
-ReIFStrList = reCompile(r"^\[.*\]")
+ReFindTypeAndKey = reCompile(r"^\s*([A-Z]+):(.+)\s*$")
+ReFindOldAndNew = reCompile(r"^\s*([\w\s,\[\]]+)->(\w+)\s*$")
 
 
 class Configs():
@@ -68,7 +67,7 @@ class Configs():
         return(self.TheConfig.keys())
 
 
-    def get(self, Keys: Iterable | str, Fallback: Any | None = None) -> Any:
+    def get(self, Keys: Iterable, Fallback: Any | None = None) -> Any:
         if isinstance(Keys, str): Keys = (Keys,)
         try: return(getValueFromDict(Keys=Keys, Dict=self.TheConfig))
         except KeyError: return(Fallback)
@@ -196,31 +195,24 @@ class Configs():
 
     def processConfig(self, Key: str, Type: str) -> dict:
         """对配置文件的各种操作"""
-        match Type:
-            case "REPLACE":
-                Old, New = ReFindOldAndNew.search(Key).groups()
-            case "RENAME":
-                Old, New = ReFindOldAndNew.search(Key).groups()
-            # TODO: 在 Nuitka 支持在 match case 语句中使用联合符 "|" 后转换格式为下: 
-            # case "REPLACE" | "RENAME":
-            # 已在 Nuitka 的 Issue 中: https://github.com/Nuitka/Nuitka/issues/1507
-            case "DELETE":
-                Old = Key
-                New = None
-            case _:
-                raise Ex_Configs.UndefinedDifferenceType(Type)
+        if Type in ("REPLACE", "RENAME",):
+            Old, New = ReFindOldAndNew.match(Key).groups()
+        elif Type == "DELETE":
+            Old = Key
+            New = None
+        else:
+            raise Ex_Configs.UndefinedDifferenceType(Type)
 
-        if ReIFStrList.search(Old.strip()) is not None: Old = self.__StrList2List(Old)
-        else: Old = [Old]
+        # 修正类型
+        if ReMatchStrList.match(Old) is not None:
+            Old = ReMatchStrList.match(Old).groups()[0].replace(" ", str()).split(",")
+        else:
+            Old = (Old,)
+
         return(self.__SetToDict(Keys=Old, Dict=self.TheConfig, Type=Type, Do=New))
 
 
-    def __StrList2List(self, Key: str) -> list:
-        """转化 String 格式的 List 至 List 格式"""
-        return(Key.replace("[", str()).replace("]", str()).replace(",", " ").split())
-
-
-    def __SetToDict(self, Keys: list, Dict: dict, Type: str, Do: Any | None = None) -> dict:
+    def __SetToDict(self, Keys: tuple | list, Dict: dict, Type: str, Do: Any | None = None) -> dict:
         """
         将设置写入 Dict
         * Keys: 字典键的列表

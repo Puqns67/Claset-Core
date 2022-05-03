@@ -30,16 +30,8 @@ class Logs():
 
     def SettingHandler(self, **Types: dict[str, str | None]):
         """设置 Handler"""
-        if Types.get("Stream") != "DISABLE":
-            if Types.get("Stream") is None:
-                self.SettingStreamHandler()
-            else:
-                self.SettingStreamHandler(LevelName=Types["Stream"])
-        if Types.get("File") != "DISABLE":
-            if Types.get("File") is None:
-                self.SettingFileHandler()
-            else:
-                self.SettingFileHandler(LevelName=Types["File"])
+        self.SettingStreamHandler(LevelName=Types.get("Stream"))
+        self.SettingFileHandler(LevelName=Types.get("File"))
 
 
     def SettingStreamHandler(self, LevelName: str | None = None):

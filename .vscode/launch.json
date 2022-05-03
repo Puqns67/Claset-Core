@@ -9,15 +9,7 @@
             "type": "python",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/Claset/Execution/CommandLine/RunVSCDebug.py",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Debug Tests",
-            "type": "python",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/Claset/Execution/Tests/RunVSCDebug.py",
+            "program": "${workspaceFolder}/Claset/Execution/CommandLine/RunDebug.py",
             "console": "integratedTerminal"
         },
         {
@@ -26,7 +18,7 @@
             "request": "launch",
             "module": "poetry",
             "cwd": "${workspaceFolder}",
-            "args": ["run", "python", "${workspaceFolder}/Claset/Execution/Tests/RunVSCDebug.py"],
+            "args": ["run", "python", "${workspaceFolder}/Claset/Execution/CommandLine/RunDebug.py"],
             "console": "integratedTerminal"
         }
     ]

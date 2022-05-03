@@ -6,12 +6,13 @@ from re import compile
 
 __all__ = ("getValueFromDict", "setValueToDict", "fixType", "encodeBase64", "decodeBase64", "formatDollar",)
 __fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
-ReMatchFormatDollar = compile(r"^(.*)\${([a-zA-Z_\d]+)}(.*)$")
+ReMatchFormatDollar = compile(r"^(.*)\${([a-zA-Z]+\w*)}(.*)$")
+ReMatchStrList = compile(r"^\s*\[([\w\s,]*)\]\s*$")
 
 
 def getValueFromDict(Keys: Iterable[str] | str, Dict: dict) -> Any:
     """使用列表从字典获取数据"""
-    if isinstance(Keys, Iterable):
+    if isinstance(Keys, list | tuple):
         if len(Keys) >= 2:
             return(getValueFromDict(Keys=Keys[1:], Dict=Dict[Keys[0]]))
         elif len(Keys) == 1:
@@ -27,7 +28,7 @@ def getValueFromDict(Keys: Iterable[str] | str, Dict: dict) -> Any:
 def setValueToDict(Keys: Iterable[str] | str, Value: Any, Dict: dict | None = None) -> dict:
     """使用列表向字典填充数据"""
     if not isinstance(Dict, dict): Dict = dict()
-    if isinstance(Keys, Iterable):
+    if isinstance(Keys, list | tuple):
         if len(Keys) >= 2:
             if Dict.get(Keys[0]) is None: Dict[Keys[0]] = dict()
             Dict[Keys[0]] = setValueToDict(Keys=Keys[1:], Value=Value, Dict=Dict[Keys[0]])
@@ -45,17 +46,27 @@ def setValueToDict(Keys: Iterable[str] | str, Value: Any, Dict: dict | None = No
 
 
 def fixType(Input: str) -> Any:
-    """修复类型"""
-    Output = Input
-    if Input.lower() in __fixType_fixs:
+    """
+    修复类型\n
+    支持的输入输出类型:
+    * 符合正则表达式 “^\s*\[([\w\s,]*)\]\s*$” 的字符串将被转化为 list 类型返回
+    * 转化所有字符为小写后在此元组 ("true", "false", "null", "none",) 中的字符串将被转换为对应的类型返回
+    * 最后一个字符为数字或小数点的字符串将会尝试转换为整型, 无法转为整型后尝试浮点数\n
+    若都无法转换则返回原字符串
+    """
+    if ReMatchStrList.match(Input) is not None:
+        Output = ReMatchStrList.match(Input).groups()[0].replace(" ", str()).split(",")
+    elif Input.lower() in __fixType_fixs:
         Output = __fixType_fixs[Input.lower()]
     elif Input == str(): return(None)
-    elif Input[-1] in ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9",):
+    elif Input[-1] in ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".",):
         try: Output = int(Input)
         except ValueError:
             # 若使用整型格式化失败则尝试浮点
             try: Output = float(Input)
             except ValueError: pass
+    else:
+        return(Input)
     return(Output)
 
 
