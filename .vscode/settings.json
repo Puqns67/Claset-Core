@@ -1,0 +1,6 @@
+{
+    "java.project.outputPath": "Build",
+    "java.project.sourcePaths": [
+        "Claset/Utils/JavaHelper/JavaSrcs/GetJavaInfo"
+    ]
+}

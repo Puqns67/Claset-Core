@@ -21,14 +21,14 @@ __all__ = (
 Logger = getLogger(__name__)
 
 
-def loadFile(Path: str, Type: str = "text") -> dict | bytes | str:
+def loadFile(Path: str, Type: str = "text", NotFormat: bool = False) -> dict | bytes | str:
     """
     加载文件
     * Path: 文件路径
     * Type: 类型(json, bytes, text)
     """
-
-    Path = Pathmd(Path, IsPath=True)
+    if not NotFormat:
+        Path = Pathmd(Path, IsPath=True)
 
     Logger.debug("Path: \"%s\", Type: \"%s\"", Path, Type)
 
@@ -46,15 +46,15 @@ def loadFile(Path: str, Type: str = "text") -> dict | bytes | str:
             raise ValueError("loadFile: Unknown Type: " + Type)
 
 
-def saveFile(Path: str, FileContent: str | bytes, Type: str = "text") -> None:
+def saveFile(Path: str, FileContent: str | bytes, Type: str = "text", NotFormat: bool = False) -> None:
     """
     保存文件
     * Path: 文件路径
     * FileContent: 文件内容
     * Type: 类型(json, bytes, log, text)
     """
-
-    Path = Pathmd(Path, IsPath=True)
+    if not NotFormat:
+        Path = Pathmd(Path, IsPath=True)
 
     Logger.debug("Path: \"%s\", Type: \"%s\", FileContent Type: %s", Path, Type, type(FileContent))
 
@@ -153,7 +153,7 @@ def decompressFile(ArchiveType: str, SourceFilePath: str, ToFilePath: str):
     saveFile(Path=ToFilePath, FileContent=FileContent, Type="bytes")
 
 
-def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
+def dfCheck(Path: str, Type: str, Size: int | None = None, NotFormat: bool = False) -> bool:
     """
     检测文件夹/文件是否存在和体积是否正常\n
     在输入 Type 不存在时触发 ValueError\n
@@ -168,7 +168,8 @@ def dfCheck(Path: str, Type: str, Size: int | None = None) -> bool:
     * fs: 对比输入的 Size, 在文件不存在时触发 FileNotFoundError, Size 为空时触发 ValueError\n
     若选项有误则触发 ValueError
     """
-    Path = Pathmd(Path, IsPath=True)
+    if not NotFormat:
+        Path = Pathmd(Path, IsPath=True)
 
     if "d" in Type:
         if "m" in Type:

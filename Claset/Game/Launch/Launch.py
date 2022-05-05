@@ -96,7 +96,7 @@ class GameLauncher():
         match Type:
             case "SUBPROCESS":
                 Stdout = None if PrintToTerminal else DEVNULL
-                WindowsCreationFlags = SubProcessPriorityClasses[self.VersionInfos.getConfig("WindowsPriority")] if System().get() else 0
+                WindowsCreationFlags = SubProcessPriorityClasses[self.VersionInfos.getConfig("WindowsPriority")] if System().get() == "Windows" else 0
                 self.Game = Popen(args=[self.PickedJava["Path"]] + self.RunArgs, cwd=self.RunCwd, stdout=Stdout, creationflags=WindowsCreationFlags)
                 LaunchedGames.append(self)
                 self.setStatus("RUNNING")

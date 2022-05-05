@@ -1,3 +1,5 @@
+package GetJavaInfo;
+
 public class GetJavaInfo {
     public static void main(String[] args) {
         System.out.println("os.arch=\"" + System.getProperty("os.arch") + "\"");
@@ -5,4 +7,3 @@ public class GetJavaInfo {
         System.out.println("java.vendor=\"" + System.getProperty("java.vendor") + "\"");
     }
 }
-

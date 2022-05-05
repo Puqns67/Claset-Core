@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from platform import system, machine, version
+from typing import Any
 
 from .Exceptions.Claset import UnsupportSystemHost
 
@@ -15,16 +16,22 @@ OriginalVersion = version()
 class Base():
     """用于获取各类风格的 Platform 字符串基类"""
     Source = str()
-    def formats(self, format: str) -> str:
+    def formats(self, format: str, Raise: Exception | None = None) -> str:
         """格式化方法"""
         return(self.Source)
 
-    def get(self, Format: str | dict = "Python") -> str:
+    def get(self, Format: str | dict = "Python", Raise: Exception | None = None) -> str | Any:
         """用于获取各类风格的 Platform 字符串"""
         if isinstance(Format, str):
-            return(self.formats(format=Format))
+            return(self.formats(format=Format, Raise=Raise))
         elif isinstance(Format, dict):
-            return(Format[self.Source])
+            if Raise is None:
+                return(Format[self.Source])
+            else:
+                try:
+                    return(Format[self.Source])
+                except KeyError:
+                    raise Exception(self.Source)
         else:
             ValueError(Format)
 
@@ -40,7 +47,7 @@ class Base():
 class System(Base):
     """用于获取各类风格的 System 字符串"""
     Source = OriginalSystem
-    def formats(self, format: str) -> str:
+    def formats(self, format: str, Raise: Exception | None = None) -> str:
         """格式化方法"""
         match format:
             case "Minecraft":
@@ -49,29 +56,29 @@ class System(Base):
                 except KeyError:
                     raise UnsupportSystemHost(system())
             case "Python": return(OriginalSystem)
-            case _: raise ValueError(format)
+            case _: raise ValueError(format) if Raise is not None else Exception(format)
 
 
 class Arch(Base):
     """用于获取各类风格的 Arch 字符串"""
     Source = OriginalArch
-    def formats(self, format: str) -> str:
+    def formats(self, format: str, Raise: Exception | None = None) -> str:
         """格式化方法"""
         match format:
             case "Minecraft": return(ArchFormats["Minecraft"][OriginalArch.lower()])
             case "PureNumbers": return(self.get(Format="Minecraft").replace("x", str()))
             case "Python": return(OriginalArch)
-            case _: raise ValueError(format)
+            case _: raise ValueError(format) if Raise is not None else Exception(format)
 
 
 class Version(Base):
     """用于获取各类风格的 Version 字符串"""
     Source = OriginalVersion
-    def formats(self, format: str) -> str:
+    def formats(self, format: str, Raise: Exception | None = None) -> str:
         """格式化方法"""
         match format:
             case "Python": return(OriginalVersion)
-            case _: raise ValueError(format)
+            case _: raise ValueError(format) if Raise is not None else Exception(format)
 
 
 def formatPlatform(String: str, Formats: dict) -> str:

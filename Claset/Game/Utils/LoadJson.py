@@ -5,7 +5,7 @@ from logging import getLogger
 from os.path import basename as baseName
 from re import compile
 
-from Claset.Utils import AdvancedPath, DownloadTask, path, pathAdder, formatDollar
+from Claset.Utils import AdvancedPath, DownloadTask, System, path, pathAdder, formatDollar
 
 from .Others import ResolveRule, getNativesObject
 from .Exceptions import TargetVersionNotFound
@@ -148,6 +148,7 @@ def AssetIndex_DownloadTasks(InitFile: dict) -> list[DownloadTask]:
 
 def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None = None) -> str:
     Output = str()
+    splitBy = ";" if System().get() == "Windows" else ":"
     for Libraries in VersionJson["libraries"]:
         if "rules" in Libraries:
             if ResolveRule(Items=Libraries["rules"], Features=Features) == False:
@@ -159,7 +160,7 @@ def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None =
             continue
         LibraryFullPath = pathAdder("$LIBRERIES", LibraryPath.split("."), f"{LibraryName}/{LibraryVersion}/{LibraryName}-{LibraryVersion}.jar")
         if LibraryFullPath not in Output:
-            Output += LibraryFullPath + ";"
+            Output += LibraryFullPath + splitBy
     Output += VersionJarPath
     return(Output)
 
