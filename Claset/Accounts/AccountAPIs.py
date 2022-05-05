@@ -16,10 +16,11 @@ Logger = getLogger(__name__)
 
 class MicrosoftAuthAPI():
     """提供正版验证功能"""
-    def __init__(self, MicrosoftAccountRefreshToken: str | None = None):
+    def __init__(self, MicrosoftAccountRefreshToken: str | None = None, MicrosoftAccountAccessToken: str | None = None):
         self.RequestsSession = getSession()
 
         self.MicrosoftAccountRefreshToken = MicrosoftAccountRefreshToken
+        self.MicrosoftAccountAccessToken = MicrosoftAccountAccessToken
 
 
     def auth(self):

@@ -28,6 +28,7 @@ class GameInstaller():
     * Downloader: 下载器, 不定义则使用全局下载器
     """
     def __init__(self, VersionName: str, MinecraftVersion: str | None = None, Downloader: DownloadManager | None = None, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
+        # TODO: 在 Linux 下, 如果 VersionName 中含有中文字符, 启动 Minecraft 时 Native 文件夹识别将会出现编码错误问题, 可通过软链接到缓存文件夹的方式避免此问题
         self.VersionName = VersionName
         self.MinecraftVersion = MinecraftVersion
         self.WaitDownloader = WaitDownloader
@@ -169,6 +170,5 @@ class GameInstaller():
 
     def createConfig(self) -> None:
         """创建版本配置文件"""
-        ProcessList = ["REPLACE:[UnableGlobal, NativesDir]->natives"]
-        Configs(ID="Game", FilePath=pathAdder("$VERSION", self.VersionName, "ClasetVersionConfig.json"), ProcessList=ProcessList)
+        Configs(ID="Game", FilePath=pathAdder("$VERSION", self.VersionName, "ClasetVersionConfig.json"))
 
