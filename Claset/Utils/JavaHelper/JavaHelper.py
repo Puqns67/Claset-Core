@@ -54,7 +54,7 @@ def getJavaPath() -> list[str]:
                     javaPath = pathAdder(one.path, "bin", JavaExecutableFileName)
                     if dfCheck(Path=javaPath, Type="f"):
                         Output.append(javaPath)
-                        break
+                        continue
                     for two in scandir(one.path):
                         javaPath = pathAdder(two.path, "bin", JavaExecutableFileName)
                         if dfCheck(Path=javaPath, Type="f"):

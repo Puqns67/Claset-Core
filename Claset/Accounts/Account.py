@@ -19,7 +19,7 @@ class Account():
         self.TheManager = Manager
 
         if self.Type == "MICROSOFT":
-            self.MicrosoftAuthAPI = MicrosoftAuthAPI(self.TheAccount["MicrosoftAccountRefreshToken"])
+            self.MicrosoftAuthAPI = MicrosoftAuthAPI(self.TheAccount["MicrosoftAccountRefreshToken"], self.TheAccount["MicrosoftAccountAccessToken"])
 
 
     def refreshToken(self, WithMicrosoft: bool = False) -> None:
