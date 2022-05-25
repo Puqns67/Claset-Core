@@ -10,7 +10,13 @@ from typing import Iterable
 from .Confs.Paths import File
 from .Exceptions.Path import SearchError, PrefixsMissingKey
 
-__all__ = ("PathRegex", "path", "pathAdder", "setPerfix", "safetyPath",)
+__all__ = (
+    "PathRegex",
+    "path",
+    "pathAdder",
+    "setPerfix",
+    "safetyPath",
+)
 PathRegex = ReCompile(r"^(.*)\$([a-zA-Z]*)(.*)$")
 PathConfigs = None
 
@@ -33,16 +39,18 @@ def path(Input: str, IsPath: bool = False) -> str:
             raise SearchError(Input)
         else:
             match Matched:
-                case "PREFIX": Matched = getcwd()
+                case "PREFIX":
+                    Matched = getcwd()
                 case Matched if Matched in PathConfigs:
                     Matched = PathConfigs[Matched]
-                case _: raise PrefixsMissingKey(Matched)
+                case _:
+                    raise PrefixsMissingKey(Matched)
             Input = f"{Perfix}{Matched}{Suffix}"
 
     if IsPath:
         Input = abspath(Input)
 
-    return(Input)
+    return Input
 
 
 def pathAdder(*Paths: str | Iterable | float | int) -> str:
@@ -58,8 +66,9 @@ def pathAdder(*Paths: str | Iterable | float | int) -> str:
         else:
             raise TypeError(type(Paths))
     Path = "/".join(PathList)
-    if "$" in Path: Path = path(Path)
-    return(abspath(Path))
+    if "$" in Path:
+        Path = path(Path)
+    return abspath(Path)
 
 
 def setPerfix(NewPerfix: str) -> None:
@@ -69,6 +78,6 @@ def setPerfix(NewPerfix: str) -> None:
 
 def safetyPath(Input: str) -> str:
     """获得更安全的路径"""
-    if " " in Input: Input = f"\"{Input}\""
-    return(Input)
-
+    if " " in Input:
+        Input = f'"{Input}"'
+    return Input

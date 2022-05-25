@@ -10,14 +10,24 @@ __version__ = "0.1.0"
 __build__ = 181
 __fullversion__ = __version__ + "_" + str(__build__)
 __all__ = (
-    "Accounts", "Execution", "Utils", "Game",
-    "LaunchedGames", "Downloaders",
-    "waitALLGames", "stopALLGames", "getDownloader", "stopALLDownloader",
-    "setLoggerHandler", "ProcessOldLog", "getLogger", 
+    "Accounts",
+    "Execution",
+    "Utils",
+    "Game",
+    "LaunchedGames",
+    "Downloaders",
+    "waitALLGames",
+    "stopALLGames",
+    "getDownloader",
+    "stopALLDownloader",
+    "setLoggerHandler",
+    "ProcessOldLog",
+    "getLogger",
 )
 
 LaunchedGames = list()
 Downloaders = list()
+
 
 def waitALLGames() -> None:
     """设置游戏守护进程状态为等待"""
@@ -47,7 +57,7 @@ def getDownloader(ID: int = 0):
         else:
             Downloader = Utils.DownloadManager()
             Downloaders.append(Downloader)
-    return(Downloader)
+    return Downloader
 
 
 def stopALLDownloader() -> None:
@@ -83,5 +93,4 @@ def ProcessLogs(Type: str | None = None, ThreadMode: bool = True) -> None:
 
 def getLogger() -> Logger:
     """获得原全局日志"""
-    return(GolbalLogger)
-
+    return GolbalLogger

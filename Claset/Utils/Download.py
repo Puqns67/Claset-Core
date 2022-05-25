@@ -14,8 +14,11 @@ from enum import Enum
 
 from Claset import __fullversion__
 from requests import (
-    __version__ as RequestsVersion, Session, post,
-    exceptions as Ex_Requests, packages as requestsPackages
+    __version__ as RequestsVersion,
+    Session,
+    post,
+    exceptions as Ex_Requests,
+    packages as requestsPackages,
 )
 from urllib3 import __version__ as Urllib3Version
 
@@ -24,7 +27,12 @@ from .Exceptions import Download as Ex_Download
 from .File import dfCheck, loadFile, saveFile
 from .Path import pathAdder, path as Pathmd
 
-__all__ = ("reloadDownloadConfig", "getSession", "DownloadTask", "DownloadManager",)
+__all__ = (
+    "reloadDownloadConfig",
+    "getSession",
+    "DownloadTask",
+    "DownloadManager",
+)
 Logger = getLogger(__name__)
 DownloadConfigs = Configs(ID="Download")
 
@@ -36,7 +44,8 @@ def reloadDownloadConfig() -> None:
 
 def getSession(TheSession: Session | None = None) -> Session:
     """设置/获取 Session"""
-    if TheSession is None: TheSession = Session()
+    if TheSession is None:
+        TheSession = Session()
 
     TheSession.stream = True
     TheSession.trust_env = DownloadConfigs["UseSystemProxy"]
@@ -50,42 +59,64 @@ def getSession(TheSession: Session | None = None) -> Session:
         try:
             post(DownloadConfigs["ProxyLink"])
         except Ex_Requests.ConnectionError:
-            Logger.warning("Unable to connect to the proxy server: \"%s\", Disable it", DownloadConfigs["ProxyLink"])
+            Logger.warning(
+                'Unable to connect to the proxy server: "%s", Disable it',
+                DownloadConfigs["ProxyLink"],
+            )
         except Ex_Requests.InvalidSchema:
-            Logger.warning("Proxy server url schema error: \"%s\", Disable it", DownloadConfigs["ProxyLink"])
+            Logger.warning(
+                'Proxy server url schema error: "%s", Disable it',
+                DownloadConfigs["ProxyLink"],
+            )
         else:
-            TheSession.proxies = {"http": DownloadConfigs["ProxyLink"], "https": DownloadConfigs["ProxyLink"]}
+            TheSession.proxies = {
+                "http": DownloadConfigs["ProxyLink"],
+                "https": DownloadConfigs["ProxyLink"],
+            }
             # 使用代理时将强制禁用 SSL 验证与使用系统代理
             requestsPackages.urllib3.disable_warnings()
-            TheSession.verify = False
+            # TheSession.verify = False
             TheSession.trust_env = False
 
     # 设置 Headers
-    SourceHeaders: dict = DownloadConfigs['Headers']
-    SourceHeaders["user-agent"] = SourceHeaders["user-agent"].format(ClasetVersion=__fullversion__)
+    SourceHeaders: dict = DownloadConfigs["Headers"]
+    SourceHeaders["user-agent"] = SourceHeaders["user-agent"].format(
+        ClasetVersion=__fullversion__
+    )
     TheSession.headers = SourceHeaders
 
-    return(TheSession)
+    return TheSession
 
 
 class StopTypes(Enum):
     """停止类型"""
+
     Downloaded = 0
     Errored = 1
     Stopping = 2
     FileExist = 3
 
 
-class DownloadTask():
+class DownloadTask:
     _FULL = False
     _EXISTS = None
     _VERIFY = None
 
     def __init__(
-        self, URL: str, FileName: str | None = None, OutputPath: str | None = None, OutputPaths: str | None = None,
-        Size: int | None = None, ProjectID: int | None = None, Overwrite: bool = True, Sha1: str | None = None,
-        ConnectTimeout: int | None = None, ReadTimeout: int | None = None, Retry: int | None = None, Next: Any | None = None
-        ) -> None:
+        self,
+        URL: str,
+        FileName: str | None = None,
+        OutputPath: str | None = None,
+        OutputPaths: str | None = None,
+        Size: int | None = None,
+        ProjectID: int | None = None,
+        Overwrite: bool = True,
+        Sha1: str | None = None,
+        ConnectTimeout: int | None = None,
+        ReadTimeout: int | None = None,
+        Retry: int | None = None,
+        Next: Any | None = None,
+    ) -> None:
         """初始化数值"""
         self.URL = URL
         self.FileName = FileName
@@ -102,15 +133,15 @@ class DownloadTask():
         self._Retry = Retry or DownloadConfigs["Retry"]
         self.Retry = self._Retry
 
-
     def full(self) -> None:
         """完善本 Task"""
-        if self._FULL is True: return
+        if self._FULL is True:
+            return
 
         # 处理缺失的项目
-        if ((self.OutputPaths is None) or (self.OutputPaths == str())):
+        if (self.OutputPaths is None) or (self.OutputPaths == str()):
             # 如不存在 OutputPath 或 OutputPath 为空, 则使用当前位置
-            if ((self.OutputPath is None) or (self.OutputPath == str())):
+            if (self.OutputPath is None) or (self.OutputPath == str()):
                 self.OutputPath = "$PREFIX"
 
             # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
@@ -126,8 +157,12 @@ class DownloadTask():
                 self.FileName = "NoName"
 
             # 从 OutputPath 中去除重复的文件名
-            if ((self.FileName in self.OutputPath) and ((search(self.FileName + "$", self.OutputPath)) is not None)):
-                self.OutputPath = search("^(.*)" + self.FileName + "$", self.OutputPath).groups()[0]
+            if (self.FileName in self.OutputPath) and (
+                (search(self.FileName + "$", self.OutputPath)) is not None
+            ):
+                self.OutputPath = search(
+                    "^(.*)" + self.FileName + "$", self.OutputPath
+                ).groups()[0]
 
             self.OutputPaths = pathAdder(self.OutputPath, self.FileName)
         else:
@@ -144,23 +179,24 @@ class DownloadTask():
 
         self._FULL = True
 
-
     def checkExists(self) -> bool:
         """检查文件是否存在"""
         self.full()
         if self._EXISTS is None:
             self._EXISTS = dfCheck(Path=self.OutputPaths, Type="f")
-        return(self._EXISTS)
-
+        return self._EXISTS
 
     def checkSha1(self) -> bool:
         """检查文件 Sha1 是否正确"""
         self.full()
-        if not (self.checkExists() and (self.Sha1 is not None)): return(True)
+        if not (self.checkExists() and (self.Sha1 is not None)):
+            return True
         if self._VERIFY is None:
-            self._VERIFY = sha1(loadFile(Path=self.OutputPaths, Type="bytes")).hexdigest() == self.Sha1
-        return(self._VERIFY)
-
+            self._VERIFY = (
+                sha1(loadFile(Path=self.OutputPaths, Type="bytes")).hexdigest()
+                == self.Sha1
+            )
+        return self._VERIFY
 
     def clear(self) -> None:
         """清理属性"""
@@ -170,8 +206,9 @@ class DownloadTask():
         self.Retry = self._Retry
 
 
-class DownloadManager():
+class DownloadManager:
     """下载管理器"""
+
     DownloadsTasks = list()
     Projects = dict()
     Adding = False
@@ -179,7 +216,9 @@ class DownloadManager():
 
     def __init__(self):
         # 线程池 (ThreadPool)
-        self.ThreadPool = ThreadPoolExecutor(max_workers=DownloadConfigs["MaxThread"], thread_name_prefix="DownloadTasks")
+        self.ThreadPool = ThreadPoolExecutor(
+            max_workers=DownloadConfigs["MaxThread"], thread_name_prefix="DownloadTasks"
+        )
 
         # 定义全局 Requests Session
         if DownloadConfigs["UseGobalRequestsSession"] is True:
@@ -188,13 +227,12 @@ class DownloadManager():
         Logger.debug("urllib3 Version: %s", Urllib3Version)
         Logger.debug("requests Version: %s", RequestsVersion)
 
-
     def Download(self, Task: DownloadTask) -> DownloadTask:
         """简易下载器 (Download) 的代理运行器"""
         Task.full()
         if Task.checkExists() and Task.checkSha1():
             self.addJobToProject(Task.ProjectID, CompletedTasksCount=1)
-            return(Task)
+            return Task
 
         while Task.Retry >= 1:
             try:
@@ -206,7 +244,7 @@ class DownloadManager():
                     Sha1=Task.Sha1,
                     Overwrite=Task.Overwrite,
                     ConnectTimeout=Task.ConnectTimeout,
-                    ReadTimeout=Task.ReadTimeout
+                    ReadTimeout=Task.ReadTimeout,
                 )
             # 错误处理
             except Ex_Download.Stopping:
@@ -215,22 +253,34 @@ class DownloadManager():
                 StopType = StopTypes.FileExist
             except Ex_Download.SizeError:
                 StopType = StopTypes.Errored
-                Logger.warning("File \"%s\" Download failure, By SizeError, From \"%s\"", Task.FileName, Task.URL)
+                Logger.warning(
+                    'File "%s" Download failure, By SizeError, From "%s"',
+                    Task.FileName,
+                    Task.URL,
+                )
             except Ex_Download.SchemaError:
                 StopType = StopTypes.Errored
-                Logger.error("URL \"%s\" Formart Error", Task.URL)
+                Logger.error('URL "%s" Formart Error', Task.URL)
             except Ex_Download.HashError:
                 StopType = StopTypes.Errored
-                Logger.warning("File \"%s\" hash verification failed", Task.FileName)
+                Logger.warning('File "%s" hash verification failed', Task.FileName)
             except Ex_Download.ReadTimeout:
                 StopType = StopTypes.Errored
-                Logger.warning("File \"%s\" Download timeout, From \"%s\"", Task.FileName, Task.URL)
+                Logger.warning(
+                    'File "%s" Download timeout, From "%s"', Task.FileName, Task.URL
+                )
             except Ex_Download.ConnectTimeout:
                 StopType = StopTypes.Errored
-                Logger.warning("File \"%s\" Connect timeout, From \"%s\"", Task.FileName, Task.URL)
+                Logger.warning(
+                    'File "%s" Connect timeout, From "%s"', Task.FileName, Task.URL
+                )
             except Ex_Download.DownloadExceptions:
                 StopType = StopTypes.Errored
-                Logger.warning("File \"%s\" Download failure, By ConnectionError, From \"%s\"", Task.FileName, Task.URL)
+                Logger.warning(
+                    'File "%s" Download failure, By ConnectionError, From "%s"',
+                    Task.FileName,
+                    Task.URL,
+                )
             except Exception:
                 StopType = StopTypes.Errored
                 Logger.warning("Unknown Error:", exc_info=True)
@@ -250,26 +300,36 @@ class DownloadManager():
                         Logger.warning("Next Error: ", exc_info=True)
 
                 match StopType:
-                    case StopTypes.Downloaded: Logger.info("File \"%s\" Downloaded", Task.OutputPaths)
-                    case StopTypes.Stopping: pass
-                    case StopTypes.FileExist: Logger.info("File \"%s\" is Exist, Skipping", Task.OutputPaths)
-                    case _: raise ValueError(StopType)
+                    case StopTypes.Downloaded:
+                        Logger.info('File "%s" Downloaded', Task.OutputPaths)
+                    case StopTypes.Stopping:
+                        pass
+                    case StopTypes.FileExist:
+                        Logger.info('File "%s" is Exist, Skipping', Task.OutputPaths)
+                    case _:
+                        raise ValueError(StopType)
 
                 self.addJobToProject(Task.ProjectID, CompletedTasksCount=1)
 
                 if StopType != StopTypes.Stopping:
                     Task.clear()
-                    return(Task)
+                    return Task
 
-        Logger.error("File \"%s\" Retry Count Max", Task.FileName)
+        Logger.error('File "%s" Retry Count Max', Task.FileName)
         self.addJobToProject(Task.ProjectID, ErrorTasksCount=1)
         raise Ex_Download.DownloadExceptions
 
-
     def download(
-        self, URL: str, OutputPaths: str, NotCheck: bool = False, Size: int | None = None,
-        Overwrite: bool | None = None, Sha1: str | None = None, ConnectTimeout: int | None = None, ReadTimeout: int | None = None
-        ) -> None:
+        self,
+        URL: str,
+        OutputPaths: str,
+        NotCheck: bool = False,
+        Size: int | None = None,
+        Overwrite: bool | None = None,
+        Sha1: str | None = None,
+        ConnectTimeout: int | None = None,
+        ReadTimeout: int | None = None,
+    ) -> None:
         """
         简易下载器
         * URL: 链接地址
@@ -285,10 +345,13 @@ class DownloadManager():
             if not Overwrite:
                 TheFile = loadFile(Path=OutputPaths, Type="bytes")
                 if Sha1 is not None:
-                    if (sha1(TheFile).hexdigest() == Sha1):
+                    if sha1(TheFile).hexdigest() == Sha1:
                         raise Ex_Download.FileExist
                     else:
-                        Logger.warning("File: \"%s\" sha1 verify Error! ReDownload it", baseName(OutputPaths))
+                        Logger.warning(
+                            'File: "%s" sha1 verify Error! ReDownload it',
+                            baseName(OutputPaths),
+                        )
                 elif Size is not None:
                     if len(TheFile) != Size:
                         raise Ex_Download.SizeError(len(TheFile))
@@ -308,13 +371,27 @@ class DownloadManager():
             raise Ex_Download.Stopping
 
         try:
-            with UsedSession.get(URL, timeout=(ConnectTimeout, ReadTimeout,)) as Request:
+            with UsedSession.get(
+                URL,
+                timeout=(
+                    ConnectTimeout,
+                    ReadTimeout,
+                ),
+            ) as Request:
                 while True:
                     Temp = Request.raw.read(1024)
-                    if self.Stopping: raise Ex_Download.Stopping
-                    if Temp == bytes(): break
+                    if self.Stopping:
+                        raise Ex_Download.Stopping
+                    if Temp == bytes():
+                        break
                     File.write(Temp)
-            if DownloadConfigs["ErrorByStatusCode"] and (str(Request.status_code)[0] in ("4", "5",)):
+            if DownloadConfigs["ErrorByStatusCode"] and (
+                str(Request.status_code)[0]
+                in (
+                    "4",
+                    "5",
+                )
+            ):
                 Request.raise_for_status()
         except Ex_Requests.ConnectTimeout:
             raise Ex_Download.ConnectTimeout
@@ -322,17 +399,27 @@ class DownloadManager():
             raise Ex_Download.ReadTimeout
         except (Ex_Requests.MissingSchema, Ex_Requests.InvalidSchema):
             raise Ex_Download.SchemaError
-        except (Ex_Requests.ProxyError, Ex_Requests.HTTPError, Ex_Requests.SSLError, Ex_Requests.ConnectionError):
+        except (
+            Ex_Requests.ProxyError,
+            Ex_Requests.HTTPError,
+            Ex_Requests.SSLError,
+            Ex_Requests.ConnectionError,
+        ):
             raise Ex_Download.DownloadExceptions
 
-        if ((Size is not None) and (len(File.getbuffer())) != Size): raise Ex_Download.SizeError
-        if ((Sha1 is not None) and (sha1(File.getbuffer()).hexdigest() != Sha1)): raise Ex_Download.HashError
+        if (Size is not None) and (len(File.getbuffer())) != Size:
+            raise Ex_Download.SizeError
+        if (Sha1 is not None) and (sha1(File.getbuffer()).hexdigest() != Sha1):
+            raise Ex_Download.HashError
 
         dfCheck(Path=OutputPaths, Type="fm")
         saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
 
-
-    def addTask(self, InputTasks: Iterable[DownloadTask] | DownloadTask, MainProjectID: int | None = None) -> int:
+    def addTask(
+        self,
+        InputTasks: Iterable[DownloadTask] | DownloadTask,
+        MainProjectID: int | None = None,
+    ) -> int:
         """添加任务至 Project, 不指定 ProjectID 则新建 Project 对象后返回对应的 ProjectID"""
         # 如果正在添加任务则不等待添加完成
         if self.Stopping:
@@ -357,36 +444,53 @@ class DownloadManager():
 
         for InputTask in InputTasks:
             InputTask.ProjectID = MainProjectID
-            self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
+            self.DownloadsTasks.append(
+                self.ThreadPool.submit(self.Download, Task=InputTask)
+            )
 
         self.Adding = False
         Logger.info("Added %s tasks to Project %s", JobTotal, MainProjectID)
-        return(MainProjectID)
-
+        return MainProjectID
 
     def stop(self) -> None:
         """停止可停止的一切 Project 对象"""
         self.Stopping = True
         CantCancelled, BeingCancelled, Cancelled = int(), int(), int()
         for Task in self.DownloadsTasks:
-            if Task.done(): pass
-            elif Task.running(): CantCancelled += 1
-            elif Task.cancel(): BeingCancelled += 1
-            elif Task.cancelled(): Cancelled += 1
+            if Task.done():
+                pass
+            elif Task.running():
+                CantCancelled += 1
+            elif Task.cancel():
+                BeingCancelled += 1
+            elif Task.cancelled():
+                Cancelled += 1
 
         if CantCancelled != 0:
-            Logger.warning("%s task cannot be cancelled, %s task is being cancelled, %s task cancelled", CantCancelled, BeingCancelled, Cancelled)
+            Logger.warning(
+                "%s task cannot be cancelled, %s task is being cancelled, %s task"
+                " cancelled",
+                CantCancelled,
+                BeingCancelled,
+                Cancelled,
+            )
         else:
-            Logger.info("0 task cannot be cancelled, %s task is being cancelled, %s task cancelled", BeingCancelled, Cancelled)
+            Logger.info(
+                "0 task cannot be cancelled, %s task is being cancelled, %s task"
+                " cancelled",
+                BeingCancelled,
+                Cancelled,
+            )
 
         self.ThreadPool.shutdown(wait=False)
 
-
-    def createProject(self, AllTasksCount: int = 0, setProjectID: int | None = None) -> int:
+    def createProject(
+        self, AllTasksCount: int = 0, setProjectID: int | None = None
+    ) -> int:
         """建立 Project 对象"""
         if setProjectID is None:
             while True:
-                NewProjectID = randint(1,4096)
+                NewProjectID = randint(1, 4096)
                 if NewProjectID not in self.Projects:
                     break
         else:
@@ -394,32 +498,45 @@ class DownloadManager():
                 raise ValueError(setProjectID)
             else:
                 NewProjectID = setProjectID
-        self.Projects[NewProjectID] = {"CompletedTasksCount": 0, "AllTasksCount": AllTasksCount, "FailuredTasksCount": 0, "ErrorTasksCount": 0}
+        self.Projects[NewProjectID] = {
+            "CompletedTasksCount": 0,
+            "AllTasksCount": AllTasksCount,
+            "FailuredTasksCount": 0,
+            "ErrorTasksCount": 0,
+        }
         Logger.info("Created New Project %s", NewProjectID)
-        return(NewProjectID)
-
+        return NewProjectID
 
     def deleteProject(self, ProjectID: int):
         """删除 Project 对象"""
-        del(self.Projects[ProjectID])
+        del self.Projects[ProjectID]
 
-
-    def addJobToProject(self, ProjectID: int, AllTasksCount: int | None = None, CompletedTasksCount: int | None = None, FailuredTasksCount: int | None = None, ErrorTasksCount: int | None = None) -> None:
+    def addJobToProject(
+        self,
+        ProjectID: int,
+        AllTasksCount: int | None = None,
+        CompletedTasksCount: int | None = None,
+        FailuredTasksCount: int | None = None,
+        ErrorTasksCount: int | None = None,
+    ) -> None:
         """向 Project 对象添加任务"""
-        if AllTasksCount is not None:       self.Projects[ProjectID]["AllTasksCount"] += AllTasksCount
-        if CompletedTasksCount is not None: self.Projects[ProjectID]["CompletedTasksCount"] += CompletedTasksCount
-        if FailuredTasksCount is not None:  self.Projects[ProjectID]["FailuredTasksCount"] += FailuredTasksCount
-        if ErrorTasksCount is not None:     self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
-
+        if AllTasksCount is not None:
+            self.Projects[ProjectID]["AllTasksCount"] += AllTasksCount
+        if CompletedTasksCount is not None:
+            self.Projects[ProjectID]["CompletedTasksCount"] += CompletedTasksCount
+        if FailuredTasksCount is not None:
+            self.Projects[ProjectID]["FailuredTasksCount"] += FailuredTasksCount
+        if ErrorTasksCount is not None:
+            self.Projects[ProjectID]["ErrorTasksCount"] += ErrorTasksCount
 
     def getInfoFormProject(self, ProjectID: int, Type: str) -> Any:
         """通过 ProjectID 从 Projects 中获取相关信息"""
-        return(self.Projects[ProjectID][Type])
-
+        return self.Projects[ProjectID][Type]
 
     def waitProject(self, ProjectIDs: list | int, Raise: Any | None = None) -> int:
         """通过 ProjectID 的列表阻塞线程, 阻塞结束后返回总错误计数"""
-        if isinstance(ProjectIDs, int): ProjectIDs = [ProjectIDs]
+        if isinstance(ProjectIDs, int):
+            ProjectIDs = [ProjectIDs]
         ErrorTasksCount = int()
         for ProjectID in ProjectIDs:
             while not self.isProjectCompleted(ProjectID=ProjectID):
@@ -427,23 +544,33 @@ class DownloadManager():
             ErrorTasksCount += self.Projects[ProjectID]["ErrorTasksCount"]
 
         if len(ProjectIDs) > 1:
-            Logger.debug("Waited Projects %s completed by %s Errors", ProjectIDs, ErrorTasksCount)
+            Logger.debug(
+                "Waited Projects %s completed by %s Errors", ProjectIDs, ErrorTasksCount
+            )
         else:
-            Logger.debug("Waited Project \"%s\" completed by %s Errors", ProjectIDs[0], ErrorTasksCount)
+            Logger.debug(
+                'Waited Project "%s" completed by %s Errors',
+                ProjectIDs[0],
+                ErrorTasksCount,
+            )
 
-        if ((Raise is not None) and (ErrorTasksCount > 0)):
+        if (Raise is not None) and (ErrorTasksCount > 0):
             if issubclass(Raise, Exception):
                 raise Raise(ErrorTasksCount)
             else:
                 raise Ex_Download.DownloadExceptions(Raise)
         else:
-            return(ErrorTasksCount)
-
+            return ErrorTasksCount
 
     def isProjectCompleted(self, ProjectID: int) -> bool:
         """检查此 Project 是否已完成"""
-        if self.getInfoFormProject(ProjectID, "CompletedTasksCount") + self.getInfoFormProject(ProjectID, "ErrorTasksCount") == self.getInfoFormProject(ProjectID, "AllTasksCount"):
-            return(True)
+        if self.getInfoFormProject(
+            ProjectID, "CompletedTasksCount"
+        ) + self.getInfoFormProject(
+            ProjectID, "ErrorTasksCount"
+        ) == self.getInfoFormProject(
+            ProjectID, "AllTasksCount"
+        ):
+            return True
         else:
-            return(False)
-
+            return False

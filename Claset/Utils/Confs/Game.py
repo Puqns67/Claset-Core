@@ -14,7 +14,7 @@ File = {
         "JavaPath": None,
         "NotCheckGame": None,
         "NotCheckJvm": None,
-        "WindowsPriority": None
+        "WindowsPriority": None,
     },
     "UnableGlobal": {
         "NativesDir": "AUTOSET",
@@ -23,25 +23,22 @@ File = {
             "JvmPrefix": [],
             "JvmSuffix": [],
             "GamePrefix": [],
-            "GameSuffix": []
-        }
-    }
+            "GameSuffix": [],
+        },
+    },
 }
 
 
 Difference = {
-    "3->4": [
-        "REPLACE:[UnableGlobal, NativesDir]->AUTOSET"
-    ],
+    "3->4": ["REPLACE:[UnableGlobal, NativesDir]->AUTOSET"],
     "2->3": [
         "REPLACE:[UnableGlobal, VersionIndependent]->False",
         "RENAME:[UnableGlobal, PrefixAndEnds]->PrefixAndSuffix",
         "RENAME:[UnableGlobal, PrefixAndSuffix, JvmEnd]->JvmSuffix",
-        "RENAME:[UnableGlobal, PrefixAndSuffix, GameEnd]->GameSuffix"
+        "RENAME:[UnableGlobal, PrefixAndSuffix, GameEnd]->GameSuffix",
     ],
     "1->2": [
         "REPLACE:[Global, WindowsPriority]->NORMAL",
-        "DELETE:[UnableGlobal, NativesDir]"
-    ]
+        "DELETE:[UnableGlobal, NativesDir]",
+    ],
 }
-

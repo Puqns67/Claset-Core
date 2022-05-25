@@ -4,14 +4,32 @@ from os import listdir
 from types import NoneType
 from typing import Iterable, Any
 
-from Claset.Utils import Configs, DownloadTask, path, pathAdder, dfCheck, loadFile, getValueFromDict, setValueToDict
-from Claset.Game.Utils import Version_Client_DownloadTasks, AssetIndex_DownloadTasks, genNativeDirName
+from Claset.Utils import (
+    Configs,
+    DownloadTask,
+    path,
+    pathAdder,
+    dfCheck,
+    loadFile,
+    getValueFromDict,
+    setValueToDict,
+)
+from Claset.Game.Utils import (
+    Version_Client_DownloadTasks,
+    AssetIndex_DownloadTasks,
+    genNativeDirName,
+)
 
-__all__ = ("VersionInfos", "getVersionInfoList", "getVersionNameList",)
+__all__ = (
+    "VersionInfos",
+    "getVersionInfoList",
+    "getVersionNameList",
+)
 
 
-class VersionInfos():
+class VersionInfos:
     """实例相关信息的获取与实例的检查"""
+
     def __init__(self, VersionName: str, FullIt: bool = False):
         self.Name = VersionName
         if FullIt:
@@ -19,10 +37,10 @@ class VersionInfos():
         else:
             self._FULL = False
 
-
     def full(self) -> None:
         """获取更多此版本的相关信息"""
-        if self._FULL is True: return
+        if self._FULL is True:
+            return
 
         self.Dir = pathAdder("$VERSION", self.Name)
 
@@ -48,19 +66,29 @@ class VersionInfos():
         if "patches" in self.VersionJson:
             for i in self.VersionJson["patches"]:
                 if i.get("id") == "game":
-                    if self.AssetIndexVersion is None: self.AssetIndexVersion = i.get("assets")
-                    if self.ComplianceLevel is None: self.ComplianceLevel = i.get("complianceLevel")
-                    if self.MinimumLauncherVersion is None: self.MinimumLauncherVersion = i.get("minimumLauncherVersion")
-                    if self.MainClass is None: self.MainClass = i.get("mainClass")
-                    if self.Type is None: self.Type = i.get("type")
-                    if self.Version is None: self.Version = i.get("version")
+                    if self.AssetIndexVersion is None:
+                        self.AssetIndexVersion = i.get("assets")
+                    if self.ComplianceLevel is None:
+                        self.ComplianceLevel = i.get("complianceLevel")
+                    if self.MinimumLauncherVersion is None:
+                        self.MinimumLauncherVersion = i.get("minimumLauncherVersion")
+                    if self.MainClass is None:
+                        self.MainClass = i.get("mainClass")
+                    if self.Type is None:
+                        self.Type = i.get("type")
+                    if self.Version is None:
+                        self.Version = i.get("version")
                     break
 
         # AssetIndex Json
         if self.AssetIndexVersion is not None:
-            self.AssetIndexJsonPath = pathAdder("$MCAssetIndex", self.AssetIndexVersion + ".json")
+            self.AssetIndexJsonPath = pathAdder(
+                "$MCAssetIndex", self.AssetIndexVersion + ".json"
+            )
             if dfCheck(Path=self.AssetIndexJsonPath, Type="d"):
-                self.AssetIndexJson = loadFile(Path=self.AssetIndexJsonPath, Type="json")
+                self.AssetIndexJson = loadFile(
+                    Path=self.AssetIndexJsonPath, Type="json"
+                )
             else:
                 self.AssetIndexJson = None
         else:
@@ -68,7 +96,12 @@ class VersionInfos():
             self.AssetIndexJson = None
 
         # Natives 文件夹位置
-        self.NativesPath = pathAdder(self.Dir, genNativeDirName() if self.Configs["UnableGlobal"]["NativesDir"] == "AUTOSET" else self.Configs["UnableGlobal"]["NativesDir"])
+        self.NativesPath = pathAdder(
+            self.Dir,
+            genNativeDirName()
+            if self.Configs["UnableGlobal"]["NativesDir"] == "AUTOSET"
+            else self.Configs["UnableGlobal"]["NativesDir"],
+        )
 
         if self.JarName is not None:
             self.JarPath = pathAdder(self.Dir, self.JarName + ".jar")
@@ -77,8 +110,9 @@ class VersionInfos():
 
         self._FULL = True
 
-
-    def getInfoStr(self, Format: str = "{Name}|{Version}|{Type}|{Dir}", OtherKeys: dict = {}) -> str:
+    def getInfoStr(
+        self, Format: str = "{Name}|{Version}|{Type}|{Dir}", OtherKeys: dict = {}
+    ) -> str:
         """
         获取信息字符串
         * Format: 格式字符串, 默认为 "{Name}|{Version}|{Type}|{Dir}"
@@ -90,25 +124,32 @@ class VersionInfos():
         * Dir: 所在文件夹
         """
         self.full()
-        return(Format.format(Name=self.Name, Version=self.Version, Type=self.Type, Dir=self.Dir, **OtherKeys))
-
+        return Format.format(
+            Name=self.Name,
+            Version=self.Version,
+            Type=self.Type,
+            Dir=self.Dir,
+            **OtherKeys
+        )
 
     def check(self) -> bool:
         """检查此版本是否可以正常被识别"""
-        return(dfCheck(Path=pathAdder("$VERSION", self.Name, self.Name + ".json"), Type="f"))
-
+        return dfCheck(
+            Path=pathAdder("$VERSION", self.Name, self.Name + ".json"), Type="f"
+        )
 
     def checkFull(self) -> list[DownloadTask]:
         """检查此版本的内容缺失情况, 返回缺失文件的 DownloadTask 列表"""
         self.full()
         DownloadTasks = list()
-        TempTasks = Version_Client_DownloadTasks(InitFile=self.VersionJson, Name=self.Name)
+        TempTasks = Version_Client_DownloadTasks(
+            InitFile=self.VersionJson, Name=self.Name
+        )
         TempTasks.extend(AssetIndex_DownloadTasks(InitFile=self.AssetIndexJson))
         for DownloadTask in TempTasks:
             if not (DownloadTask.checkExists() and DownloadTask.checkSha1()):
                 DownloadTasks.append(DownloadTask)
-        return(DownloadTasks)
-
+        return DownloadTasks
 
     def getConfig(self, Keys: str | Iterable[str]) -> Any:
         """获取配置"""
@@ -117,16 +158,22 @@ class VersionInfos():
 
         if BaseKeys in self.Configs["Global"]:
             if self.Configs["UseGlobalConfig"]:
-                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
+                return getValueFromDict(
+                    Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]
+                )
             else:
                 Return = getValueFromDict(Keys=Keys, Dict=self.Configs["Global"])
-                if Return is not None: return(Return)
-                return(getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]))
+                if Return is not None:
+                    return Return
+                return getValueFromDict(
+                    Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]
+                )
         else:
-            return(getValueFromDict(Keys=Keys, Dict=self.Configs["UnableGlobal"]))
+            return getValueFromDict(Keys=Keys, Dict=self.Configs["UnableGlobal"])
 
-
-    def setConfig(self, Keys: str | Iterable[str], Value: Any, Save: bool = True) -> None:
+    def setConfig(
+        self, Keys: str | Iterable[str], Value: Any, Save: bool = True
+    ) -> None:
         """设置配置"""
         self.full()
         BaseKeys = Keys if isinstance(Keys, str) else Keys[0]
@@ -134,12 +181,16 @@ class VersionInfos():
         if BaseKeys in self.Configs["Global"]:
             if self.Configs["UseGlobalConfig"]:
                 self.Configs["UseGlobalConfig"] = False
-            self.Configs["Global"]  = setValueToDict(Keys=Keys, Value=Value, Dict=self.Configs["Global"])
+            self.Configs["Global"] = setValueToDict(
+                Keys=Keys, Value=Value, Dict=self.Configs["Global"]
+            )
         else:
-            self.Configs["UnableGlobal"] = setValueToDict(Keys=Keys, Value=Value, Dict=self.Configs["UnableGlobal"])
+            self.Configs["UnableGlobal"] = setValueToDict(
+                Keys=Keys, Value=Value, Dict=self.Configs["UnableGlobal"]
+            )
 
-        if Save: self.Configs.save()
-
+        if Save:
+            self.Configs.save()
 
     def reloadConfig(self) -> None:
         """重载配置文件"""
@@ -156,16 +207,18 @@ def getVersionNameList() -> list[str]:
         if not VersionInfosObject.check():
             continue
         Output.append(VersionName)
-    return(Output)
+    return Output
 
 
-def getVersionInfoList(VersionNames: Iterable[str] | str | None = None) -> list[VersionInfos]:
+def getVersionInfoList(
+    VersionNames: Iterable[str] | str | None = None,
+) -> list[VersionInfos]:
     """获取输入的多个版本中已被识别的版本的信息"""
     if isinstance(VersionNames, NoneType):
         try:
             VersionNames = listdir(path=path("$VERSION"))
         except FileNotFoundError:
-            return(tuple())
+            return tuple()
     elif isinstance(VersionNames, str):
         VersionNames = (VersionNames,)
     Output: list[VersionInfos] = list()
@@ -175,5 +228,4 @@ def getVersionInfoList(VersionNames: Iterable[str] | str | None = None) -> list[
             continue
         VersionInfosObject.full()
         Output.append(VersionInfosObject)
-    return(Output)
-
+    return Output

@@ -6,5 +6,7 @@ except ModuleNotFoundError:
     ClasetCommandLine = None
     ClasetCommandLineMain = None
 
-__all__ = ("ClasetCommandLine", "ClasetCommandLineMain",)
-
+__all__ = (
+    "ClasetCommandLine",
+    "ClasetCommandLineMain",
+)

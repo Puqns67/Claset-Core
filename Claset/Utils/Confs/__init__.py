@@ -3,11 +3,13 @@
 
 from . import Accounts, Download, Game, Logs, Mirrors, Paths, Settings
 
-__all__ = ("ConfigIDs", "ConfigInfos", "changeConfsObject",)
+__all__ = (
+    "ConfigIDs",
+    "ConfigInfos",
+    "changeConfsObject",
+)
 
-ConfigIDs = [
-    "Download", "Paths", "Mirrors", "Settings", "Logs", "Game", "Accounts"
-]
+ConfigIDs = ["Download", "Paths", "Mirrors", "Settings", "Logs", "Game", "Accounts"]
 
 ConfigInfos = {
     "Version": {
@@ -17,7 +19,7 @@ ConfigInfos = {
         "Settings": Settings.LastVersion,
         "Logs": Logs.LastVersion,
         "Game": Game.LastVersion,
-        "Accounts": Accounts.LastVersion
+        "Accounts": Accounts.LastVersion,
     },
     "File": {
         "Download": Download.File,
@@ -26,8 +28,8 @@ ConfigInfos = {
         "Settings": Settings.File,
         "Logs": Logs.File,
         "Game": Game.File,
-        "Accounts": Accounts.File
-    }, 
+        "Accounts": Accounts.File,
+    },
     "Difference": {
         "Download": Download.Difference,
         "Paths": Paths.Difference,
@@ -35,7 +37,7 @@ ConfigInfos = {
         "Settings": Settings.Difference,
         "Logs": Logs.Difference,
         "Game": Game.Difference,
-        "Accounts": Accounts.Difference
+        "Accounts": Accounts.Difference,
     },
     "Path": {
         "Download": "Download.json",
@@ -44,15 +46,17 @@ ConfigInfos = {
         "Settings": "Settings.json",
         "Logs": "Logs.json",
         "Game": "$NONGLOBAL$",
-        "Accounts": "Accounts.json"
-    }
+        "Accounts": "Accounts.json",
+    },
 }
 
 
-def changeConfsObject(Name: str, Version: int, File: dict, Difference: dict, Path: str) -> None:
-    if Name not in ConfigIDs: ConfigIDs.append(Name)
+def changeConfsObject(
+    Name: str, Version: int, File: dict, Difference: dict, Path: str
+) -> None:
+    if Name not in ConfigIDs:
+        ConfigIDs.append(Name)
     ConfigInfos["Version"][Name] = Version
     ConfigInfos["File"][Name] = File
     ConfigInfos["Difference"][Name] = Difference
     ConfigInfos["Path"][Name] = Path
-

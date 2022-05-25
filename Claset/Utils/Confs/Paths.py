@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-LastVersion = 6
+LastVersion = 7
 
 
 File = {
@@ -16,33 +16,28 @@ File = {
         "ASSETS": "$MINECRFT/assets",
         "VERSION": "$MINECRFT/versions",
         "LIBRERIES": "$MINECRFT/libraries",
-        "MCVersion": "$CACHE/MCVersionJson",
-        "MCAssetIndex": "$ASSETS/indexes",
-        "MCVersionManifest": "$CACHE"
     },
-    "Others": []
+    "Others": [],
 }
 
 
 Difference = {
-    "5->6": [
-        "REPLACE:[Prefixs, JARS]->$CACHE/Jars"
+    "6->7": [
+        "DELETE:[Prefixs, MCVersion]",
+        "DELETE:[Prefixs, MCAssetIndex]",
+        "DELETE:[Prefixs, MCVersionManifest]",
     ],
-    "4->5": [
-        "REPLACE:[Prefixs, VERSION]->$MINECRFT/versions"
-    ],
+    "5->6": ["REPLACE:[Prefixs, JARS]->$CACHE/Jars"],
+    "4->5": ["REPLACE:[Prefixs, VERSION]->$MINECRFT/versions"],
     "3->4": [
         "REPLACE:[Prefixs, CACHE]->$EXEC/Cache",
-        "REPLACE:[Prefixs, CONFIG]->$EXEC"
-        "REPLACE:[Prefixs, LOG]->$EXEC/Logs"
+        "REPLACE:[Prefixs, CONFIG]->$EXECREPLACE:[Prefixs, LOG]->$EXEC/Logs",
     ],
     "2->3": [
         "REPLACE:[Prefixs, ASSETS]->$MINECRFT/assets",
         "REPLACE:[Prefixs, VERSION]->$MINECRFT/version",
         "REPLACE:[Prefixs, LIBRERIES]->$MINECRFT/libraries",
-        "REPLACE:[Prefixs, MCAssetIndex]->$ASSETS/indexes"
+        "REPLACE:[Prefixs, MCAssetIndex]->$ASSETS/indexes",
     ],
-    "1->2": [
-        "REPLACE:[Prefixs, CONFIG]->$PREFIX/Claset"
-    ]
+    "1->2": ["REPLACE:[Prefixs, CONFIG]->$PREFIX/Claset"],
 }

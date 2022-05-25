@@ -3,9 +3,4 @@
 from . import Exceptions
 from .Install import *
 
-__all__ = (
-    "Exceptions",
-) + (
-    Install.__all__
-)
-
+__all__ = ("Exceptions",) + (Install.__all__)

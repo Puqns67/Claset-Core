@@ -19,10 +19,18 @@ ReFindTypeAndKey = reCompile(r"^\s*([A-Z]+):(.+)\s*$")
 ReFindOldAndNew = reCompile(r"^\s*([\w\s,\[\]]+)->(\w+)\s*$")
 
 
-class Configs():
+class Configs:
     """管理日志"""
-    def __init__(self, ID: str, TargetVersion: int = 0, FilePath: str | None = None, ProcessList: list = list()) -> None:
-        if ID not in ConfigIDs: raise Ex_Configs.ConfigUnregistered(ID)
+
+    def __init__(
+        self,
+        ID: str,
+        TargetVersion: int = 0,
+        FilePath: str | None = None,
+        ProcessList: list = list(),
+    ) -> None:
+        if ID not in ConfigIDs:
+            raise Ex_Configs.ConfigUnregistered(ID)
         self.ID = ID
         if TargetVersion == 0:
             self.TargetVersion = ConfigInfos["Version"][ID]
@@ -35,7 +43,8 @@ class Configs():
                 raise Ex_Configs.ConfigNonGlobalMissingFilePath
             else:
                 self.FilePath = path("$CONFIG/" + ConfigInfos["Path"][ID], IsPath=True)
-        else: self.FilePath = path(FilePath, IsPath=True)
+        else:
+            self.FilePath = path(FilePath, IsPath=True)
 
         self.TheConfig = self.getConfig()
         self.NowVersion = self.TheConfig["VERSION"]
@@ -46,32 +55,29 @@ class Configs():
         if len(ProcessList) >= 1:
             self.updateConfig(Differences=ProcessList)
 
-
     def __str__(self) -> str:
         """实现str()"""
-        return(self.ID)
-
+        return self.ID
 
     def __getitem__(self, Key: Any) -> Any:
         """实现下标获取"""
-        return(self.TheConfig[Key])
-
+        return self.TheConfig[Key]
 
     def __setitem__(self, Key: Any, Value: Any) -> None:
         """实现下标写入"""
         self.TheConfig[Key] = Value
 
-
     def keys(self):
         """实现来着dict类型的keys()"""
-        return(self.TheConfig.keys())
-
+        return self.TheConfig.keys()
 
     def get(self, Keys: Iterable, Fallback: Any | None = None) -> Any:
-        if isinstance(Keys, str): Keys = (Keys,)
-        try: return(getValueFromDict(Keys=Keys, Dict=self.TheConfig))
-        except KeyError: return(Fallback)
-
+        if isinstance(Keys, str):
+            Keys = (Keys,)
+        try:
+            return getValueFromDict(Keys=Keys, Dict=self.TheConfig)
+        except KeyError:
+            return Fallback
 
     def getConfig(self) -> dict:
         """取得配置文件"""
@@ -82,13 +88,12 @@ class Configs():
         try:
             TheConfig = loadFile(Path=self.FilePath, Type="json")
         except JSONDecodeError:
-            Logger.warning("Decode Config \"%s\" error, delete it", self.ID)
+            Logger.warning('Decode Config "%s" error, delete it', self.ID)
             removeFile(self.FilePath)
             self.genConfig()
             TheConfig = loadFile(Path=self.FilePath, Type="json")
         else:
-            return(TheConfig)
-
+            return TheConfig
 
     def checkUpdate(self, Type: str = "!=") -> bool:
         """
@@ -97,64 +102,86 @@ class Configs():
         若更新了配置文件则返回True, 反之则返回False
         """
         # 判断是否需要更新
-        if (
-            not ((Type == "!=") and (self.NowVersion != self.TargetVersion)
-            or (Type == ">=") and (self.NowVersion >= self.TargetVersion)
-            or (Type == "<=") and (self.NowVersion <= self.TargetVersion))
+        if not (
+            (Type == "!=")
+            and (self.NowVersion != self.TargetVersion)
+            or (Type == ">=")
+            and (self.NowVersion >= self.TargetVersion)
+            or (Type == "<=")
+            and (self.NowVersion <= self.TargetVersion)
         ):
-            return(False)
+            return False
 
         # 尝试进行更新
         try:
             self.updateConfig()
         except Exception as INFO:
             Logger.warning("Updating Config (%s) Error! INFO: %s", self.ID, INFO)
-            return(False)
-        return(True)
-
+            return False
+        return True
 
     def genConfig(self, OverWrite: bool = True) -> None:
         """生成配置文件"""
-        if (dfCheck(Path=self.FilePath, Type="f") and (OverWrite == False)): raise Ex_Configs.ConfigExist(self.ID)
+        if dfCheck(Path=self.FilePath, Type="f") and (OverWrite == False):
+            raise Ex_Configs.ConfigExist(self.ID)
 
-        FileContent = self.setVersion(Config=ConfigInfos["File"][self.ID], Version=ConfigInfos["Version"][self.ID])
+        FileContent = self.setVersion(
+            Config=ConfigInfos["File"][self.ID], Version=ConfigInfos["Version"][self.ID]
+        )
 
         saveFile(Path=self.FilePath, FileContent=FileContent, Type="json")
         Logger.info("Created Config: %s", self.ID)
-
 
     def save(self) -> None:
         """保存配置文件"""
         saveFile(Path=self.FilePath, FileContent=self.TheConfig, Type="json")
 
-
     def reload(self) -> None:
         """从文件重载配置文件"""
         self.TheConfig = self.getConfig()
 
-
-    def updateConfig(self, TargetVersion: int | None = None, Differences: Iterable[str] | None = None) -> None:
+    def updateConfig(
+        self, TargetVersion: int | None = None, Differences: Iterable[str] | None = None
+    ) -> None:
         """更新或降级配置文件版本至目标版本(TargetVersion), 或是执行差异"""
         if Differences is not None:
             DifferenceS = Differences
         else:
             # 处理版本数据
             if TargetVersion:
-                Logger.info("Update Config (%s) From Version %s to Version %s", self.ID, self.NowVersion, TargetVersion)
+                Logger.info(
+                    "Update Config (%s) From Version %s to Version %s",
+                    self.ID,
+                    self.NowVersion,
+                    TargetVersion,
+                )
             else:
-                Logger.info("Update Config (%s) From Version %s to last Version", self.ID, self.NowVersion)
+                Logger.info(
+                    "Update Config (%s) From Version %s to last Version",
+                    self.ID,
+                    self.NowVersion,
+                )
 
             if TargetVersion is None:
                 TargetVersion = self.TargetVersion
+
             if TargetVersion == 0:
                 TargetVersion = ConfigInfos["Version"][self.ID]
-                if TargetVersion == self.NowVersion: return(None)
+                if TargetVersion == self.NowVersion:
+                    return None
+
             if TargetVersion < self.NowVersion:
                 Reverse = True
             else:
                 Reverse = False
-            DifferenceS = self.getDifferenceS(TargetVersion=TargetVersion, Reverse=Reverse)
-            self.TheConfig = self.setVersion(Config=self.TheConfig, Version=TargetVersion)
+
+            # TODO: 优化此处的逻辑(先拆再结合再拆)
+            DifferenceS = self.getDifferenceS(
+                TargetVersion=TargetVersion, Reverse=Reverse
+            )
+            self.TheConfig = self.setVersion(
+                Config=self.TheConfig, Version=TargetVersion
+            )
 
         for Difference in DifferenceS:
             Type, Key = ReFindTypeAndKey.match(Difference).groups()
@@ -162,8 +189,9 @@ class Configs():
 
         self.save()
 
-
-    def getDifferenceS(self, TargetVersion: int | None = None, Reverse: bool = False) -> list[str]:
+    def getDifferenceS(
+        self, TargetVersion: int | None = None, Reverse: bool = False
+    ) -> list[str]:
         """取得版本之间的所有差异"""
         Differences = ConfigInfos["Difference"][self.ID]
         ChangeList = list()
@@ -175,27 +203,47 @@ class Configs():
         for DifferentsKey in Differences:
             Old, New = ReFindOldAndNew.match(DifferentsKey).groups()
             ChangeList.append([int(Old), int(New)])
-        ChangeList = sorted(ChangeList, key=lambda ChangeList: ChangeList[0], reverse=Reverse)
+
+        ChangeList = sorted(
+            ChangeList, key=lambda ChangeList: ChangeList[0], reverse=Reverse
+        )
 
         for DifferentsKey in ChangeList:
             if Reverse == False:
-                if (self.NowVersion <= DifferentsKey[0]) and (TargetVersion >= DifferentsKey[1]):
-                    DifferenceS.extend(Differences[str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])])
+                if (self.NowVersion <= DifferentsKey[0]) and (
+                    TargetVersion >= DifferentsKey[1]
+                ):
+                    DifferenceS.extend(
+                        Differences[
+                            str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])
+                        ]
+                    )
             else:
-                if (self.NowVersion >= DifferentsKey[0]) and (TargetVersion <= DifferentsKey[1]):
-                    DifferenceS.extend(reversed(Differences[str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])]))
+                if (self.NowVersion >= DifferentsKey[0]) and (
+                    TargetVersion <= DifferentsKey[1]
+                ):
+                    DifferenceS.extend(
+                        reversed(
+                            Differences[
+                                str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])
+                            ]
+                        )
+                    )
         Logger.debug("Config (%s)'s Differents: %s", self.ID, DifferenceS)
-        return(DifferenceS)
-
+        return DifferenceS
 
     def setVersion(self, Config: dict, Version: int | str) -> dict:
         """设置版本"""
-        return(self.__SetToDict(Keys=["VERSION"], Dict=Config, Type="REPLACE", Do=int(Version)))
-
+        return self.__SetToDict(
+            Keys=["VERSION"], Dict=Config, Type="REPLACE", Do=int(Version)
+        )
 
     def processConfig(self, Key: str, Type: str) -> dict:
         """对配置文件的各种操作"""
-        if Type in ("REPLACE", "RENAME",):
+        if Type in (
+            "REPLACE",
+            "RENAME",
+        ):
             Old, New = ReFindOldAndNew.match(Key).groups()
         elif Type == "DELETE":
             Old = Key
@@ -209,10 +257,11 @@ class Configs():
         else:
             Old = (Old,)
 
-        return(self.__SetToDict(Keys=Old, Dict=self.TheConfig, Type=Type, Do=New))
+        return self.__SetToDict(Keys=Old, Dict=self.TheConfig, Type=Type, Do=New)
 
-
-    def __SetToDict(self, Keys: tuple | list, Dict: dict, Type: str, Do: Any | None = None) -> dict:
+    def __SetToDict(
+        self, Keys: tuple | list, Dict: dict, Type: str, Do: Any | None = None
+    ) -> dict:
         """
         将设置写入 Dict
         * Keys: 字典键的列表
@@ -221,9 +270,12 @@ class Configs():
         * Do: 替换为
         """
         if len(Keys) > 1:
-            if Dict.get(Keys[0]) is None: Dict[Keys[0]] = dict()
-            Dict[Keys[0]] = self.__SetToDict(Keys=Keys[1:], Dict=Dict[Keys[0]], Type=Type, Do=Do)
-            return(Dict)
+            if Dict.get(Keys[0]) is None:
+                Dict[Keys[0]] = dict()
+            Dict[Keys[0]] = self.__SetToDict(
+                Keys=Keys[1:], Dict=Dict[Keys[0]], Type=Type, Do=Do
+            )
+            return Dict
         elif len(Keys) == 1:
             match Type:
                 case "REPLACE":
@@ -231,19 +283,18 @@ class Configs():
                     if isinstance(Do, str):
                         Do = fixType(Do)
                     Dict[Keys[0]] = Do
-                    return(Dict)
+                    return Dict
                 case "DELETE":
                     try:
                         Dict.pop(Keys[0])
                     except KeyError:
                         pass
-                    return(Dict)
+                    return Dict
                 case "RENAME":
                     try:
                         Dict[Do] = Dict.pop(Keys[0])
                     except KeyError:
                         pass
-                    return(Dict)
+                    return Dict
                 case _:
                     ValueError(Type)
-

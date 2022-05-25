@@ -13,5 +13,8 @@ File = {"FileContent": "FileContent"}
 #   [WIP]RENAMEKEY:OLDKEYS->NEWKEYNAME
 #   [WIP]REMOVEKEY:OLDKEYS->NEWKEYS
 # Types: NEW, DEL, RENAMEKEY, REMOVEKEY
-Difference = {"Version_1": ["Difference1", "Difference2", "..."], "Version_2": ["Differences"], "...": "..."}
-
+Difference = {
+    "Version_1": ["Difference1", "Difference2", "..."],
+    "Version_2": ["Differences"],
+    "...": "...",
+}

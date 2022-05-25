@@ -13,16 +13,17 @@ exclude = ["Claset/Cache/*", "Claset/Logs/*", "Claset/Utils/JavaHelper/JavaSrcs/
 python = "^3.10.0"
 requests = "^2.27.1"
 cmd2 = "^2.4.1"
-rich = "^12.2.0"
+rich = "^12.4.4"
 zstandard = "^0.17.0"
 PySocks = "^1.7.1"
 
 [tool.poetry.dev-dependencies]
 Nuitka = "^0.7.7"
+black = "^22.3.0"
 
 [[tool.poetry.source]]
-name = "tuna"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+name = "bfsu"
+url = "https://mirrors.bfsu.edu.cn/pypi/web/simple"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

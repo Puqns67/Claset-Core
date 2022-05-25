@@ -13,14 +13,12 @@ from .Others import *
 from .Path import *
 from .JavaHelper import *
 
-__all__ = (
-    (
-        "Exceptions", "AdvancedPath", "Configs", "Logs",
-    ) + (
-        Platform.__all__ + Confs.__all__ +
-        Download.__all__ + File.__all__ +
-        Others.__all__ + Path.__all__ +
-        JavaHelper.__all__
-    )
+__all__ = ("Exceptions", "AdvancedPath", "Configs", "Logs",) + (
+    Platform.__all__
+    + Confs.__all__
+    + Download.__all__
+    + File.__all__
+    + Others.__all__
+    + Path.__all__
+    + JavaHelper.__all__
 )
-

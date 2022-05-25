@@ -5,12 +5,20 @@ from logging import getLogger
 
 from Claset import getDownloader
 from Claset.Utils import (
-    DownloadTask, DownloadManager, Configs,
-    loadFile, saveFile, dfCheck, copyFile, pathAdder
+    DownloadTask,
+    DownloadManager,
+    Configs,
+    loadFile,
+    saveFile,
+    dfCheck,
+    copyFile,
+    pathAdder,
 )
 from Claset.Game.Utils import (
-    VersionInfos, getVersionManifestTask,
-    VersionManifest_To_Version, Version_To_AssetIndex
+    VersionInfos,
+    getVersionManifestTask,
+    VersionManifest_To_Version,
+    Version_To_AssetIndex,
 )
 from Claset.Game.Utils.Exceptions import TargetVersionNotFound
 
@@ -20,14 +28,22 @@ __all__ = ("GameInstaller",)
 Logger = getLogger(__name__)
 
 
-class GameInstaller():
+class GameInstaller:
     """
     游戏安装器
     * Name: 游戏版本名
     * Version: 游戏版本号
     * Downloader: 下载器, 不定义则使用全局下载器
     """
-    def __init__(self, VersionName: str, MinecraftVersion: str | None = None, Downloader: DownloadManager | None = None, WaitDownloader: bool = True, UsingDownloadServer: str | None = None):
+
+    def __init__(
+        self,
+        VersionName: str,
+        MinecraftVersion: str | None = None,
+        Downloader: DownloadManager | None = None,
+        WaitDownloader: bool = True,
+        UsingDownloadServer: str | None = None,
+    ):
         # TODO: 在 Linux 下, 如果 VersionName 中含有中文字符, 启动 Minecraft 时 Native 文件夹识别将会出现编码错误问题, 可通过软链接到缓存文件夹的方式避免此问题
         self.VersionName = VersionName
         self.MinecraftVersion = MinecraftVersion
@@ -52,12 +68,10 @@ class GameInstaller():
         except KeyError:
             raise UndefinedMirror(self.UsingDownloadServer)
 
-
     def __del__(self):
         """释放函数"""
         if hasattr(self, "MainDownloadProject"):
             self.Downloader.deleteProject(self.MainDownloadProject)
-
 
     def InstallVanilla(self) -> None:
         """下载并安装游戏, 需要先获取任务"""
@@ -69,22 +83,39 @@ class GameInstaller():
 
         # 下载
         if self.MinecraftVersion is None:
-            Logger.info("Start installation name \"%s\" from latest Vanilla stable Verison", self.VersionName)
+            Logger.info(
+                'Start installation name "%s" from latest Vanilla stable Verison',
+                self.VersionName,
+            )
         else:
-            Logger.info("Start installation name \"%s\" from Vanilla Verison \"%s\"", self.VersionName, self.MinecraftVersion)
+            Logger.info(
+                'Start installation name "%s" from Vanilla Verison "%s"',
+                self.VersionName,
+                self.MinecraftVersion,
+            )
 
-        Logger.info("Checking exists files for \"%s\"", self.VersionName)
+        Logger.info('Checking exists files for "%s"', self.VersionName)
         DownloadTasks = self.getTasks()
 
-        Logger.info("Downloading Minecraft Vanilla Verison \"%s\", from mirror \"%s\"", self.VersionName, self.MinecraftVersion)
-        self.Downloader.addTask(InputTasks=DownloadTasks, MainProjectID=self.MainDownloadProject)
+        if len(DownloadTasks) <= 0:
+            Logger.info('Install Minecraft Vanilla Verison "%s"', self.VersionName)
+        else:
+            Logger.info(
+                'Downloading Minecraft Vanilla Verison "%s", from mirror "%s"',
+                self.VersionName,
+                self.UsingDownloadServer,
+            )
+            self.Downloader.addTask(
+                InputTasks=DownloadTasks, MainProjectID=self.MainDownloadProject
+            )
 
-        if self.WaitDownloader:
-            self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
+            if self.WaitDownloader:
+                self.Downloader.waitProject(
+                    ProjectIDs=self.MainDownloadProject, Raise=DownloadError
+                )
 
         # 创建版本配置文件
         self.createConfig()
-
 
     def getTasks(self) -> list[DownloadTask]:
         """获取需下载的任务列表"""
@@ -93,8 +124,7 @@ class GameInstaller():
 
         self.getVersionSources()
         self.createConfig()
-        return(self.VersionInfos.checkFull())
-
+        return self.VersionInfos.checkFull()
 
     def getVersionSources(self):
         """获取版本元数据 (VersionJson, AssetIndexJson)"""
@@ -102,10 +132,11 @@ class GameInstaller():
             self.VersionJson = self.getVersionJson()
 
         if not hasattr(self, "AssetIndexJson"):
-            self.AssetIndexJson = self.getAssetIndexJson(VersionJson=self.VersionJson, MainProjectID=self.MainDownloadProject)
+            self.AssetIndexJson = self.getAssetIndexJson(
+                VersionJson=self.VersionJson, MainProjectID=self.MainDownloadProject
+            )
 
-
-    def getVersionJson(self) -> dict:
+    def getVersionJson(self, forceNew: bool = False) -> dict:
         """获取对应版本的 Version json, 自动获取 Version Manifest"""
         if not hasattr(self, "MainDownloadProject"):
             self.MainDownloadProject = self.Downloader.createProject()
@@ -115,36 +146,60 @@ class GameInstaller():
         if dfCheck(Path=VersionManifestTask.OutputPaths, Type="f"):
             VersionManifestFileType = "OLD"
         else:
-            self.Downloader.addTask(InputTasks=VersionManifestTask, MainProjectID=self.MainDownloadProject)
-            self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
+            self.Downloader.addTask(
+                InputTasks=VersionManifestTask, MainProjectID=self.MainDownloadProject
+            )
+            self.Downloader.waitProject(
+                ProjectIDs=self.MainDownloadProject, Raise=DownloadError
+            )
             VersionManifestFileType = "NEW"
-        VersionManifestFile = loadFile(Path=VersionManifestTask.OutputPaths, Type="json")
+        VersionManifestFile = loadFile(
+            Path=VersionManifestTask.OutputPaths, Type="json"
+        )
 
         # 如版本号为空, 则使用最新的稳定版 Minecraft
         if self.MinecraftVersion is None:
             self.MinecraftVersion = VersionManifestFile["latest"]["release"]
-            Logger.debug("Update MinecraftVersion to %s from None", self.MinecraftVersion)
+            Logger.debug(
+                "Update MinecraftVersion to %s from None", self.MinecraftVersion
+            )
 
         while True:
             try:
-                VersionTask = VersionManifest_To_Version(InitFile=VersionManifestFile, TargetVersion=self.MinecraftVersion)
+                VersionTask = VersionManifest_To_Version(
+                    InitFile=VersionManifestFile, TargetVersion=self.MinecraftVersion
+                )
             except TargetVersionNotFound:
                 match VersionManifestFileType:
                     case "NEW":
                         raise UnknownVersion(self.MinecraftVersion)
                     case "OLD":
                         Logger.debug("Update old Minectaft version manifest file")
-                        self.Downloader.addTask(InputTasks=VersionManifestTask, MainProjectID=self.MainDownloadProject)
-                        self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
-                        VersionManifestFile = loadFile(Path=VersionManifestTask.OutputPaths, Type="json")
+                        self.Downloader.addTask(
+                            InputTasks=VersionManifestTask,
+                            MainProjectID=self.MainDownloadProject,
+                        )
+                        self.Downloader.waitProject(
+                            ProjectIDs=self.MainDownloadProject, Raise=DownloadError
+                        )
+                        VersionManifestFile = loadFile(
+                            Path=VersionManifestTask.OutputPaths, Type="json"
+                        )
                         VersionManifestFileType = "NEW"
-            else: break
+            else:
+                break
 
         VersionTask.full()
-        self.Downloader.addTask(InputTasks=VersionTask, MainProjectID=self.MainDownloadProject)
-        self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
+        self.Downloader.addTask(
+            InputTasks=VersionTask, MainProjectID=self.MainDownloadProject
+        )
+        self.Downloader.waitProject(
+            ProjectIDs=self.MainDownloadProject, Raise=DownloadError
+        )
 
-        self.VersionPath = pathAdder("$VERSION", self.VersionName, self.VersionName + ".json")
+        self.VersionPath = pathAdder(
+            "$VERSION", self.VersionName, self.VersionName + ".json"
+        )
 
         dfCheck(Path=self.VersionPath, Type="fm")
         copyFile(src=VersionTask.OutputPaths, dst=self.VersionPath)
@@ -156,19 +211,23 @@ class GameInstaller():
         Logger.debug("Saveing new version json for %s", self.VersionName)
         saveFile(Path=self.VersionPath, FileContent=VersionJson, Type="json")
 
-        return(VersionJson)
-
+        return VersionJson
 
     def getAssetIndexJson(self, VersionJson: dict, MainProjectID: int) -> dict:
         """获取对应版本的 AssetIndex json"""
         AssetIndexTask = Version_To_AssetIndex(InitFile=VersionJson)
         AssetIndexTask.full()
         self.Downloader.addTask(InputTasks=AssetIndexTask, MainProjectID=MainProjectID)
-        self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
-        return(loadFile(Path=AssetIndexTask.OutputPaths, Type="json"))
-
+        self.Downloader.waitProject(
+            ProjectIDs=self.MainDownloadProject, Raise=DownloadError
+        )
+        return loadFile(Path=AssetIndexTask.OutputPaths, Type="json")
 
     def createConfig(self) -> None:
         """创建版本配置文件"""
-        Configs(ID="Game", FilePath=pathAdder("$VERSION", self.VersionName, "ClasetVersionConfig.json"))
-
+        Configs(
+            ID="Game",
+            FilePath=pathAdder(
+                "$VERSION", self.VersionName, "ClasetVersionConfig.json"
+            ),
+        )

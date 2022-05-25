@@ -15,13 +15,24 @@ from .Path import pathAdder, path as Pathmd
 from .Exceptions.File import *
 
 __all__ = (
-    "loadFile", "saveFile", "copyFile", "moveFile", "dfCheck", "removeFile", "removeDir",
-    "compressFile", "decompressFile", "makeArchive", "addFileIntoArchive",
+    "loadFile",
+    "saveFile",
+    "copyFile",
+    "moveFile",
+    "dfCheck",
+    "removeFile",
+    "removeDir",
+    "compressFile",
+    "decompressFile",
+    "makeArchive",
+    "addFileIntoArchive",
 )
 Logger = getLogger(__name__)
 
 
-def loadFile(Path: str, Type: str = "text", NotFormat: bool = False) -> dict | bytes | str:
+def loadFile(
+    Path: str, Type: str = "text", NotFormat: bool = False
+) -> dict | bytes | str:
     """
     加载文件
     * Path: 文件路径
@@ -30,23 +41,25 @@ def loadFile(Path: str, Type: str = "text", NotFormat: bool = False) -> dict | b
     if not NotFormat:
         Path = Pathmd(Path, IsPath=True)
 
-    Logger.debug("Path: \"%s\", Type: \"%s\"", Path, Type)
+    Logger.debug('Path: "%s", Type: "%s"', Path, Type)
 
     match Type:
         case "json":
             with open(file=Path, mode="r", encoding="UTF-8") as openedfile:
-                return(load(openedfile))
+                return load(openedfile)
         case "bytes":
             with open(file=Path, mode="rb") as openedfile:
-                return(openedfile.read())
+                return openedfile.read()
         case "text":
             with open(file=Path, mode="r", encoding="UTF-8") as openedfile:
-                return(openedfile.read())
+                return openedfile.read()
         case _:
             raise ValueError("loadFile: Unknown Type: " + Type)
 
 
-def saveFile(Path: str, FileContent: str | bytes, Type: str = "text", NotFormat: bool = False) -> None:
+def saveFile(
+    Path: str, FileContent: str | bytes, Type: str = "text", NotFormat: bool = False
+) -> None:
     """
     保存文件
     * Path: 文件路径
@@ -56,9 +69,11 @@ def saveFile(Path: str, FileContent: str | bytes, Type: str = "text", NotFormat:
     if not NotFormat:
         Path = Pathmd(Path, IsPath=True)
 
-    Logger.debug("Path: \"%s\", Type: \"%s\", FileContent Type: %s", Path, Type, type(FileContent))
+    Logger.debug(
+        'Path: "%s", Type: "%s", FileContent Type: %s', Path, Type, type(FileContent)
+    )
 
-    dfCheck(Path=Path, Type="fm")
+    dfCheck(Path=Path, Type="fm", NotFormat=NotFormat)
 
     match Type:
         case "json":
@@ -86,29 +101,38 @@ def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False) -
     * Rename: 若无法分辨 To 为"目标文件夹"还是"目标路径"时, 此时 Rename 为 True 则视为"目标路径", 若为 False 则为"目标文件夹"
     """
 
-    Logger.debug("Path: \"%s\", To: \"%s\"", File, To)
+    Logger.debug('Path: "%s", To: "%s"', File, To)
 
-    if not dfCheck(Path=File, Type="f"): raise FileNotFoundError(File)
+    if not dfCheck(Path=File, Type="f"):
+        raise FileNotFoundError(File)
 
     if isdir(To):
         # 若为文件夹, 则检查在其中是否有与源文件重名的文件
         ToFile = pathAdder(To, basename(File))
         if dfCheck(Path=ToFile, Type="f"):
-            if (OverWrite == False): raise FileExistsError(ToFile)
-            else: removeFile(ToFile)
-        else: To = ToFile
+            if OverWrite == False:
+                raise FileExistsError(ToFile)
+            else:
+                removeFile(ToFile)
+        else:
+            To = ToFile
     elif isfile(To):
         # 若为文件, 此时 OverWrite 为 False 则触发 FileExistsError, 若为 True 则覆盖
-        if OverWrite == False: raise FileExistsError(To)
-        else: removeFile(To)
+        if OverWrite == False:
+            raise FileExistsError(To)
+        else:
+            removeFile(To)
     else:
         # 若目标文件夹不为文件夹也不为文件则判断是否需要覆盖, 若 Rename 为 True 则优先判定其为重命名
-        if Rename == False: dfCheck(Path=To, Type="dm")
+        if Rename == False:
+            dfCheck(Path=To, Type="dm")
 
     move(src=File, dst=To)
 
 
-def compressFile(ArchiveType: str, SourceFilePath: str, ToFilePath: str, CompressLevel: int = 8):
+def compressFile(
+    ArchiveType: str, SourceFilePath: str, ToFilePath: str, CompressLevel: int = 8
+):
     """
     压缩文件
     * ArchiveType: 文档类型
@@ -153,7 +177,9 @@ def decompressFile(ArchiveType: str, SourceFilePath: str, ToFilePath: str):
     saveFile(Path=ToFilePath, FileContent=FileContent, Type="bytes")
 
 
-def dfCheck(Path: str, Type: str, Size: int | None = None, NotFormat: bool = False) -> bool:
+def dfCheck(
+    Path: str, Type: str, Size: int | None = None, NotFormat: bool = False
+) -> bool:
     """
     检测文件夹/文件是否存在和体积是否正常\n
     在输入 Type 不存在时触发 ValueError\n
@@ -173,31 +199,40 @@ def dfCheck(Path: str, Type: str, Size: int | None = None, NotFormat: bool = Fal
 
     if "d" in Type:
         if "m" in Type:
-            try: makedirs(Path)
+            try:
+                makedirs(Path)
             except FileExistsError:
-                return(True)
-            return(False)
-        return(exists(Path))
+                return True
+            return False
+        return exists(Path)
     elif "f" in Type:
         if "s" in Type:
             if dfCheck(Path=Path, Type="f") == False:
                 raise FileNotFoundError(Path)
             FileSize = getsize(Path)
             if Size != FileSize:
-                if FileSize is None: raise ValueError
-                return(False)
-            else: return(True)
+                if FileSize is None:
+                    raise ValueError
+                return False
+            else:
+                return True
         elif "m" in Type:
-            try: makedirs(dirname(Path))
+            try:
+                makedirs(dirname(Path))
             except FileExistsError:
-                return(True)
-            return(False)
-        return(exists(Path))
+                return True
+            return False
+        return exists(Path)
     else:
         raise ValueError(Type)
 
 
-def makeArchive(SourcePaths: str, ArchivePath: str, ArchiveType: str = "Zstandard", CompressLevel: int = 8) -> None:
+def makeArchive(
+    SourcePaths: str,
+    ArchivePath: str,
+    ArchiveType: str = "Zstandard",
+    CompressLevel: int = 8,
+) -> None:
     """
     制作存档
     * SourcePaths: 源文件/文件夹地址
@@ -216,12 +251,22 @@ def makeArchive(SourcePaths: str, ArchivePath: str, ArchiveType: str = "Zstandar
     with openTar(name=TempFilePath, mode="x") as File:
         File.add(name=FullSourcePaths, arcname=SourcePaths)
 
-    compressFile(ArchiveType=ArchiveType, SourceFilePath=TempFilePath, ToFilePath=ArchivePath, CompressLevel=CompressLevel)
+    compressFile(
+        ArchiveType=ArchiveType,
+        SourceFilePath=TempFilePath,
+        ToFilePath=ArchivePath,
+        CompressLevel=CompressLevel,
+    )
 
     removeFile(TempFilePath)
 
 
-def addFileIntoArchive(ArchivePath: str, SourcePaths: list[str] | str, ArchiveType: str = "Zstandard", ArcnamePerfix: str | None = None) -> None:
+def addFileIntoArchive(
+    ArchivePath: str,
+    SourcePaths: list[str] | str,
+    ArchiveType: str = "Zstandard",
+    ArcnamePerfix: str | None = None,
+) -> None:
     """
     添加文件至存档
     * ArchivePath: 存档的文件路径
@@ -236,7 +281,9 @@ def addFileIntoArchive(ArchivePath: str, SourcePaths: list[str] | str, ArchiveTy
         SourcePaths = [SourcePaths]
 
     # 解压
-    decompressFile(ArchiveType=ArchiveType, SourceFilePath=ArchivePath, ToFilePath=TempFilePath)
+    decompressFile(
+        ArchiveType=ArchiveType, SourceFilePath=ArchivePath, ToFilePath=TempFilePath
+    )
     removeFile(ArchivePath)
 
     # 添加
@@ -245,12 +292,13 @@ def addFileIntoArchive(ArchivePath: str, SourcePaths: list[str] | str, ArchiveTy
             SourcePath = Pathmd(SourcePath, IsPath=True)
             Arcname = basename(SourcePath)
             if ArcnamePerfix is not None:
-                Arcname = ArcnamePerfix + "/" +  Arcname
+                Arcname = ArcnamePerfix + "/" + Arcname
             File.add(name=SourcePath, arcname=Arcname)
 
     # 压缩
-    compressFile(ArchiveType=ArchiveType, SourceFilePath=TempFilePath, ToFilePath=ArchivePath)
+    compressFile(
+        ArchiveType=ArchiveType, SourceFilePath=TempFilePath, ToFilePath=ArchivePath
+    )
 
     # 移除缓存
     removeFile(TempFilePath)
-

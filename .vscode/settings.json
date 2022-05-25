@@ -1,6 +1,11 @@
 {
-    "java.project.outputPath": "Build",
-    "java.project.sourcePaths": [
-        "Claset/Utils/JavaHelper/JavaSrcs/GetJavaInfo"
-    ]
+	"[python]": {
+		"editor.defaultFormatter": "ms-python.black-formatter"
+		// "editor.formatOnSave": true
+	},
+	"python.formatting.provider": "black",
+	"java.project.outputPath": "Build",
+	"java.project.sourcePaths": [
+		"Claset/Utils/JavaHelper/JavaSrcs/GetJavaInfo"
+	]
 }

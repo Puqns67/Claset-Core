@@ -5,59 +5,72 @@ from logging import getLogger
 from os.path import basename as baseName
 from re import compile
 
-from Claset.Utils import AdvancedPath, DownloadTask, System, path, pathAdder, formatDollar
+from Claset.Utils import AdvancedPath, DownloadTask, System, formatDollar
 
-from .Others import ResolveRule, getNativesObject
+from .Others import Pather, ResolveRule, getNativesObject
 from .Exceptions import TargetVersionNotFound
 
 __all__ = (
-    "Versionmanifest_VersionList", "VersionManifest_To_Version",
-    "Version_Client_DownloadTasks", "Version_Server_DownloadTasks", "Version_To_AssetIndex",
-    "AssetIndex_DownloadTasks", "getClassPath", "getLog4j2Infos",
+    "Versionmanifest_VersionList",
+    "VersionManifest_To_Version",
+    "Version_Client_DownloadTasks",
+    "Version_Server_DownloadTasks",
+    "Version_To_AssetIndex",
+    "AssetIndex_DownloadTasks",
+    "getClassPath",
+    "getLog4j2Infos",
 )
 ReMatchLibraryName = compile(r"^([\S\d\.-]+):([\S\d-]+):([\S\d\.-]+)$")
 Logger = getLogger(__name__)
 
 
-def Versionmanifest_VersionList(InitFile: dict, Recommend: str | None = None) -> list[str]:
+def Versionmanifest_VersionList(
+    InitFile: dict, Recommend: str | None = None
+) -> list[str]:
     if Recommend is not None:
-        return(InitFile["Latest"][Recommend])
+        return InitFile["Latest"][Recommend]
     OutputList = list()
     for Version in InitFile["versions"]:
         OutputList.append(Version["id"])
-    return(OutputList)
+    return OutputList
 
 
-def VersionManifest_To_Version(InitFile: dict, TargetVersion: str | None) -> DownloadTask:
+def VersionManifest_To_Version(
+    InitFile: dict, TargetVersion: str | None
+) -> DownloadTask:
     """从 VersionManifest Json 提取 Version Json 的相关信息并转化为 DownloadManager Task"""
     if TargetVersion is None:
         TargetVersion = InitFile["latest"]["release"]
 
     for Version in InitFile["versions"]:
         if Version["id"] == TargetVersion:
-            return(DownloadTask(
+            return DownloadTask(
                 URL=Version["url"],
-                OutputPath=path("$MCVersion", IsPath=True),
+                OutputPath=Pather.path("$MCVersionCache", IsPath=True),
                 FileName=baseName(Version["url"]),
-                Overwrite=False
-            ))
+                Overwrite=False,
+            )
 
     raise TargetVersionNotFound(TargetVersion)
 
 
-def Version_Client_DownloadTasks(InitFile: dict, Name: str, Types: dict = dict()) -> list[DownloadTask]:
+def Version_Client_DownloadTasks(
+    InitFile: dict, Name: str, Types: dict = dict()
+) -> list[DownloadTask]:
     Tasks = list()
 
     # Client
     try:
         Client = InitFile["downloads"]["client"]
-        Tasks.append(DownloadTask(
-            URL=Client["url"],
-            Size=Client["size"],
-            Sha1=Client["sha1"],
-            OutputPaths=pathAdder("$VERSION", Name, Name + ".jar"),
-            Overwrite=False
-        ))
+        Tasks.append(
+            DownloadTask(
+                URL=Client["url"],
+                Size=Client["size"],
+                Sha1=Client["sha1"],
+                OutputPaths=Pather.pathAdder("$VERSION", Name, Name + ".jar"),
+                Overwrite=False,
+            )
+        )
     except KeyError:
         pass
 
@@ -69,25 +82,29 @@ def Version_Client_DownloadTasks(InitFile: dict, Name: str, Types: dict = dict()
 
         Natives = getNativesObject(Libraries=Libraries, Features=Types)
         if Natives is not None:
-            Tasks.append(DownloadTask(
-                URL=Natives["url"],
-                Size=Natives["size"],
-                Sha1=Natives["sha1"],
-                OutputPaths=pathAdder("$LIBRERIES/", Natives["path"]),
-                Overwrite=False,
-                FileName=None
-            ))
+            Tasks.append(
+                DownloadTask(
+                    URL=Natives["url"],
+                    Size=Natives["size"],
+                    Sha1=Natives["sha1"],
+                    OutputPaths=Pather.pathAdder("$LIBRERIES", Natives["path"]),
+                    Overwrite=False,
+                    FileName=None,
+                )
+            )
 
         try:
             Artifact = Libraries["downloads"]["artifact"]
-            Tasks.append(DownloadTask(
-                URL=Artifact["url"],
-                Size=Artifact["size"],
-                Sha1=Artifact["sha1"],
-                OutputPaths=pathAdder("$LIBRERIES/", Artifact["path"]),
-                Overwrite=False,
-                FileName=None
-            ))
+            Tasks.append(
+                DownloadTask(
+                    URL=Artifact["url"],
+                    Size=Artifact["size"],
+                    Sha1=Artifact["sha1"],
+                    OutputPaths=Pather.pathAdder("$LIBRERIES", Artifact["path"]),
+                    Overwrite=False,
+                    FileName=None,
+                )
+            )
         except KeyError:
             pass
 
@@ -96,32 +113,34 @@ def Version_Client_DownloadTasks(InitFile: dict, Name: str, Types: dict = dict()
     if Log4j2Config is not None:
         Tasks.append(Log4j2Config)
 
-    return(Tasks)
+    return Tasks
 
 
 def Version_Server_DownloadTasks(InitFile: dict, SaveTo: str) -> list[DownloadTask]:
     """从 Version 获取对应的 Server jar 下载列表"""
     Server = InitFile["downloads"]["server"]
-    return([DownloadTask(
-        URL=Server["url"],
-        Sha1=Server["sha1"],
-        Size=Server["size"],
-        OutputPath=path(SaveTo, IsPath=True),
-        Overwrite=False
-    )])
+    return [
+        DownloadTask(
+            URL=Server["url"],
+            Sha1=Server["sha1"],
+            Size=Server["size"],
+            OutputPath=Pather.path(SaveTo, IsPath=True),
+            Overwrite=False,
+        )
+    ]
 
 
 def Version_To_AssetIndex(InitFile: dict) -> DownloadTask:
     """从 Version Json 提取 AssetIndex Json 的相关信息并转化为 DownloadManager Task"""
     assetIndex = InitFile["assetIndex"]
-    return(DownloadTask(
+    return DownloadTask(
         URL=assetIndex["url"],
         Sha1=assetIndex["sha1"],
         Size=assetIndex["size"],
-        OutputPath=path("$MCAssetIndex", IsPath=True),
+        OutputPath=Pather.path("$MCAssetIndexCache", IsPath=True),
         FileName=baseName(assetIndex["url"]),
-        Overwrite=False
-    ))
+        Overwrite=False,
+    )
 
 
 def AssetIndex_DownloadTasks(InitFile: dict) -> list[DownloadTask]:
@@ -130,64 +149,78 @@ def AssetIndex_DownloadTasks(InitFile: dict) -> list[DownloadTask]:
     Pather = AdvancedPath(Others=["&F<Mirrors>&V<&F<Settings>&V<DownloadServer>>"])
 
     for i in Objects:
-        Tasks.append(DownloadTask(
-            FileName=Objects[i]["hash"],
-            URL=Pather.path(
-                "$Assets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"]),
-            Size=Objects[i]["size"],
-            OutputPath=pathAdder("$ASSETS/objects", Objects[i]["hash"][:2]),
-            Sha1=Objects[i]["hash"],
-            Overwrite=False,
-            Retry=3,
-            ConnectTimeout=3,
-            ReadTimeout=15
-        ))
+        Tasks.append(
+            DownloadTask(
+                FileName=Objects[i]["hash"],
+                URL=Pather.path(
+                    "$Assets/" + Objects[i]["hash"][:2] + "/" + Objects[i]["hash"]
+                ),
+                Size=Objects[i]["size"],
+                OutputPath=Pather.pathAdder("$ASSETS/objects", Objects[i]["hash"][:2]),
+                Sha1=Objects[i]["hash"],
+                Overwrite=False,
+                Retry=3,
+                ConnectTimeout=3,
+                ReadTimeout=15,
+            )
+        )
 
-    return(Tasks)
+    return Tasks
 
 
-def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None = None) -> str:
+def getClassPath(
+    VersionJson: dict, VersionJarPath: str, Features: dict | None = None
+) -> str:
     Output = str()
-    splitBy = ";" if System().get() == "Windows" else ":"
+    splitBy = System().get(Format={"Windows": ";", "Linux": ":", "Darwin": ":"})
     for Libraries in VersionJson["libraries"]:
         if "rules" in Libraries:
             if ResolveRule(Items=Libraries["rules"], Features=Features) == False:
                 continue
         try:
-            LibraryPath, LibraryName, LibraryVersion = ReMatchLibraryName.match(Libraries["name"]).groups()
+            LibraryPath, LibraryName, LibraryVersion = ReMatchLibraryName.match(
+                Libraries["name"]
+            ).groups()
         except (AttributeError, ValueError):
-            Logger.warning("Unpack Library name error, source string: %s", Libraries["name"])
+            Logger.warning(
+                "Unpack Library name error, source string: %s", Libraries["name"]
+            )
             continue
-        LibraryFullPath = pathAdder("$LIBRERIES", LibraryPath.split("."), f"{LibraryName}/{LibraryVersion}/{LibraryName}-{LibraryVersion}.jar")
+        LibraryFullPath = Pather.pathAdder(
+            "$LIBRERIES",
+            LibraryPath.split("."),
+            f"{LibraryName}/{LibraryVersion}/{LibraryName}-{LibraryVersion}.jar",
+        )
         if LibraryFullPath not in Output:
             Output += LibraryFullPath + splitBy
     Output += VersionJarPath
-    return(Output)
+    return Output
 
 
-def getLog4j2Infos(InitFile: dict, Type: str, Platform: str | None = None) -> DownloadTask | str | None:
+def getLog4j2Infos(
+    InitFile: dict, Type: str, Platform: str | None = None
+) -> DownloadTask | str | None:
     if Platform is None:
         Platform = "client"
 
     try:
         Target = InitFile["logging"][Platform]
     except KeyError:
-        return(None)
+        return None
 
-    FilePath = pathAdder("$ASSETS", "log_configs", Target["file"]["id"])
+    FilePath = Pather.pathAdder("$ASSETS", "log_configs", Target["file"]["id"])
 
     match Type:
         case "DownloadTask":
             try:
-                return(DownloadTask(
+                return DownloadTask(
                     URL=Target["file"]["url"],
                     Size=Target["file"]["size"],
                     Sha1=Target["file"]["sha1"],
                     OutputPaths=FilePath,
-                    Overwrite=False
-                ))
+                    Overwrite=False,
+                )
             except KeyError:
-                return(None)
+                return None
         case "Argument":
-            return(formatDollar(Target["argument"], path=FilePath))
-
+            return formatDollar(Target["argument"], path=FilePath)
