@@ -7,18 +7,15 @@ from typing import Iterable, Any
 from Claset.Utils import (
     Configs,
     DownloadTask,
-    path,
-    pathAdder,
     dfCheck,
     loadFile,
     getValueFromDict,
     setValueToDict,
 )
-from Claset.Game.Utils import (
-    Version_Client_DownloadTasks,
-    AssetIndex_DownloadTasks,
-    genNativeDirName,
-)
+
+from .Others import Pather, genNativeDirName
+from .LoadJson import Version_Client_DownloadTasks, AssetIndex_DownloadTasks
+
 
 __all__ = (
     "VersionInfos",
@@ -42,15 +39,15 @@ class VersionInfos:
         if self._FULL is True:
             return
 
-        self.Dir = pathAdder("$VERSION", self.Name)
+        self.Dir = Pather.pathAdder("$VERSION", self.Name)
 
         # 配置文件相关处理
         self.GlobalConfig = Configs(ID="Settings")
-        self.ConfigPath = pathAdder(self.Dir, "ClasetVersionConfig.json")
+        self.ConfigPath = Pather.pathAdder(self.Dir, "ClasetVersionConfig.json")
         self.Configs = Configs(ID="Game", FilePath=self.ConfigPath)
 
         # 版本 Json
-        self.VersionJsonPath = pathAdder(self.Dir, self.Name + ".json")
+        self.VersionJsonPath = Pather.pathAdder(self.Dir, self.Name + ".json")
         self.VersionJson: dict = loadFile(Path=self.VersionJsonPath, Type="json")
 
         self.ID = self.VersionJson.get("id")
@@ -82,7 +79,7 @@ class VersionInfos:
 
         # AssetIndex Json
         if self.AssetIndexVersion is not None:
-            self.AssetIndexJsonPath = pathAdder(
+            self.AssetIndexJsonPath = Pather.pathAdder(
                 "$MCAssetIndex", self.AssetIndexVersion + ".json"
             )
             if dfCheck(Path=self.AssetIndexJsonPath, Type="d"):
@@ -96,7 +93,7 @@ class VersionInfos:
             self.AssetIndexJson = None
 
         # Natives 文件夹位置
-        self.NativesPath = pathAdder(
+        self.NativesPath = Pather.pathAdder(
             self.Dir,
             genNativeDirName()
             if self.Configs["UnableGlobal"]["NativesDir"] == "AUTOSET"
@@ -104,9 +101,9 @@ class VersionInfos:
         )
 
         if self.JarName is not None:
-            self.JarPath = pathAdder(self.Dir, self.JarName + ".jar")
+            self.JarPath = Pather.pathAdder(self.Dir, self.JarName + ".jar")
         else:
-            self.JarPath = pathAdder(self.Dir, self.Name + ".jar")
+            self.JarPath = Pather.pathAdder(self.Dir, self.Name + ".jar")
 
         self._FULL = True
 
@@ -135,7 +132,9 @@ class VersionInfos:
     def check(self) -> bool:
         """检查此版本是否可以正常被识别"""
         return dfCheck(
-            Path=pathAdder("$VERSION", self.Name, self.Name + ".json"), Type="f"
+            Path=Pather.pathAdder("$VERSION", self.Name, self.Name + ".json"),
+            Type="f",
+            NotFormat=True,
         )
 
     def checkFull(self) -> list[DownloadTask]:
@@ -201,7 +200,7 @@ class VersionInfos:
 def getVersionNameList() -> list[str]:
     """获取已被识别的版本名列表"""
     Output: list[str] = list()
-    VersionNameList = listdir(path=path("$VERSION"))
+    VersionNameList = listdir(path=Pather.path("$VERSION"))
     for VersionName in VersionNameList:
         VersionInfosObject = VersionInfos(VersionName=VersionName)
         if not VersionInfosObject.check():
@@ -216,7 +215,7 @@ def getVersionInfoList(
     """获取输入的多个版本中已被识别的版本的信息"""
     if isinstance(VersionNames, NoneType):
         try:
-            VersionNames = listdir(path=path("$VERSION"))
+            VersionNames = listdir(path=Pather.path("$VERSION"))
         except FileNotFoundError:
             return tuple()
     elif isinstance(VersionNames, str):
