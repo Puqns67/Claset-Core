@@ -2,9 +2,10 @@
 """获取 Java 的相关信息"""
 
 from logging import getLogger
-from os import scandir
+from os import getenv
 from subprocess import run
 from re import compile
+from pathlib import Path
 
 from zstandard import decompress
 
@@ -33,11 +34,12 @@ JavaInfo = dict[str, str | tuple[int]]
 
 def getJavaPath() -> list[str]:
     """获取 Java 路径列表"""
-    InstallPaths = System().get(
+    JavaInstallPathCollect = System().get(
         Format={
             "Windows": (
                 "C:\\Program Files\\",
                 "C:\\Program Files (x86)\\",
+                getenv("HOMEDRIVE") + getenv("HOMEPATH") + "\\scoop\\apps\\",
             ),
             "Linux": ("/usr/lib/jvm",)
             # TODO: MacOS 位置缺失, 需补充
@@ -45,24 +47,42 @@ def getJavaPath() -> list[str]:
         Raise=UnsupportSystemHost,
     )
     JavaExecutableFileName = System().get(
-        Format={"Windows": "java.exe", "Linux": "java", "Darwin": "java"},
+        Format={"Windows": "java.exe", "Other": "java"},
         Raise=UnsupportSystemHost,
     )
 
     Output = list()
 
-    for InstallPath in InstallPaths:
-        if dfCheck(Path=InstallPath, Type="d"):
-            for one in scandir(InstallPath):
-                if one.is_dir(follow_symlinks=False):
-                    javaPath = pathAdder(one.path, "bin", JavaExecutableFileName)
-                    if dfCheck(Path=javaPath, Type="f"):
-                        Output.append(javaPath)
-                        continue
-                    for two in scandir(one.path):
-                        javaPath = pathAdder(two.path, "bin", JavaExecutableFileName)
-                        if dfCheck(Path=javaPath, Type="f"):
-                            Output.append(javaPath)
+    # 一段巨痛苦的判断
+    for InstallPath in JavaInstallPathCollect:
+        InstallPath = Path(InstallPath)
+        if InstallPath.is_dir():
+            try:
+                for One in InstallPath.iterdir():
+                    print(One)
+                    if (One / "bin").is_dir():
+                        if (One / "bin" / JavaExecutableFileName).exists():
+                            Output.append(
+                                str((One / "bin" / JavaExecutableFileName).resolve())
+                            )
+                            continue
+                    elif One.is_dir():
+                        try:
+                            for Two in One.iterdir():
+                                print(Two)
+                                if (Two / "bin" / JavaExecutableFileName).exists():
+                                    Output.append(
+                                        str(
+                                            (
+                                                Two / "bin" / JavaExecutableFileName
+                                            ).resolve()
+                                        )
+                                    )
+                                    continue
+                        except PermissionError:
+                            continue
+            except PermissionError:
+                continue
 
     return Output
 

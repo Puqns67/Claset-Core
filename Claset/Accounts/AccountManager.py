@@ -22,11 +22,10 @@ class AccountManager:
 
     def __init__(self):
         self.Configs = Configs(ID="Accounts")
-        self.removeNow()
-        self.save()
+        self.prepareConfig()
 
-    def create(self, Type: str = "OFFLINE", Name: str | None = None) -> None:
-        """创建账户"""
+    def create(self, Type: str = "OFFLINE", Name: str | None = None) -> dict[str, str | int]:
+        """创建一个初始化账户"""
         Logger.debug("Create new account by Type: %s", Type)
         NewAccount = {"Type": Type, "Status": "NORMAL"}
         match Type:
@@ -55,9 +54,13 @@ class AccountManager:
             case _:
                 UnsupportedAccountType(Type)
 
-        self.Configs["Accounts"].append(NewAccount)
+        return NewAccount
 
-        # 如果新建用户后只有一个账户存在, 则使其成为默认账户
+    def add(self, Account: dict[str, str | int]) -> None:
+        """添加一个已初始化的账户至配置文件"""
+        self.Configs["Accounts"].append(Account)
+
+        # 如果添加用户后只有一个账户存在, 则使其成为默认账户
         if len(self.Configs["Accounts"]) == 1:
             Logger.debug('Set this account\'s status to "DEFAULT"')
             self.setDefault(ID=0)
@@ -65,6 +68,7 @@ class AccountManager:
     def remove(self, ID: int) -> None:
         """通过账户 ID 删除对应的账户(设置账户状态为 DELETE)"""
         # 若要删除的账户为默认账户, 则设置另一个账户为默认
+        # 如果剩余的账户不足一个则设置默认账户为空
         match self.Configs["Accounts"][ID]["Status"]:
             case "DEFAULT":
                 if len(self.Configs["Accounts"]) >= 1:
@@ -82,6 +86,11 @@ class AccountManager:
         # 设置移除账户的状态
         self.Configs["Accounts"][ID]["Status"] = "DELETE"
         Logger.info("Removeing account {}".format(self.Configs["Accounts"][ID]["Name"]))
+
+    def prepareConfig(self) -> None:
+        """对配置文件进行预处理"""
+        self.removeNow()
+        self.save()
 
     def removeNow(self) -> None:
         """立即移除状态为 DELETE 的账户"""
@@ -125,6 +134,7 @@ class AccountManager:
                     )
                 )
                 return
+
         # 将老的默认账户的状态还原
         if self.Configs["DefaultAccount"] is not None:
             self.Configs["Accounts"][self.Configs["DefaultAccount"]][
@@ -162,19 +172,23 @@ class AccountManager:
     ) -> list[dict]:
         """获取以各种方式过滤后的用户列表"""
         Output = list()
-        for AccountID in range(len(self.Configs["Accounts"])):
+        for AccountID, Account in zip(
+            range(len(self.Configs["Accounts"])), self.Configs["Accounts"]
+        ):
             if (ID is not None) and (AccountID != ID):
                 continue
-            Account = deepcopy(self.Configs["Accounts"][AccountID])
             if UUID is not None:
-                if isinstance(UUID, Class_UUID) and (UUID.hex != Account["UUID"]):
-                    continue
-                elif UUID != Account["UUID"]:
-                    continue
+                if isinstance(UUID, Class_UUID):
+                    if UUID.hex != Account["UUID"]:
+                        continue
+                else:
+                    if UUID != Account["UUID"]:
+                        continue
             if (Name is not None) and (Account["Name"] != Name):
                 continue
             if (Type is not None) and (Account["Type"] != Type):
                 continue
+            Account = deepcopy(Account)
             Account["ID"] = AccountID
             Output.append(Account)
         return Output

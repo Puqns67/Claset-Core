@@ -400,7 +400,7 @@ reference = "bfsu"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10.0"
-content-hash = "8ecdcfc7f4f63d24f79bdb383e6b16f1712446855dc8784f2502643078d6a6ae"
+content-hash = "ec813c7a58241c83df6cf85998b20ba96afadbf42a933fa3901bee7e67e22e3a"
 
 [metadata.files]
 attrs = [
