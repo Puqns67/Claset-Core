@@ -185,7 +185,7 @@ reference = "bfsu"
 
 [[package]]
 name = "nuitka"
-version = "0.7.7"
+version = "0.9"
 description = "Python compiler with full language support and CPython compatibility"
 category = "dev"
 optional = false
@@ -400,7 +400,7 @@ reference = "bfsu"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10.0"
-content-hash = "ec813c7a58241c83df6cf85998b20ba96afadbf42a933fa3901bee7e67e22e3a"
+content-hash = "2000eb82f96b9bb4b497743892acde7e84a0bf763ed2ef75b68933cd23bec941"
 
 [metadata.files]
 attrs = [
@@ -517,7 +517,7 @@ mypy-extensions = [
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
 ]
 nuitka = [
-    {file = "Nuitka-0.7.7.tar.gz", hash = "sha256:c2bac25edae92d3ab00f6d16f9e32e5f25f55508e1e380b0ab0120e46e4b1767"},
+    {file = "Nuitka-0.9.tar.gz", hash = "sha256:085285ebcd8866ec3a462d3bd604b54cf394fea095fc1fff7d23950c1359db0a"},
 ]
 pathspec = [
     {file = "pathspec-0.9.0-py2.py3-none-any.whl", hash = "sha256:7d15c4ddb0b5c802d161efc417ec1a2558ea2653c2e8ad9c19098201dc1c993a"},

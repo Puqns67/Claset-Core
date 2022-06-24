@@ -18,7 +18,7 @@ zstandard = "^0.17.0"
 PySocks = "^1.7.1"
 
 [tool.poetry.dev-dependencies]
-Nuitka = "^0.7.7"
+Nuitka = "^0.9"
 black = "^22.3.0"
 
 [[tool.poetry.source]]
