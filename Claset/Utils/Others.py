@@ -93,7 +93,7 @@ def fixType(Input: str) -> Any:
             try:
                 Output = float(Input)
             except ValueError:
-                pass
+                return Input
     else:
         return Input
     return Output

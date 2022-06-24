@@ -80,7 +80,7 @@ class VersionInfos:
         # AssetIndex Json
         if self.AssetIndexVersion is not None:
             self.AssetIndexJsonPath = Pather.pathAdder(
-                "$MCAssetIndex", self.AssetIndexVersion + ".json"
+                "$MCAssetIndexCache", self.AssetIndexVersion + ".json"
             )
             if dfCheck(Path=self.AssetIndexJsonPath, Type="d"):
                 self.AssetIndexJson = loadFile(

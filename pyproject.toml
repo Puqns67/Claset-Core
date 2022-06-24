@@ -11,7 +11,7 @@ exclude = ["Claset/Cache/*", "Claset/Logs/*", "Claset/Utils/JavaHelper/JavaSrcs/
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
-requests = "^2.27.1"
+requests = "^2.28.0"
 cmd2 = "^2.4.1"
 rich = "^12.4.4"
 zstandard = "^0.17.0"

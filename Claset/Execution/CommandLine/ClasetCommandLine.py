@@ -10,7 +10,6 @@ from rich.progress import BarColumn, Progress, TextColumn
 from rich.table import Table
 
 import Claset
-from Claset.Accounts.Account import Account
 
 from .ArgumentParsers import *
 

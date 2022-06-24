@@ -39,7 +39,9 @@ def getJavaPath() -> list[str]:
             "Windows": (
                 "C:\\Program Files\\",
                 "C:\\Program Files (x86)\\",
-                getenv("HOMEDRIVE") + getenv("HOMEPATH") + "\\scoop\\apps\\",
+                "{HOMEDRIVE}{HOMEPATH}\\scoop\\apps\\".format(
+                    HOMEDRIVE=getenv("HOMEDRIVE"), HOMEPATH=getenv("HOMEPATH")
+                ),
             ),
             "Linux": ("/usr/lib/jvm",)
             # TODO: MacOS 位置缺失, 需补充
@@ -59,7 +61,6 @@ def getJavaPath() -> list[str]:
         if InstallPath.is_dir():
             try:
                 for One in InstallPath.iterdir():
-                    print(One)
                     if (One / "bin").is_dir():
                         if (One / "bin" / JavaExecutableFileName).exists():
                             Output.append(
@@ -69,7 +70,6 @@ def getJavaPath() -> list[str]:
                     elif One.is_dir():
                         try:
                             for Two in One.iterdir():
-                                print(Two)
                                 if (Two / "bin" / JavaExecutableFileName).exists():
                                     Output.append(
                                         str(

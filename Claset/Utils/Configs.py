@@ -16,7 +16,7 @@ from .Exceptions import Configs as Ex_Configs
 __all__ = ("Configs",)
 Logger = getLogger(__name__)
 ReFindTypeAndKey = reCompile(r"^\s*([A-Z]+):(.+)\s*$")
-ReFindOldAndNew = reCompile(r"^\s*([\w\s,\[\]]+)->(\w+)\s*$")
+ReFindOldAndNew = reCompile(r"^\s*(.+)->(.+)\s*$")
 
 
 class Configs:

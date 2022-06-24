@@ -46,17 +46,15 @@ class Base:
         if isinstance(Format, str):
             return self.formats(format=Format, Raise=Raise)
         elif isinstance(Format, dict):
-            if Raise is None:
+            try:
                 return Format[self.Source]
-            else:
-                try:
-                    return Format[self.Source]
-                except KeyError:
-                    if "Other" in Format:
-                        return Format["Other"]
-                    raise Exception(self.Source) if Exception else KeyError(self.Source)
+            except KeyError:
+                if "Other" in Format:
+                    return Format["Other"]
+                raise Raise(self.Source) if Raise else KeyError(self.Source)
+
         else:
-            ValueError(Format)
+            raise TypeError(Format)
 
     def getLower(self, Format: str = "Python") -> str:
         return self.get(Format=Format).lower()
