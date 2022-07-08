@@ -10,12 +10,7 @@ __pycache__/
 *.json
 
 # Build
-*.build/
-*.dist/
-*.onefile-build/
-Claset-Build*
-*.class
-Build/
+dist/
 
 # Other
 .vscode/

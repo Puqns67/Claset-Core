@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-# Claset
+# Claset-Core
 基于 Python 的 Minecraft 启动管理器, 未完成
 """
 
 __author__ = "Puqns67"
-__productname__ = "Claset"
+__productname__ = "Claset-Core"
 __version__ = "0.1.0"
 __build__ = 187
 __fullversion__ = __version__ + "_" + str(__build__)
@@ -68,7 +68,7 @@ def stopALLDownloader() -> None:
 
 from logging import getLogger, Logger, DEBUG
 
-from . import Accounts, Execution, Utils, Game
+from . import Accounts, Utils, Game
 
 
 GolbalLogger = getLogger(__name__)

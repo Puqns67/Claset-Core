@@ -111,7 +111,7 @@ def decodeBase64(Input: str) -> str:
 
 def formatDollar(Input: str, **Kwargs: str) -> None:
     """格式化 ${}"""
-    while "${" in Input:
+    while True:
         try:
             Perfix, Matched, Suffix = ReMatchFormatDollar.match(Input).groups()
         except (AttributeError, ValueError):
