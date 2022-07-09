@@ -118,14 +118,6 @@ optional = false
 python-versions = "*"
 
 [[package]]
-name = "nuitka"
-version = "0.9.4"
-description = "Python compiler with full language support and CPython compatibility"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "pathspec"
 version = "0.9.0"
 description = "Utility library for gitignore style pattern matching of file paths."
@@ -233,7 +225,7 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10.0"
-content-hash = "c9ff99d0034284ead32a42bbb70461caa4719be1fb453ccc83dafc5095a781df"
+content-hash = "23bf33da7401a30e0da5e578e36ed45b5c576b619ad2c5874352e97e6e3dbbfd"
 
 [metadata.files]
 attrs = []
@@ -252,7 +244,6 @@ mypy-extensions = [
     {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
 ]
-nuitka = []
 pathspec = []
 platformdirs = []
 pycparser = []

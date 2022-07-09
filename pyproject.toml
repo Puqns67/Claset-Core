@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "Claset"
+name = "Claset-Core"
 version = "0.1.0"
-description = "基于 Python 的 Minecraft 启动管理器"
+description = "基于 Python 的 Minecraft 启动管理器核心"
 authors = ["Puqns67 <me@puqns67.icu>"]
 license = "GPL-3.0-or-later"
 packages = [
@@ -10,7 +10,7 @@ packages = [
 exclude = ["Claset/Cache/*", "Claset/Logs/*", "Claset/Utils/JavaHelper/JavaSrcs/*"]
 
 [tool.poetry.dependencies]
-python = "^3.10.0"
+python = "^3.10"
 requests = "^2.28.1"
 cmd2 = "^2.4.1"
 zstandard = "^0.17.0"

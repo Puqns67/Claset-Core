@@ -1,6 +1,6 @@
 # Claset-Core [![License](https://img.shields.io/github/license/Puqns67/Claset-Core?label=License)](https://github.com/Puqns67/Claset-Core/blob/master/LICENSE) [![Code style: black](https://img.shields.io/badge/Code%20Style-black-000000.svg)](https://github.com/psf/black)
 
-基于 Python 的 Minecraft 启动管理器, 未完成.
+基于 Python 的 Minecraft 启动管理器核心, 未完成.
 仅支持 Python 3.10.0 及以上的版本.
 已测试于 Archlinux 和 Windows 11.
 
