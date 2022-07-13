@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """生成, 更新, 降级配置文件"""
 
-from logging import getLogger
+from logging import Filter, getLogger
 from re import compile as reCompile
 from typing import Iterable, Any
 from json import JSONDecodeError
 
 from .Path import path
-from .File import loadFile, saveFile, dfCheck, removeFile
+from .File import FileTypes, loadFile, saveFile, dfCheck, removeFile
 from .Others import getValueFromDict, fixType, ReMatchStrList
 
 from .Confs import ConfigIDs, ConfigInfos
@@ -86,12 +86,12 @@ class Configs:
             self.genConfig()
         # 读取文件并返回数据
         try:
-            TheConfig = loadFile(Path=self.FilePath, Type="json")
+            TheConfig = loadFile(Path=self.FilePath, Type=FileTypes.Json)
         except JSONDecodeError:
             Logger.warning('Decode Config "%s" error, delete it', self.ID)
             removeFile(self.FilePath)
             self.genConfig()
-            TheConfig = loadFile(Path=self.FilePath, Type="json")
+            TheConfig = loadFile(Path=self.FilePath, Type=FileTypes.Json)
         else:
             return TheConfig
 
@@ -129,12 +129,12 @@ class Configs:
             Config=ConfigInfos["File"][self.ID], Version=ConfigInfos["Version"][self.ID]
         )
 
-        saveFile(Path=self.FilePath, FileContent=FileContent, Type="json")
+        saveFile(Path=self.FilePath, FileContent=FileContent, Type=FileTypes.Json)
         Logger.info("Created Config: %s", self.ID)
 
     def save(self) -> None:
         """保存配置文件"""
-        saveFile(Path=self.FilePath, FileContent=self.TheConfig, Type="json")
+        saveFile(Path=self.FilePath, FileContent=self.TheConfig, Type=FileTypes.Json)
 
     def reload(self) -> None:
         """从文件重载配置文件"""

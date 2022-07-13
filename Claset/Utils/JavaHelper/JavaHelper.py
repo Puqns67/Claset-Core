@@ -9,9 +9,8 @@ from pathlib import Path
 
 from zstandard import decompress
 
-from Claset.Utils import pathAdder, saveFile, dfCheck, fixType, OriginalSystem
+from Claset.Utils import System, FileTypes, pathAdder, saveFile, dfCheck, fixType, OriginalSystem
 from Claset.Utils.Exceptions.Claset import UnsupportSystemHost
-from Claset.Utils.Platform import System
 
 from .Exceptions import MatchStringError, JavaNotFound
 
@@ -208,5 +207,5 @@ def genJarFile(FileName: str, Overwrite: bool = False) -> str:
             raise ValueError(FileName)
 
     dfCheck(Path=FullPath, Type="fm")
-    saveFile(Path=FullPath, FileContent=decompress(FileContent), Type="bytes")
+    saveFile(Path=FullPath, FileContent=decompress(FileContent), Type=FileTypes.Bytes)
     return FullPath

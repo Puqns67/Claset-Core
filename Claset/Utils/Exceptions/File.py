@@ -5,5 +5,5 @@ class FileExceptions(Exception):
     """文件处理异常主类"""
 
 
-class UnknownType(FileExceptions, ValueError):
-    """未知的处理类型"""
+class UnsupportType(FileExceptions, ValueError):
+    """不支持的处理类型"""

@@ -12,7 +12,7 @@ try:
 except ModuleNotFoundError:
     RichHandler = None
 
-from .File import dfCheck, removeFile, makeArchive, addFileIntoArchive
+from .File import FileTypes, dfCheck, removeFile, makeArchive, addFileIntoArchive
 from .Configs import Configs
 from .Path import path as Pathmd, pathAdder
 
@@ -140,12 +140,12 @@ class Logs:
 
                 if not dfCheck(Path=ArchiveFilePath, Type="f"):
                     makeArchive(
-                        SourcePaths=NeedArchivePaths.pop(), ArchivePath=ArchiveFilePath
+                        SourcePaths=NeedArchivePaths.pop(), ArchivePath=ArchiveFilePath, Type=FileTypes.Zstandard
                     )
 
                 if len(NeedArchivePaths) >= 1:
                     addFileIntoArchive(
-                        ArchivePath=ArchiveFilePath, SourcePaths=NeedArchivePaths
+                        ArchivePath=ArchiveFilePath, SourcePaths=NeedArchivePaths, Type=FileTypes.Zstandard
                     )
                     for i in NeedArchivePaths:
                         removeFile(path=i)

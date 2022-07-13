@@ -10,18 +10,26 @@ from time import strftime, localtime
 
 from Claset import getDownloader, __fullversion__, __productname__, LaunchedGames
 from Claset.Accounts import AccountManager, Account
-from Claset.Game.Utils import (
-    VersionInfos,
+from Claset.Instance.Utils import (
+    InstanceInfos,
     ResolveRule,
     getClassPath,
     extractNatives,
     getLog4j2Infos,
 )
-from Claset.Utils.Platform import System
-from Claset.Utils.Path import path, pathAdder, safetyPath
-from Claset.Utils.File import dfCheck, saveFile
+from Claset.Utils import (
+    System,
+    FileTypes,
+    path,
+    pathAdder,
+    safetyPath,
+    dfCheck,
+    saveFile,
+    autoPickJava,
+    getJavaInfo,
+    JavaInfo,
+)
 from Claset.Utils.Others import ReMatchFormatDollar
-from Claset.Utils.JavaHelper import autoPickJava, getJavaInfo, JavaInfo
 
 from .Exceptions import *
 
@@ -71,7 +79,7 @@ class GameLauncher:
 
     def __init__(self, VersionName: str, Account: Account | None = None):
         # 获取版本相关信息
-        self.VersionInfos = VersionInfos(VersionName=VersionName)
+        self.VersionInfos = InstanceInfos(VersionName=VersionName)
         if not self.VersionInfos.check():
             raise VersionNotFound(VersionName)
         self.VersionInfos.full()
@@ -190,7 +198,7 @@ class GameLauncher:
                     SafetyRunCommand += " " + safetyPath(i)
                 saveFile(
                     Path=SaveTo,
-                    Type="text",
+                    Type=FileTypes.Text,
                     FileContent=(
                         f"cd {SafetyRunCwd}\n{SafetyJavaPath}{SafetyRunCommand}"
                     ),
@@ -304,7 +312,7 @@ class GameLauncher:
             ):
                 if len(Replaced) != 0:
                     Output.extend(Replaced)
-            elif isinstance(Replaced, (int, float)):
+            elif isinstance(Replaced, int | float):
                 Output.append(str(Replaced))
         return Output
 
@@ -331,14 +339,14 @@ class GameLauncher:
                 return self.VersionInfos.getConfig(
                     (
                         "PrefixAndSuffix",
-                        "GamePrefix",
+                        "ExecPrefix",
                     )
                 )
             case "GAMEARGSSUFFIX":
                 return self.VersionInfos.getConfig(
                     (
                         "PrefixAndSuffix",
-                        "GameSuffix",
+                        "ExecSuffix",
                     )
                 )
             case "MEMMIN":

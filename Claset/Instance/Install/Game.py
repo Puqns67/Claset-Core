@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""下载游戏"""
+"""游戏安装器"""
 
 from logging import getLogger
 
@@ -8,19 +8,20 @@ from Claset.Utils import (
     DownloadTask,
     DownloadManager,
     Configs,
+    FileTypes,
     loadFile,
     saveFile,
     dfCheck,
     copyFile,
     pathAdder,
 )
-from Claset.Game.Utils import (
-    VersionInfos,
+from Claset.Instance.Utils import (
+    InstanceInfos,
     getVersionManifestTask,
     VersionManifest_To_Version,
     Version_To_AssetIndex,
 )
-from Claset.Game.Utils.Exceptions import TargetVersionNotFound
+from Claset.Instance.Utils.Exceptions import TargetVersionNotFound
 
 from .Exceptions import *
 
@@ -49,7 +50,7 @@ class GameInstaller:
         self.MinecraftVersion = MinecraftVersion
         self.WaitDownloader = WaitDownloader
         self.VersionDir = pathAdder("$VERSION", VersionName)
-        self.VersionInfos = VersionInfos(VersionName=VersionName)
+        self.VersionInfos = InstanceInfos(VersionName=VersionName)
 
         if Downloader is None:
             self.Downloader = getDownloader()
@@ -143,7 +144,7 @@ class GameInstaller:
 
         VersionManifestTask = getVersionManifestTask()
         VersionManifestTask.full()
-        if dfCheck(Path=VersionManifestTask.OutputPaths, Type="f"):
+        if dfCheck(Path=VersionManifestTask.OutputPaths, Type="f") and not forceNew:
             VersionManifestFileType = "OLD"
         else:
             self.Downloader.addTask(
@@ -154,7 +155,7 @@ class GameInstaller:
             )
             VersionManifestFileType = "NEW"
         VersionManifestFile = loadFile(
-            Path=VersionManifestTask.OutputPaths, Type="json"
+            Path=VersionManifestTask.OutputPaths, Type=FileTypes.Json
         )
 
         # 如版本号为空, 则使用最新的稳定版 Minecraft
@@ -183,7 +184,7 @@ class GameInstaller:
                             ProjectIDs=self.MainDownloadProject, Raise=DownloadError
                         )
                         VersionManifestFile = loadFile(
-                            Path=VersionManifestTask.OutputPaths, Type="json"
+                            Path=VersionManifestTask.OutputPaths, Type=FileTypes.Json
                         )
                         VersionManifestFileType = "NEW"
             else:
@@ -203,13 +204,13 @@ class GameInstaller:
 
         dfCheck(Path=self.VersionPath, Type="fm")
         copyFile(src=VersionTask.OutputPaths, dst=self.VersionPath)
-        VersionJson = loadFile(Path=self.VersionPath, Type="json")
+        VersionJson = loadFile(Path=self.VersionPath, Type=FileTypes.Json)
         # 数据保持
         VersionJson["id"] = self.VersionName
         VersionJson["jar"] = self.VersionName
         VersionJson["version"] = self.MinecraftVersion
         Logger.debug("Saveing new version json for %s", self.VersionName)
-        saveFile(Path=self.VersionPath, FileContent=VersionJson, Type="json")
+        saveFile(Path=self.VersionPath, FileContent=VersionJson, Type=FileTypes.Json)
 
         return VersionJson
 
@@ -221,13 +222,13 @@ class GameInstaller:
         self.Downloader.waitProject(
             ProjectIDs=self.MainDownloadProject, Raise=DownloadError
         )
-        return loadFile(Path=AssetIndexTask.OutputPaths, Type="json")
+        return loadFile(Path=AssetIndexTask.OutputPaths, Type=FileTypes.Json)
 
     def createConfig(self) -> None:
         """创建版本配置文件"""
         Configs(
-            ID="Game",
+            ID="Instance",
             FilePath=pathAdder(
-                "$VERSION", self.VersionName, "ClasetVersionConfig.json"
+                "$VERSION", self.VersionName, "ClasetInstanceConfig.json"
             ),
         )

@@ -172,7 +172,7 @@ def getClassPath(
     VersionJson: dict, VersionJarPath: str, Features: dict | None = None
 ) -> str:
     Output = str()
-    splitBy = System().get(Format={"Windows": ";", "Linux": ":", "Darwin": ":"})
+    splitBy = System().get(Format={"Windows": ";", "Other": ":"})
     for Libraries in VersionJson["libraries"]:
         if "rules" in Libraries:
             if ResolveRule(Items=Libraries["rules"], Features=Features) == False:
@@ -224,3 +224,5 @@ def getLog4j2Infos(
                 return None
         case "Argument":
             return formatDollar(Target["argument"], path=FilePath)
+        case _:
+            raise ValueError(Type)

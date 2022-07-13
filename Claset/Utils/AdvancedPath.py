@@ -6,7 +6,7 @@ from os.path import abspath
 from typing import Iterable
 from re import compile as reCompile
 
-from .File import loadFile
+from .File import FileTypes, loadFile
 from .Configs import Configs
 from .Path import PathRegex
 
@@ -39,7 +39,7 @@ class AdvancedPath:
         except AttributeError:
             raise Ex_AdvancedPath.SearchError
         except ConfigUnregistered:
-            File = loadFile(Path=File, Type="json")
+            File = loadFile(Path=File, Type=FileTypes.Json)
 
         try:
             Value = self.loadOtherString(Value)

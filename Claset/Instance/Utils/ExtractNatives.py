@@ -6,8 +6,7 @@ from os.path import basename as baseName, splitext as splitExt
 from hashlib import sha1
 from copy import deepcopy as deepCopy
 
-from Claset.Utils import pathAdder, saveFile
-from Claset.Utils.File import dfCheck, loadFile
+from Claset.Utils import FileTypes, pathAdder, saveFile, dfCheck, loadFile
 
 from .LoadJson import getNativesObject
 
@@ -69,7 +68,9 @@ def extractNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = No
                 if dfCheck(Path=RealFilePath, Type="f"):
                     if FilePathInZip in FileSha1:
                         if (
-                            sha1(loadFile(Path=RealFilePath, Type="bytes")).hexdigest()
+                            sha1(
+                                loadFile(Path=RealFilePath, Type=FileTypes.Bytes)
+                            ).hexdigest()
                             == FileSha1[FilePathInZip]
                         ):
                             continue
@@ -77,4 +78,4 @@ def extractNatives(VersionJson: dict, ExtractTo: str, Features: dict | None = No
                 if FilePathInZip in FileSha1:
                     if not (sha1(TheFile).hexdigest() == FileSha1[FilePathInZip]):
                         raise Sha1VerificationError
-                saveFile(Path=RealFilePath, FileContent=TheFile, Type="bytes")
+                saveFile(Path=RealFilePath, FileContent=TheFile, Type=FileTypes.Bytes)

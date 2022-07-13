@@ -5,13 +5,12 @@ from Claset.Utils import (
     DownloadTask,
     System,
     Arch,
+    formatPlatform,
     formatDollar,
     dfCheck,
     removeDir,
     path,
-    OriginalSystem,
     OriginalVersion,
-    OriginalArch,
 )
 
 from .Exceptions import (
@@ -84,8 +83,9 @@ def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
                         raise FeaturesMissingKey(FeaturesKey)
             except FeaturesContinue:
                 continue
-        allow = {"allow": True, "disallow": False, None: None}[Item.get("action")]
-        if allow is None:
+        try:
+            allow = {"allow": True, "disallow": False}[Item.get("action")]
+        except KeyError:
             raise UnsupportSystemHost
     return allow
 
@@ -127,4 +127,4 @@ def removeGame(Name: str):
 
 def genNativeDirName() -> str:
     """生成适用于当前平台的 Native 文件夹名"""
-    return f"Natives-{OriginalSystem}-{OriginalArch}"
+    return formatPlatform("Natives-{System}-{Arch}")

@@ -24,7 +24,7 @@ from urllib3 import __version__ as Urllib3Version
 
 from .Configs import Configs
 from .Exceptions import Download as Ex_Download
-from .File import dfCheck, loadFile, saveFile
+from .File import FileTypes, dfCheck, loadFile, saveFile
 from .Path import pathAdder, path as Pathmd
 
 __all__ = (
@@ -193,7 +193,7 @@ class DownloadTask:
             return True
         if self._VERIFY is None:
             self._VERIFY = (
-                sha1(loadFile(Path=self.OutputPaths, Type="bytes")).hexdigest()
+                sha1(loadFile(Path=self.OutputPaths, Type=FileTypes.Bytes)).hexdigest()
                 == self.Sha1
             )
         return self._VERIFY
@@ -343,7 +343,7 @@ class DownloadManager:
         """
         if (not NotCheck) and dfCheck(Path=OutputPaths, Type="f"):
             if not Overwrite:
-                TheFile = loadFile(Path=OutputPaths, Type="bytes")
+                TheFile = loadFile(Path=OutputPaths, Type=FileTypes.Bytes)
                 if Sha1 is not None:
                     if sha1(TheFile).hexdigest() == Sha1:
                         raise Ex_Download.FileExist
@@ -413,7 +413,7 @@ class DownloadManager:
             raise Ex_Download.HashError
 
         dfCheck(Path=OutputPaths, Type="fm")
-        saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type="bytes")
+        saveFile(Path=OutputPaths, FileContent=File.getbuffer(), Type=FileTypes.Bytes)
 
     def addTask(
         self,

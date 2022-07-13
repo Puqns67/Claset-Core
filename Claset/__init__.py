@@ -13,7 +13,7 @@ __all__ = (
     "Accounts",
     "Execution",
     "Utils",
-    "Game",
+    "Instance",
     "LaunchedGames",
     "Downloaders",
     "waitALLGames",
@@ -68,7 +68,7 @@ def stopALLDownloader() -> None:
 
 from logging import getLogger, Logger, DEBUG
 
-from . import Accounts, Utils, Game
+from . import Accounts, Utils, Instance
 
 
 GolbalLogger = getLogger(__name__)

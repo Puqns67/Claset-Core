@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """默认配置相关的内容, 包含最新的版本的版本号与文件, 和老版本之间的差异"""
 
-from . import Accounts, Download, Game, Logs, Mirrors, Paths, Settings
+from . import Accounts, Download, Instance, Logs, Mirrors, Paths, Settings
 
 __all__ = (
     "ConfigIDs",
@@ -9,7 +9,7 @@ __all__ = (
     "changeConfsObject",
 )
 
-ConfigIDs = ["Download", "Paths", "Mirrors", "Settings", "Logs", "Game", "Accounts"]
+ConfigIDs = ["Download", "Paths", "Mirrors", "Settings", "Logs", "Instance", "Accounts"]
 
 ConfigInfos = {
     "Version": {
@@ -18,7 +18,7 @@ ConfigInfos = {
         "Mirrors": Mirrors.LastVersion,
         "Settings": Settings.LastVersion,
         "Logs": Logs.LastVersion,
-        "Game": Game.LastVersion,
+        "Instance": Instance.LastVersion,
         "Accounts": Accounts.LastVersion,
     },
     "File": {
@@ -27,7 +27,7 @@ ConfigInfos = {
         "Mirrors": Mirrors.File,
         "Settings": Settings.File,
         "Logs": Logs.File,
-        "Game": Game.File,
+        "Instance": Instance.File,
         "Accounts": Accounts.File,
     },
     "Difference": {
@@ -36,7 +36,7 @@ ConfigInfos = {
         "Mirrors": Mirrors.Difference,
         "Settings": Settings.Difference,
         "Logs": Logs.Difference,
-        "Game": Game.Difference,
+        "Instance": Instance.Difference,
         "Accounts": Accounts.Difference,
     },
     "Path": {
@@ -45,7 +45,7 @@ ConfigInfos = {
         "Mirrors": "Mirrors.json",
         "Settings": "Settings.json",
         "Logs": "Logs.json",
-        "Game": "$NONGLOBAL$",
+        "Instance": "$NONGLOBAL$",
         "Accounts": "Accounts.json",
     },
 }

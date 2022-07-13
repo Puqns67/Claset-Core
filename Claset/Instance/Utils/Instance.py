@@ -7,6 +7,7 @@ from typing import Iterable, Any
 from Claset.Utils import (
     Configs,
     DownloadTask,
+    FileTypes,
     dfCheck,
     loadFile,
     getValueFromDict,
@@ -18,13 +19,13 @@ from .LoadJson import Version_Client_DownloadTasks, AssetIndex_DownloadTasks
 
 
 __all__ = (
-    "VersionInfos",
-    "getVersionInfoList",
-    "getVersionNameList",
+    "InstanceInfos",
+    "getInstanceInfoList",
+    "getInstanceNameList",
 )
 
 
-class VersionInfos:
+class InstanceInfos:
     """实例相关信息的获取与实例的检查"""
 
     def __init__(self, VersionName: str, FullIt: bool = False):
@@ -44,11 +45,14 @@ class VersionInfos:
         # 配置文件相关处理
         self.GlobalConfig = Configs(ID="Settings")
         self.ConfigPath = Pather.pathAdder(self.Dir, "ClasetVersionConfig.json")
-        self.Configs = Configs(ID="Game", FilePath=self.ConfigPath)
+        self.Configs = Configs(ID="Instance", FilePath=self.ConfigPath)
+        self.InstanceType: str = self.Configs["UnableGlobal"]["InstanceType"]
 
         # 版本 Json
         self.VersionJsonPath = Pather.pathAdder(self.Dir, self.Name + ".json")
-        self.VersionJson: dict = loadFile(Path=self.VersionJsonPath, Type="json")
+        self.VersionJson: dict = loadFile(
+            Path=self.VersionJsonPath, Type=FileTypes.Json
+        )
 
         self.ID = self.VersionJson.get("id")
         self.JarName = self.VersionJson.get("jar")
@@ -84,7 +88,7 @@ class VersionInfos:
             )
             if dfCheck(Path=self.AssetIndexJsonPath, Type="d"):
                 self.AssetIndexJson = loadFile(
-                    Path=self.AssetIndexJsonPath, Type="json"
+                    Path=self.AssetIndexJsonPath, Type=FileTypes.Json
                 )
             else:
                 self.AssetIndexJson = None
@@ -197,21 +201,21 @@ class VersionInfos:
         self.GlobalConfig.reload()
 
 
-def getVersionNameList() -> list[str]:
+def getInstanceNameList() -> list[str]:
     """获取已被识别的版本名列表"""
     Output: list[str] = list()
     VersionNameList = listdir(path=Pather.path("$VERSION"))
     for VersionName in VersionNameList:
-        VersionInfosObject = VersionInfos(VersionName=VersionName)
+        VersionInfosObject = InstanceInfos(VersionName=VersionName)
         if not VersionInfosObject.check():
             continue
         Output.append(VersionName)
     return Output
 
 
-def getVersionInfoList(
+def getInstanceInfoList(
     VersionNames: Iterable[str] | str | None = None,
-) -> list[VersionInfos]:
+) -> list[InstanceInfos]:
     """获取输入的多个版本中已被识别的版本的信息"""
     if isinstance(VersionNames, NoneType):
         try:
@@ -220,9 +224,9 @@ def getVersionInfoList(
             return tuple()
     elif isinstance(VersionNames, str):
         VersionNames = (VersionNames,)
-    Output: list[VersionInfos] = list()
+    Output: list[InstanceInfos] = list()
     for VersionName in VersionNames:
-        VersionInfosObject = VersionInfos(VersionName=VersionName)
+        VersionInfosObject = InstanceInfos(VersionName=VersionName)
         if not VersionInfosObject.check():
             continue
         VersionInfosObject.full()

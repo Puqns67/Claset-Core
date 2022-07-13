@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from ast import For
 from platform import system, machine, version
 from typing import Any
 
@@ -114,18 +115,30 @@ class Version(Base):
                 raise ValueError(format) if Raise is not None else Exception(format)
 
 
-def formatPlatform(String: str, Formats: dict) -> str:
+def formatPlatform(
+    String: str,
+    Formats: dict = {
+        "System": {"Type": "System"},
+        "Arch": {"Type": "Arch"},
+        "Version": {"Type": "Version"},
+    },
+) -> str:
     """
     使用各异的格式格式化字符串
     * String: 格式字符串, 以 {KEYNAME} 格式输入
     * Formats: 格式形如 {"KEYNAME": {"Type": "Type name", "Format": "Format name"}, ...}
     """
     Formated = dict()
+
     """获取格式化后的对应字符串"""
     for Key in Formats:
         Formater = {"System": System, "Arch": Arch, "Version": Version}[
             Formats[Key]["Type"]
         ]
-        Formated[Key] = Formater().get(Formats[Key]["Format"])
+        Formated[Key] = (
+            Formater().get(Formats[Key]["Format"])
+            if Formats[Key].get("Format") is not None
+            else Formater().get()
+        )
 
     return String.format_map(Formated)

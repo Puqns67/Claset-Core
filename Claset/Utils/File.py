@@ -7,6 +7,7 @@ from os import makedirs, remove as removeFile
 from os.path import basename, dirname, exists, getsize, isdir, isfile
 from shutil import move, copy2 as copyFile, rmtree as removeDir
 from tarfile import open as openTar
+from enum import Enum, auto
 
 from zstandard import ZstdCompressor, ZstdDecompressor
 
@@ -15,6 +16,7 @@ from .Path import pathAdder, path as Pathmd
 from .Exceptions.File import *
 
 __all__ = (
+    "FileTypes",
     "loadFile",
     "saveFile",
     "copyFile",
@@ -30,8 +32,16 @@ __all__ = (
 Logger = getLogger(__name__)
 
 
+class FileTypes(Enum):
+    Text = auto()
+    Bytes = auto()
+    Json = auto()
+    Log = auto()
+    Zstandard = auto()
+
+
 def loadFile(
-    Path: str, Type: str = "text", NotFormat: bool = False
+    Path: str, Type: FileTypes = FileTypes.Text, NotFormat: bool = False
 ) -> dict | bytes | str:
     """
     加载文件
@@ -44,21 +54,24 @@ def loadFile(
     Logger.debug('Path: "%s", Type: "%s"', Path, Type)
 
     match Type:
-        case "json":
+        case FileTypes.Json:
             with open(file=Path, mode="r", encoding="UTF-8") as openedfile:
                 return load(openedfile)
-        case "bytes":
+        case FileTypes.Bytes:
             with open(file=Path, mode="rb") as openedfile:
                 return openedfile.read()
-        case "text":
+        case FileTypes.Text:
             with open(file=Path, mode="r", encoding="UTF-8") as openedfile:
                 return openedfile.read()
         case _:
-            raise ValueError("loadFile: Unknown Type: " + Type)
+            raise UnsupportType(Type)
 
 
 def saveFile(
-    Path: str, FileContent: str | bytes, Type: str = "text", NotFormat: bool = False
+    Path: str,
+    FileContent: str | bytes,
+    Type: FileTypes = FileTypes.Text,
+    NotFormat: bool = False,
 ) -> None:
     """
     保存文件
@@ -76,20 +89,20 @@ def saveFile(
     dfCheck(Path=Path, Type="fm", NotFormat=NotFormat)
 
     match Type:
-        case "json":
+        case FileTypes.Json:
             with open(Path, mode="w+", encoding="UTF-8") as thefile:
                 thefile.write(dumps(FileContent, indent=4, ensure_ascii=False))
-        case "bytes":
+        case FileTypes.Bytes:
             with open(Path, mode="wb+") as thefile:
                 thefile.write(FileContent)
-        case "log":
+        case FileTypes.Log:
             with open(Path, mode="a+", encoding="UTF-8") as thefile:
                 thefile.write(FileContent)
-        case "text":
+        case FileTypes.Text:
             with open(Path, mode="w+", encoding="UTF-8") as thefile:
                 thefile.write(FileContent)
         case _:
-            raise ValueError("saveFile(): Unknown Type: " + Type)
+            raise UnsupportType(Type)
 
 
 def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False) -> None:
@@ -131,50 +144,50 @@ def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False) -
 
 
 def compressFile(
-    ArchiveType: str, SourceFilePath: str, ToFilePath: str, CompressLevel: int = 8
+    Type: FileTypes, SourceFilePath: str, ToFilePath: str, CompressLevel: int = 8
 ):
     """
     压缩文件
-    * ArchiveType: 文档类型
+    * Type: 文档类型
     * SourceFilePath: 源文件位置
     * ToFilePath: 压缩后文件位置
     * CompressLevel: 压缩等级
     """
     # 读取
-    SourceFile = loadFile(Path=SourceFilePath, Type="bytes")
+    SourceFile = loadFile(Path=SourceFilePath, Type=FileTypes.Bytes)
 
     # 压缩
-    match ArchiveType:
-        case "Zstandard":
+    match Type:
+        case FileTypes.Zstandard:
             Compressor = ZstdCompressor(level=CompressLevel, threads=-1)
             FileContent = Compressor.compress(SourceFile)
         case _:
-            raise ValueError("makeArchive(): Unknown Type: " + ArchiveType)
+            raise UnsupportType(Type)
 
     # 保存
-    saveFile(Path=ToFilePath, FileContent=FileContent, Type="bytes")
+    saveFile(Path=ToFilePath, FileContent=FileContent, Type=FileTypes.Bytes)
 
 
-def decompressFile(ArchiveType: str, SourceFilePath: str, ToFilePath: str):
+def decompressFile(Type: FileTypes, SourceFilePath: str, ToFilePath: str):
     """
     解压文件
-    * ArchiveType: 文档类型
+    * AType: 文档类型
     * SourceFilePath: 源文件位置
     * ToFilePath: 解压后文件位置
     """
     # 读取
-    SourceFile = loadFile(Path=SourceFilePath, Type="bytes")
+    SourceFile = loadFile(Path=SourceFilePath, Type=FileTypes.Bytes)
 
     # 压缩
-    match ArchiveType:
-        case "Zstandard":
+    match Type:
+        case FileTypes.Zstandard:
             Compressor = ZstdDecompressor()
             FileContent = Compressor.decompress(SourceFile)
         case _:
-            raise ValueError("makeArchive(): Unknown Type: " + ArchiveType)
+            raise UnsupportType(Type)
 
     # 保存
-    saveFile(Path=ToFilePath, FileContent=FileContent, Type="bytes")
+    saveFile(Path=ToFilePath, FileContent=FileContent, Type=FileTypes.Bytes)
 
 
 def dfCheck(
@@ -182,7 +195,7 @@ def dfCheck(
 ) -> bool:
     """
     检测文件夹/文件是否存在和体积是否正常\n
-    在输入 Type 不存在时触发 ValueError\n
+    在输入 Type 不存在时触发 UnsupportType\n
     * Path: 对象路径
     * Type: 检查选项
     * Size: 对应的文件大小(字节), 用于匹配大小\n
@@ -191,8 +204,8 @@ def dfCheck(
     * d: 检测文件夹是否存在, 也可检测文件
     * dm: 创建文件夹
     * fm: 建立对应的文件夹
-    * fs: 对比输入的 Size, 在文件不存在时触发 FileNotFoundError, Size 为空时触发 ValueError\n
-    若选项有误则触发 ValueError
+    * fs: 对比输入的 Size, 在文件不存在时触发 FileNotFoundError, Size 为空时触发 UnsupportType\n
+    若选项有误则触发 UnsupportType
     """
     if not NotFormat:
         Path = Pathmd(Path, IsPath=True)
@@ -212,7 +225,7 @@ def dfCheck(
             FileSize = getsize(Path)
             if Size != FileSize:
                 if FileSize is None:
-                    raise ValueError
+                    raise UnsupportType
                 return False
             else:
                 return True
@@ -224,20 +237,20 @@ def dfCheck(
             return False
         return exists(Path)
     else:
-        raise ValueError(Type)
+        raise UnsupportType(Type)
 
 
 def makeArchive(
     SourcePaths: str,
     ArchivePath: str,
-    ArchiveType: str = "Zstandard",
+    Type: FileTypes = FileTypes.Zstandard,
     CompressLevel: int = 8,
 ) -> None:
     """
     制作存档
     * SourcePaths: 源文件/文件夹地址
     * ArchivePath: 保存至的文件路径
-    * ArchiveType: 存档文件类型, 暂只支持 "Zstandard"
+    * Type: 存档文件类型, 暂只支持 "Zstandard"
     * CompressLevel: 压缩等级, 某些压缩类型支持
     """
     FullSourcePaths = Pathmd(SourcePaths, IsPath=True)
@@ -252,7 +265,7 @@ def makeArchive(
         File.add(name=FullSourcePaths, arcname=SourcePaths)
 
     compressFile(
-        ArchiveType=ArchiveType,
+        Type=Type,
         SourceFilePath=TempFilePath,
         ToFilePath=ArchivePath,
         CompressLevel=CompressLevel,
@@ -264,14 +277,14 @@ def makeArchive(
 def addFileIntoArchive(
     ArchivePath: str,
     SourcePaths: list[str] | str,
-    ArchiveType: str = "Zstandard",
+    Type: FileTypes = FileTypes.Zstandard,
     ArcnamePerfix: str | None = None,
 ) -> None:
     """
     添加文件至存档
     * ArchivePath: 存档的文件路径
     * SourcePaths: 源文件/文件夹地址
-    * ArchiveType: 存档文件类型, 暂只支持 "Zstandard"
+    * Type: 存档文件类型, 暂只支持 "Zstandard"
     * ArcnamePerfix: 添加至存档内的路径
     """
     ArchivePath = Pathmd(ArchivePath, IsPath=True)
@@ -281,9 +294,7 @@ def addFileIntoArchive(
         SourcePaths = [SourcePaths]
 
     # 解压
-    decompressFile(
-        ArchiveType=ArchiveType, SourceFilePath=ArchivePath, ToFilePath=TempFilePath
-    )
+    decompressFile(Type=Type, SourceFilePath=ArchivePath, ToFilePath=TempFilePath)
     removeFile(ArchivePath)
 
     # 添加
@@ -296,9 +307,7 @@ def addFileIntoArchive(
             File.add(name=SourcePath, arcname=Arcname)
 
     # 压缩
-    compressFile(
-        ArchiveType=ArchiveType, SourceFilePath=TempFilePath, ToFilePath=ArchivePath
-    )
+    compressFile(Type=Type, SourceFilePath=TempFilePath, ToFilePath=ArchivePath)
 
     # 移除缓存
     removeFile(TempFilePath)

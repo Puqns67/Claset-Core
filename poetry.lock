@@ -224,8 +224,8 @@ cffi = ["cffi (>=1.11)"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.10.0"
-content-hash = "23bf33da7401a30e0da5e578e36ed45b5c576b619ad2c5874352e97e6e3dbbfd"
+python-versions = "^3.10"
+content-hash = "8ff767fbe453fd23485c3ec304ebac2864d025e9fd1a0eb05f86642a2da8fc16"
 
 [metadata.files]
 attrs = []
