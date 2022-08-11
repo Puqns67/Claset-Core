@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from ast import For
 from platform import system, machine, version
-from typing import Any
+from typing import Any, final
 
 from .Exceptions.Claset import UnsupportSystemHost
 
@@ -40,8 +39,9 @@ class Base:
         """格式化方法"""
         return self.Source
 
+    @final
     def get(
-        self, Format: str | dict = "Python", Raise: Exception | None = None
+        self, Format: str | dict[str, Any] = "Python", Raise: Exception | None = None
     ) -> str | Any:
         """用于获取各类风格的 Platform 字符串"""
         if isinstance(Format, str):
@@ -53,15 +53,20 @@ class Base:
                 if "Other" in Format:
                     return Format["Other"]
                 raise Raise(self.Source) if Raise else KeyError(self.Source)
-
         else:
             raise TypeError(Format)
 
-    def getLower(self, Format: str = "Python") -> str:
-        return self.get(Format=Format).lower()
+    @final
+    def getLower(
+        self, Format: str | dict[str, Any] = "Python", Raise: Exception | None = None
+    ) -> str:
+        return self.get(Format=Format, Raise=Raise).lower()
 
-    def getUpper(self, Format: str = "Python") -> str:
-        return self.get(Format=Format).upper()
+    @final
+    def getUpper(
+        self, Format: str | dict[str, Any] = "Python", Raise: Exception | None = None
+    ) -> str:
+        return self.get(Format=Format, Raise=Raise).upper()
 
 
 class System(Base):
@@ -117,7 +122,7 @@ class Version(Base):
 
 def formatPlatform(
     String: str,
-    Formats: dict = {
+    Formats: dict[str, str | dict] = {
         "System": {"Type": "System"},
         "Arch": {"Type": "Arch"},
         "Version": {"Type": "Version"},
@@ -126,15 +131,13 @@ def formatPlatform(
     """
     使用各异的格式格式化字符串
     * String: 格式字符串, 以 {KEYNAME} 格式输入
-    * Formats: 格式形如 {"KEYNAME": {"Type": "Type name", "Format": "Format name"}, ...}
+    * Formats: 格式形如 {"KEYNAME": {"Type": "Type name", "Format": "Formats"}, ...}
     """
     Formated = dict()
 
     """获取格式化后的对应字符串"""
     for Key in Formats:
-        Formater = {"System": System, "Arch": Arch, "Version": Version}[
-            Formats[Key]["Type"]
-        ]
+        Formater = {"System": System, "Arch": Arch, "Version": Version}[Formats[Key]["Type"]]
         Formated[Key] = (
             Formater().get(Formats[Key]["Format"])
             if Formats[Key].get("Format") is not None

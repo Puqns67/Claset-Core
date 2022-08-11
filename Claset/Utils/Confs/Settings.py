@@ -32,7 +32,7 @@ Difference = {
     ],
     "1->2": [
         "REPLACE:[GlobalConfig, WindowWidth]->845",
-        "REPLACE:[GlobalConfig, WindowHeight]->480"
+        "REPLACE:[GlobalConfig, WindowHeight]->480",
         "REPLACE:[GlobalConfig, JavaPath]->None",
         "REPLACE:[GlobalConfig, NotCheckGame]->False",
         "REPLACE:[GlobalConfig, NotCheckJvm]->False",

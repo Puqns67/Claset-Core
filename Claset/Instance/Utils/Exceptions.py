@@ -37,9 +37,13 @@ class NativesFileError(CheckGameErrors):
     """Natives 文件错误"""
 
 
-class ProcessModLoaderError(Exception):
-    """处理模组加载器时出现的粗恶主类"""
+class ProcessInstallProfileError(Exception):
+    """处理模组加载器时出现的错误主类"""
 
 
-class UnsupportedModLoaderType(ProcessModLoaderError, ValueError):
+class UnsupportedModLoaderType(ProcessInstallProfileError, ValueError):
     """不支持的模组加载器类型"""
+
+
+class Sha1VerifyError(ProcessInstallProfileError):
+    """处理后的 Sha1 不符合预期"""

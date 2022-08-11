@@ -7,3 +7,7 @@ class UnsupportSystemHost(SystemError):
 
 class WorkInProgressThings(SystemError):
     """未完成的部分"""
+
+
+class Continue(SystemError):
+    """用于快速跳出多层循环"""

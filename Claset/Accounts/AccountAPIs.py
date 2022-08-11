@@ -138,8 +138,7 @@ class MicrosoftAuthAPI:
 
         self.XboxLiveToken = XboxLiveReturned["Token"]
         self.XboxLiveTokenExpiresTime = (
-            mktime(strptime(XboxLiveReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f"))
-            - 5
+            mktime(strptime(XboxLiveReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f")) - 5
         )
         self.XboxLiveUserHash = XboxLiveReturned["DisplayClaims"]["xui"][0]["uhs"]
 
@@ -160,8 +159,7 @@ class MicrosoftAuthAPI:
 
         self.XboxXstsToken = XboxXstsReturned["Token"]
         self.XboxXstsTokenExpiresTime = (
-            mktime(strptime(XboxXstsReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f"))
-            - 5
+            mktime(strptime(XboxXstsReturned["NotAfter"][:26], "%Y-%m-%dT%H:%M:%S.%f")) - 5
         )
         self.XboxXstsUserHash = XboxXstsReturned["DisplayClaims"]["xui"][0]["uhs"]
 
@@ -170,19 +168,13 @@ class MicrosoftAuthAPI:
         MinecraftRespons = self.RequestsSession.post(
             url=MOJANG_AUTH_SERVICES_URL,
             headers={"content-type": "application/json", "charset": "UTF-8"},
-            json={
-                "identityToken": (
-                    f"XBL3.0 x={self.XboxXstsUserHash};{self.XboxXstsToken}"
-                )
-            },
+            json={"identityToken": (f"XBL3.0 x={self.XboxXstsUserHash};{self.XboxXstsToken}")},
         )
 
         MinecraftRespons.raise_for_status()
         MinecraftReturned = MinecraftRespons.json()
         self.MinecraftAccessToken = MinecraftReturned["access_token"]
-        self.MinecraftAccessTokenExpiresTime = (
-            MinecraftReturned["expires_in"] + time() - 5
-        )
+        self.MinecraftAccessTokenExpiresTime = MinecraftReturned["expires_in"] + time() - 5
 
 
 class MinecraftAccountAPI:

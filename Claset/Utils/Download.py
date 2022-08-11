@@ -9,8 +9,8 @@ from os.path import basename as baseName, split as splitPath
 from random import randint
 from re import search
 from time import sleep
-from typing import Iterable, Any
-from enum import Enum
+from typing import Callable, Iterable, Any
+from enum import Enum, auto
 
 from Claset import __fullversion__
 from requests import (
@@ -32,9 +32,12 @@ __all__ = (
     "getSession",
     "DownloadTask",
     "DownloadManager",
+    "getDownloader",
+    "stopALLDownloader",
 )
 Logger = getLogger(__name__)
 DownloadConfigs = Configs(ID="Download")
+Downloaders = list()
 
 
 def reloadDownloadConfig() -> None:
@@ -52,7 +55,7 @@ def getSession(TheSession: Session | None = None) -> Session:
     TheSession.verify = DownloadConfigs["SSLVerify"]
 
     # 设置代理
-    if DownloadConfigs["SSLVerify"] == False:
+    if not DownloadConfigs["SSLVerify"]:
         requestsPackages.urllib3.disable_warnings()
 
     if DownloadConfigs["ProxyLink"] is not None:
@@ -91,10 +94,10 @@ def getSession(TheSession: Session | None = None) -> Session:
 class StopTypes(Enum):
     """停止类型"""
 
-    Downloaded = 0
-    Errored = 1
-    Stopping = 2
-    FileExist = 3
+    Downloaded = auto()
+    Errored = auto()
+    Stopping = auto()
+    FileExist = auto()
 
 
 class DownloadTask:
@@ -115,7 +118,8 @@ class DownloadTask:
         ConnectTimeout: int | None = None,
         ReadTimeout: int | None = None,
         Retry: int | None = None,
-        Next: Any | None = None,
+        # 3.11 将可替换 [] 为 [typing.Self]
+        Next: Callable[[], None] | None = None,
     ) -> None:
         """初始化数值"""
         self.URL = URL
@@ -139,9 +143,9 @@ class DownloadTask:
             return
 
         # 处理缺失的项目
-        if (self.OutputPaths is None) or (self.OutputPaths == str()):
+        if not self.OutputPaths:
             # 如不存在 OutputPath 或 OutputPath 为空, 则使用当前位置
-            if (self.OutputPath is None) or (self.OutputPath == str()):
+            if not self.OutputPath:
                 self.OutputPath = "$PREFIX"
 
             # 如不存在 FileName 则优先从 URL 中获取文件名, 若 FileName 为 None, 则优先从 OutPutPath 中获取文件名, 若都无法获取则使用 NoName
@@ -235,6 +239,7 @@ class DownloadManager:
             return Task
 
         while Task.Retry >= 1:
+            StopType = StopTypes.Errored
             try:
                 self.download(
                     URL=Task.URL,
@@ -252,37 +257,28 @@ class DownloadManager:
             except Ex_Download.FileExist:
                 StopType = StopTypes.FileExist
             except Ex_Download.SizeError:
-                StopType = StopTypes.Errored
                 Logger.warning(
                     'File "%s" Download failure, By SizeError, From "%s"',
                     Task.FileName,
                     Task.URL,
                 )
             except Ex_Download.SchemaError:
-                StopType = StopTypes.Errored
                 Logger.error('URL "%s" Formart Error', Task.URL)
             except Ex_Download.HashError:
-                StopType = StopTypes.Errored
                 Logger.warning('File "%s" hash verification failed', Task.FileName)
             except Ex_Download.ReadTimeout:
-                StopType = StopTypes.Errored
                 Logger.warning(
                     'File "%s" Download timeout, From "%s"', Task.FileName, Task.URL
                 )
             except Ex_Download.ConnectTimeout:
-                StopType = StopTypes.Errored
-                Logger.warning(
-                    'File "%s" Connect timeout, From "%s"', Task.FileName, Task.URL
-                )
+                Logger.warning('File "%s" Connect timeout, From "%s"', Task.FileName, Task.URL)
             except Ex_Download.DownloadExceptions:
-                StopType = StopTypes.Errored
                 Logger.warning(
                     'File "%s" Download failure, By ConnectionError, From "%s"',
                     Task.FileName,
                     Task.URL,
                 )
             except Exception:
-                StopType = StopTypes.Errored
                 Logger.warning("Unknown Error:", exc_info=True)
             else:
                 StopType = StopTypes.Downloaded
@@ -444,9 +440,7 @@ class DownloadManager:
 
         for InputTask in InputTasks:
             InputTask.ProjectID = MainProjectID
-            self.DownloadsTasks.append(
-                self.ThreadPool.submit(self.Download, Task=InputTask)
-            )
+            self.DownloadsTasks.append(self.ThreadPool.submit(self.Download, Task=InputTask))
 
         self.Adding = False
         Logger.info("Added %s tasks to Project %s", JobTotal, MainProjectID)
@@ -476,17 +470,14 @@ class DownloadManager:
             )
         else:
             Logger.info(
-                "0 task cannot be cancelled, %s task is being cancelled, %s task"
-                " cancelled",
+                "0 task cannot be cancelled, %s task is being cancelled, %s task" " cancelled",
                 BeingCancelled,
                 Cancelled,
             )
 
         self.ThreadPool.shutdown(wait=False)
 
-    def createProject(
-        self, AllTasksCount: int = 0, setProjectID: int | None = None
-    ) -> int:
+    def createProject(self, AllTasksCount: int = 0, setProjectID: int | None = None) -> int:
         """建立 Project 对象"""
         if setProjectID is None:
             while True:
@@ -564,13 +555,28 @@ class DownloadManager:
 
     def isProjectCompleted(self, ProjectID: int) -> bool:
         """检查此 Project 是否已完成"""
-        if self.getInfoFormProject(
-            ProjectID, "CompletedTasksCount"
-        ) + self.getInfoFormProject(
+        if self.getInfoFormProject(ProjectID, "CompletedTasksCount") + self.getInfoFormProject(
             ProjectID, "ErrorTasksCount"
-        ) == self.getInfoFormProject(
-            ProjectID, "AllTasksCount"
-        ):
+        ) == self.getInfoFormProject(ProjectID, "AllTasksCount"):
             return True
         else:
             return False
+
+
+def getDownloader(ID: int = 0) -> DownloadManager:
+    """获取 Downloader, 若不存在已实例化的 Downloader 则创建新的"""
+    try:
+        Downloader = Downloaders[ID]
+    except IndexError:
+        if ID != 0:
+            Downloader = Downloaders[0]
+        else:
+            Downloader = DownloadManager()
+            Downloaders.append(Downloader)
+    return Downloader
+
+
+def stopALLDownloader() -> None:
+    """停止所有 Downloader"""
+    for I in Downloaders:
+        I.stop()

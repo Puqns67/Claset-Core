@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from . import Exceptions
-from .Launch import *
+from .Instance import *
+from .Game import *
 
-__all__ = ("Exceptions",) + (Launch.__all__)
+__all__ = ("Exceptions",) + (Instance.__all__ + Game.__all__)

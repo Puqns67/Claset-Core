@@ -12,10 +12,10 @@ from Claset.Utils import (
     path,
     OriginalVersion,
 )
+from Claset.Utils.Exceptions.Claset import Continue
 
 from .Exceptions import (
     UnsupportSystemHost,
-    FeaturesContinue,
     FeaturesMissingKey,
     TargetVersionNotFound,
 )
@@ -26,6 +26,7 @@ __all__ = (
     "getNativesObject",
     "removeGame",
     "genNativeDirName",
+    "parseLibraryName",
 )
 
 Pather = AdvancedPath(
@@ -78,10 +79,10 @@ def ResolveRule(Items: list[dict], Features: dict | None = dict()) -> bool:
                 for FeaturesKey in Item["features"]:
                     if FeaturesKey in Features:
                         if Features[FeaturesKey] != Item["features"][FeaturesKey]:
-                            raise FeaturesContinue
+                            raise Continue
                     else:
                         raise FeaturesMissingKey(FeaturesKey)
-            except FeaturesContinue:
+            except Continue:
                 continue
         try:
             allow = {"allow": True, "disallow": False}[Item.get("action")]
@@ -125,6 +126,36 @@ def removeGame(Name: str):
         raise TargetVersionNotFound(Name)
 
 
-def genNativeDirName() -> str:
+def genNativeDirName(Type: str = "INVERSION") -> str:
     """生成适用于当前平台的 Native 文件夹名"""
-    return formatPlatform("Natives-{System}-{Arch}")
+    match Type:
+        case "INVERSION":
+            return formatPlatform("Natives-{System}-{Arch}")
+        case "INTEMP":
+            return formatPlatform("Claset-Temp-Natives")
+
+
+def parseLibraryName(Input: str) -> str:
+    """解析库名至路径"""
+    Splited = Input.split(":")
+    LibraryPath, LibraryName, LibraryVersion = Splited[:3]
+
+    if len(Splited) == 4:
+        if "@" in Splited[3]:
+            FileName, Extension = Splited[3].split("@")
+        else:
+            FileName = Splited[3]
+            Extension = None
+    else:
+        FileName = None
+
+        if "@" in LibraryVersion:
+            LibraryVersion, Extension = LibraryVersion.split("@")
+        else:
+            Extension = None
+
+    return Pather.pathAdder(
+        "$LIBRERIES",
+        LibraryPath.split("."),
+        f"{LibraryName}/{LibraryVersion}/{LibraryName}-{LibraryVersion}{'-' + FileName if FileName else str()}.{Extension if Extension else 'jar'}",
+    )

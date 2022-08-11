@@ -1,7 +1,19 @@
 # -*- coding: utf-8 -*-
 
 
-class LauncherError(Exception):
+class InstanceError(Exception):
+    """实例错误主类"""
+
+
+class UndefinedInstanceStatus(InstanceError):
+    """未定义的实例状态"""
+
+
+class InstanceStatusError(InstanceError):
+    """实例状态错误"""
+
+
+class LauncherError(InstanceError):
     """启动器错误主类"""
 
 
@@ -15,11 +27,3 @@ class UnsupportVersion(LauncherError):
 
 class LauncherVersionError(LauncherError):
     """此版本所要求的启动器版本不被本启动器所满足"""
-
-
-class UndefinedGameStatus(LauncherError):
-    """未定义的游戏状态"""
-
-
-class GameStatusError(LauncherError):
-    """游戏状态错误"""

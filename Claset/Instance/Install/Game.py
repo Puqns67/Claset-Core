@@ -3,7 +3,6 @@
 
 from logging import getLogger
 
-from Claset import getDownloader
 from Claset.Utils import (
     DownloadTask,
     DownloadManager,
@@ -14,6 +13,7 @@ from Claset.Utils import (
     dfCheck,
     copyFile,
     pathAdder,
+    getDownloader,
 )
 from Claset.Instance.Utils import (
     InstanceInfos,
@@ -45,7 +45,6 @@ class GameInstaller:
         WaitDownloader: bool = True,
         UsingDownloadServer: str | None = None,
     ):
-        # TODO: 在 Linux 下, 如果 VersionName 中含有中文字符, 启动 Minecraft 时 Native 文件夹识别将会出现编码错误问题, 可通过软链接到缓存文件夹的方式避免此问题
         self.VersionName = VersionName
         self.MinecraftVersion = MinecraftVersion
         self.WaitDownloader = WaitDownloader
@@ -161,9 +160,7 @@ class GameInstaller:
         # 如版本号为空, 则使用最新的稳定版 Minecraft
         if self.MinecraftVersion is None:
             self.MinecraftVersion = VersionManifestFile["latest"]["release"]
-            Logger.debug(
-                "Update MinecraftVersion to %s from None", self.MinecraftVersion
-            )
+            Logger.debug("Update MinecraftVersion to %s from None", self.MinecraftVersion)
 
         while True:
             try:
@@ -191,16 +188,10 @@ class GameInstaller:
                 break
 
         VersionTask.full()
-        self.Downloader.addTask(
-            InputTasks=VersionTask, MainProjectID=self.MainDownloadProject
-        )
-        self.Downloader.waitProject(
-            ProjectIDs=self.MainDownloadProject, Raise=DownloadError
-        )
+        self.Downloader.addTask(InputTasks=VersionTask, MainProjectID=self.MainDownloadProject)
+        self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
 
-        self.VersionPath = pathAdder(
-            "$VERSION", self.VersionName, self.VersionName + ".json"
-        )
+        self.VersionPath = pathAdder("$VERSION", self.VersionName, self.VersionName + ".json")
 
         dfCheck(Path=self.VersionPath, Type="fm")
         copyFile(src=VersionTask.OutputPaths, dst=self.VersionPath)
@@ -219,16 +210,12 @@ class GameInstaller:
         AssetIndexTask = Version_To_AssetIndex(InitFile=VersionJson)
         AssetIndexTask.full()
         self.Downloader.addTask(InputTasks=AssetIndexTask, MainProjectID=MainProjectID)
-        self.Downloader.waitProject(
-            ProjectIDs=self.MainDownloadProject, Raise=DownloadError
-        )
+        self.Downloader.waitProject(ProjectIDs=self.MainDownloadProject, Raise=DownloadError)
         return loadFile(Path=AssetIndexTask.OutputPaths, Type=FileTypes.Json)
 
     def createConfig(self) -> None:
         """创建版本配置文件"""
         Configs(
             ID="Instance",
-            FilePath=pathAdder(
-                "$VERSION", self.VersionName, "ClasetInstanceConfig.json"
-            ),
+            FilePath=pathAdder("$VERSION", self.VersionName, "ClasetInstanceConfig.json"),
         )

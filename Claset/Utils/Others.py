@@ -2,7 +2,7 @@
 
 from typing import Iterable, Any
 from base64 import b64encode, b64decode
-from re import compile
+from re import compile, findall
 
 __all__ = (
     "getValueFromDict",
@@ -11,10 +11,11 @@ __all__ = (
     "encodeBase64",
     "decodeBase64",
     "formatDollar",
+    "ReMatchFormatDollar",
 )
 __fixType_fixs = {"true": True, "false": False, "null": None, "none": None}
 ReMatchFormatDollar = compile(r"^(.*)\${([a-zA-Z]+\w*)}(.*)$")
-ReMatchStrList = compile(r"^\s*\[([\w\s,]*)\]\s*$")
+ReMatchStrList = compile(r"^\[[\w\d\s,-]+\]$")
 
 
 def getValueFromDict(Keys: Iterable[str] | str, Dict: dict) -> Any:
@@ -32,9 +33,7 @@ def getValueFromDict(Keys: Iterable[str] | str, Dict: dict) -> Any:
         raise TypeError(type(Keys))
 
 
-def setValueToDict(
-    Keys: Iterable[str] | str, Value: Any, Dict: dict | None = None
-) -> dict:
+def setValueToDict(Keys: Iterable[str] | str, Value: Any, Dict: dict | None = None) -> dict:
     """使用列表向字典填充数据"""
     if not isinstance(Dict, dict):
         Dict = dict()
@@ -42,9 +41,7 @@ def setValueToDict(
         if len(Keys) >= 2:
             if Dict.get(Keys[0]) is None:
                 Dict[Keys[0]] = dict()
-            Dict[Keys[0]] = setValueToDict(
-                Keys=Keys[1:], Value=Value, Dict=Dict[Keys[0]]
-            )
+            Dict[Keys[0]] = setValueToDict(Keys=Keys[1:], Value=Value, Dict=Dict[Keys[0]])
             return Dict
         elif len(Keys) == 1:
             Dict[Keys[0]] = Value
@@ -62,13 +59,13 @@ def fixType(Input: str) -> Any:
     """
     修复类型\n
     支持的输入输出类型:
-    * 符合正则表达式 “^\s*\[([\w\s,]*)\]\s*$” 的字符串将被转化为 list 类型返回
+    * 符合正则表达式 “^\[[\w\d\s,-]+\]$” 的字符串将被转化为 list 类型返回
     * 转化所有字符为小写后在此元组 ("true", "false", "null", "none",) 中的字符串将被转换为对应的类型返回
     * 最后一个字符为数字或小数点的字符串将会尝试转换为整型, 无法转为整型后尝试浮点数\n
     若都无法转换则返回原字符串
     """
     if ReMatchStrList.match(Input) is not None:
-        Output = ReMatchStrList.match(Input).groups()[0].replace(" ", str()).split(",")
+        Output = findall(r"[\w\d-]+", Input)
     elif Input.lower() in __fixType_fixs:
         Output = __fixType_fixs[Input.lower()]
     elif Input == str():

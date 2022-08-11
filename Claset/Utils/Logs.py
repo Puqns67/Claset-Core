@@ -127,9 +127,7 @@ class Logs:
                 if len(LogFileList) <= TypeConfigs["MaxKeepFile"]:
                     return None
 
-                ArchiveFilePath = pathAdder(
-                    self.LogPath, TypeConfigs["ArchiveFileName"]
-                )
+                ArchiveFilePath = pathAdder(self.LogPath, TypeConfigs["ArchiveFileName"])
 
                 for LogFileName in LogFileList:
                     self.TheLogger.info('Archiveing old log file: "%s"', LogFileName)
@@ -140,12 +138,16 @@ class Logs:
 
                 if not dfCheck(Path=ArchiveFilePath, Type="f"):
                     makeArchive(
-                        SourcePaths=NeedArchivePaths.pop(), ArchivePath=ArchiveFilePath, Type=FileTypes.Zstandard
+                        SourcePaths=NeedArchivePaths.pop(),
+                        ArchivePath=ArchiveFilePath,
+                        Type=FileTypes.Zstandard,
                     )
 
                 if len(NeedArchivePaths) >= 1:
                     addFileIntoArchive(
-                        ArchivePath=ArchiveFilePath, SourcePaths=NeedArchivePaths, Type=FileTypes.Zstandard
+                        ArchivePath=ArchiveFilePath,
+                        SourcePaths=NeedArchivePaths,
+                        Type=FileTypes.Zstandard,
                     )
                     for i in NeedArchivePaths:
                         removeFile(path=i)

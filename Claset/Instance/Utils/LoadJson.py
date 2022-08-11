@@ -3,11 +3,10 @@
 
 from logging import getLogger
 from os.path import basename as baseName
-from re import compile
 
 from Claset.Utils import AdvancedPath, DownloadTask, System, formatDollar
 
-from .Others import Pather, ResolveRule, getNativesObject
+from .Others import Pather, ResolveRule, getNativesObject, parseLibraryName
 from .Exceptions import TargetVersionNotFound
 
 __all__ = (
@@ -20,13 +19,10 @@ __all__ = (
     "getClassPath",
     "getLog4j2Infos",
 )
-ReMatchLibraryName = compile(r"^([\S\d\.-]+):([\S\d-]+):([\S\d\.-]+)$")
 Logger = getLogger(__name__)
 
 
-def Versionmanifest_VersionList(
-    InitFile: dict, Recommend: str | None = None
-) -> list[str]:
+def Versionmanifest_VersionList(InitFile: dict, Recommend: str | None = None) -> list[str]:
     if Recommend is not None:
         return InitFile["Latest"][Recommend]
     OutputList = list()
@@ -35,9 +31,7 @@ def Versionmanifest_VersionList(
     return OutputList
 
 
-def VersionManifest_To_Version(
-    InitFile: dict, TargetVersion: str | None
-) -> DownloadTask:
+def VersionManifest_To_Version(InitFile: dict, TargetVersion: str | None) -> DownloadTask:
     """从 VersionManifest Json 提取 Version Json 的相关信息并转化为 DownloadManager Task"""
     if TargetVersion is None:
         TargetVersion = InitFile["latest"]["release"]
@@ -89,7 +83,6 @@ def Version_Client_DownloadTasks(
                     Sha1=Natives["sha1"],
                     OutputPaths=Pather.pathAdder("$LIBRERIES", Natives["path"]),
                     Overwrite=False,
-                    FileName=None,
                 )
             )
 
@@ -102,7 +95,6 @@ def Version_Client_DownloadTasks(
                     Sha1=Artifact["sha1"],
                     OutputPaths=Pather.pathAdder("$LIBRERIES", Artifact["path"]),
                     Overwrite=False,
-                    FileName=None,
                 )
             )
         except KeyError:
@@ -168,29 +160,14 @@ def AssetIndex_DownloadTasks(InitFile: dict) -> list[DownloadTask]:
     return Tasks
 
 
-def getClassPath(
-    VersionJson: dict, VersionJarPath: str, Features: dict | None = None
-) -> str:
+def getClassPath(VersionJson: dict, VersionJarPath: str, Features: dict | None = None) -> str:
     Output = str()
     splitBy = System().get(Format={"Windows": ";", "Other": ":"})
     for Libraries in VersionJson["libraries"]:
         if "rules" in Libraries:
             if ResolveRule(Items=Libraries["rules"], Features=Features) == False:
                 continue
-        try:
-            LibraryPath, LibraryName, LibraryVersion = ReMatchLibraryName.match(
-                Libraries["name"]
-            ).groups()
-        except (AttributeError, ValueError):
-            Logger.warning(
-                "Unpack Library name error, source string: %s", Libraries["name"]
-            )
-            continue
-        LibraryFullPath = Pather.pathAdder(
-            "$LIBRERIES",
-            LibraryPath.split("."),
-            f"{LibraryName}/{LibraryVersion}/{LibraryName}-{LibraryVersion}.jar",
-        )
+        LibraryFullPath = parseLibraryName(Libraries["name"])
         if LibraryFullPath not in Output:
             Output += LibraryFullPath + splitBy
     Output += VersionJarPath

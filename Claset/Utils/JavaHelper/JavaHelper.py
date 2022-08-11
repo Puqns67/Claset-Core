@@ -9,12 +9,21 @@ from pathlib import Path
 
 from zstandard import decompress
 
-from Claset.Utils import System, FileTypes, pathAdder, saveFile, dfCheck, fixType, OriginalSystem
+from Claset.Utils import (
+    System,
+    FileTypes,
+    pathAdder,
+    saveFile,
+    dfCheck,
+    fixType,
+    OriginalSystem,
+)
 from Claset.Utils.Exceptions.Claset import UnsupportSystemHost
 
 from .Exceptions import MatchStringError, JavaNotFound
 
 __all__ = (
+    "checkJavaExecFile",
     "getJavaPath",
     "getJavaInfo",
     "versionFormater",
@@ -31,6 +40,26 @@ ReMatchJavaInfos = compile(
 JavaInfo = dict[str, str | tuple[int]]
 
 
+def checkJavaExecFile(Path: Path) -> list[str]:
+    """检查此文件夹下的 java 可执行文件"""
+    JavaExecutableFileName: str = System().get(
+        Format={"Windows": "java.exe", "Other": "java"},
+    )
+
+    Outputs = list()
+
+    if Path.is_dir():
+        try:
+            for i in Path.iterdir():
+                Temp = i / "bin" / JavaExecutableFileName
+                if Temp.exists() and str(Temp.resolve()) not in Outputs:
+                    Outputs.append(str(Temp.resolve()))
+                    continue
+        except PermissionError:
+            pass
+    return Outputs
+
+
 def getJavaPath() -> list[str]:
     """获取 Java 路径列表"""
     JavaInstallPathCollect = System().get(
@@ -38,50 +67,25 @@ def getJavaPath() -> list[str]:
             "Windows": (
                 "C:\\Program Files\\",
                 "C:\\Program Files (x86)\\",
-                "{HOMEDRIVE}{HOMEPATH}\\scoop\\apps\\".format(
-                    HOMEDRIVE=getenv("HOMEDRIVE"), HOMEPATH=getenv("HOMEPATH")
-                ),
+                f"{getenv('HOMEDRIVE')}{getenv('HOMEPATH')}\\scoop\\apps\\",
             ),
             "Linux": ("/usr/lib/jvm",)
             # TODO: MacOS 位置缺失, 需补充
         },
         Raise=UnsupportSystemHost,
     )
-    JavaExecutableFileName = System().get(
-        Format={"Windows": "java.exe", "Other": "java"},
-        Raise=UnsupportSystemHost,
-    )
 
     Output = list()
-
-    # 一段巨痛苦的判断
     for InstallPath in JavaInstallPathCollect:
         InstallPath = Path(InstallPath)
-        if InstallPath.is_dir():
-            try:
-                for One in InstallPath.iterdir():
-                    if (One / "bin").is_dir():
-                        if (One / "bin" / JavaExecutableFileName).exists():
-                            Output.append(
-                                str((One / "bin" / JavaExecutableFileName).resolve())
-                            )
-                            continue
-                    elif One.is_dir():
-                        try:
-                            for Two in One.iterdir():
-                                if (Two / "bin" / JavaExecutableFileName).exists():
-                                    Output.append(
-                                        str(
-                                            (
-                                                Two / "bin" / JavaExecutableFileName
-                                            ).resolve()
-                                        )
-                                    )
-                                    continue
-                        except PermissionError:
-                            continue
-            except PermissionError:
-                continue
+        result = checkJavaExecFile(InstallPath)
+        if result:
+            Output.extend(result)
+        else:
+            for Next in InstallPath.iterdir():
+                result = checkJavaExecFile(Next)
+                if result:
+                    Output.extend(result)
 
     return Output
 
@@ -143,9 +147,9 @@ def getJavaInfoList(PathList: list[str] | None = None) -> list[JavaInfo]:
     if PathList is None:
         PathList: list[str] = getJavaPath()
     Outputs: list[JavaInfo] = list()
-    for Path in PathList:
+    for JavaPath in PathList:
         try:
-            JavaInfos = getJavaInfo(Path)
+            JavaInfos = getJavaInfo(JavaPath)
         except MatchStringError:
             continue
         Outputs.append(JavaInfos)
@@ -153,39 +157,43 @@ def getJavaInfoList(PathList: list[str] | None = None) -> list[JavaInfo]:
 
 
 def autoPickJava(
-    recommendVersion: int, JavaInfoList: list[JavaInfo] | None = None
+    ExpectVersion: int | None = None, JavaInfoList: list[JavaInfo] | None = None
 ) -> JavaInfo:
     """自动选择 Java"""
     # 如 JavaInfoList 为空则通过 getJavaInfoList() 获取
     if JavaInfoList is None:
         JavaInfoList = getJavaInfoList()
 
+    # 将其按照版本从高往低排序
+    JavaInfoList.sort(key=lambda JavaInfo: JavaInfo["Version"], reverse=True)
+
+    # 此处超几个近道
     # 如 JavaInfoList 为中单位数量为零则抛出 JavaNotFound 异常
     if len(JavaInfoList) == 0:
         raise JavaNotFound
     elif len(JavaInfoList) == 1:
         return JavaInfoList[0]
 
+    # 如期望版本为空则优先返回最新版本 Java
+    if ExpectVersion is None:
+        return JavaInfoList[0]
+
+    VersionList = list()
     for i in JavaInfoList:
-        if i["Version"][0] == recommendVersion:
-            return i
+        VersionList.append(i["Version"][0])
 
-    if recommendVersion <= 16 and recommendVersion >= 8:
-        for i in JavaInfoList:  # 优先使用 LTS 版本
-            if i["Version"][0] in [8, 11, 17]:
-                return i
-        for i in JavaInfoList:
-            if i["Version"][0] <= 16 and i["Version"][0] >= 8:
-                return i
-    elif recommendVersion >= 17:
-        for i in JavaInfoList:
-            if i["Version"][0] == 17:
-                return i
-        for i in JavaInfoList:
-            if i["Version"][0] >= 17:
-                return i
+    # 如有与期望版本相同版本的 Java 优先返回
+    if ExpectVersion in VersionList:
+        return JavaInfoList[VersionList.index(ExpectVersion)]
 
-    return JavaInfoList[0]
+    # 如所有版本都比期望版本低则使用最新版, 其他情况则使用大于期望版本的第一个版本
+    VersionList.append(ExpectVersion)
+    VersionList.sort(reverse=True)
+    Index = VersionList.index(ExpectVersion)
+    if Index == 0:
+        return JavaInfoList[0]
+    else:
+        return JavaInfoList[Index - 1]
 
 
 def genJarFile(FileName: str, Overwrite: bool = False) -> str:
@@ -193,7 +201,7 @@ def genJarFile(FileName: str, Overwrite: bool = False) -> str:
     FullPath = pathAdder("$JARS", FileName)
 
     # 如 Overwrite 为 False 且文件存在则提前返回
-    if (Overwrite == False) and dfCheck(Path=FullPath, Type="f"):
+    if (not Overwrite) and dfCheck(Path=FullPath, Type="f"):
         return FullPath
 
     match FileName:

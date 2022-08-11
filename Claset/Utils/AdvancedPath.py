@@ -21,9 +21,7 @@ ReMatchLoadString = reCompile(r"^&F<([a-zA-Z_\d]+)>&V<(.+)>$")
 
 
 class AdvancedPath:
-    def __init__(
-        self, Others: Iterable[str | dict] | None = None, IsPath: bool = False
-    ):
+    def __init__(self, Others: Iterable[str | dict] | None = None, IsPath: bool = False):
         self.Configs = Configs(ID="Paths")
         self.IsPath = IsPath
         self.CompleteConfigs: dict = self.Configs["Prefixs"]
@@ -120,7 +118,4 @@ class AdvancedPath:
                 PathList.append(str(i))
             else:
                 raise TypeError(type(Paths))
-        Path = "/".join(PathList)
-        if "$" in Path:
-            Path = self.path(Path)
-        return abspath(Path)
+        return self.path("/".join(PathList), IsPath=True)

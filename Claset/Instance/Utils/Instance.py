@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from os import listdir
+from os import getenv, listdir
 from types import NoneType
 from typing import Iterable, Any
 
@@ -13,6 +13,7 @@ from Claset.Utils import (
     getValueFromDict,
     setValueToDict,
 )
+from Claset.Utils.Platform import System
 
 from .Others import Pather, genNativeDirName
 from .LoadJson import Version_Client_DownloadTasks, AssetIndex_DownloadTasks
@@ -30,10 +31,9 @@ class InstanceInfos:
 
     def __init__(self, VersionName: str, FullIt: bool = False):
         self.Name = VersionName
+        self._FULL = False
         if FullIt:
             self.full()
-        else:
-            self._FULL = False
 
     def full(self) -> None:
         """获取更多此版本的相关信息"""
@@ -44,15 +44,13 @@ class InstanceInfos:
 
         # 配置文件相关处理
         self.GlobalConfig = Configs(ID="Settings")
-        self.ConfigPath = Pather.pathAdder(self.Dir, "ClasetVersionConfig.json")
+        self.ConfigPath = Pather.pathAdder(self.Dir, "ClasetInstanceConfig.json")
         self.Configs = Configs(ID="Instance", FilePath=self.ConfigPath)
         self.InstanceType: str = self.Configs["UnableGlobal"]["InstanceType"]
 
         # 版本 Json
         self.VersionJsonPath = Pather.pathAdder(self.Dir, self.Name + ".json")
-        self.VersionJson: dict = loadFile(
-            Path=self.VersionJsonPath, Type=FileTypes.Json
-        )
+        self.VersionJson: dict = loadFile(Path=self.VersionJsonPath, Type=FileTypes.Json)
 
         self.ID = self.VersionJson.get("id")
         self.JarName = self.VersionJson.get("jar")
@@ -96,13 +94,18 @@ class InstanceInfos:
             self.AssetIndexVersion = None
             self.AssetIndexJson = None
 
-        # Natives 文件夹位置
-        self.NativesPath = Pather.pathAdder(
-            self.Dir,
-            genNativeDirName()
-            if self.Configs["UnableGlobal"]["NativesDir"] == "AUTOSET"
-            else self.Configs["UnableGlobal"]["NativesDir"],
-        )
+        # 设置 Natives 文件夹位置
+        if self.Configs["UnableGlobal"]["NativesDir"] == "AUTOSET":
+            if self.Dir:
+                self.NativesPath = Pather.pathAdder(self.Dir, genNativeDirName())
+            else:
+                self.NativesPath = Pather.pathAdder(
+                    System().get(Format={"Windows": getenv("TEMP"), "Other": "/tmp"}),
+                    genNativeDirName(),
+                )
+            # TODO: 在 Linux 下, 如果 VersionName 中含有中文字符, 启动 Minecraft 时 Native 文件夹识别将会出现编码错误问题, 可通过软链接到缓存文件夹的方式避免此问题
+        else:
+            self.NativesPath = self.Configs["UnableGlobal"]["NativesDir"]
 
         if self.JarName is not None:
             self.JarPath = Pather.pathAdder(self.Dir, self.JarName + ".jar")
@@ -126,11 +129,7 @@ class InstanceInfos:
         """
         self.full()
         return Format.format(
-            Name=self.Name,
-            Version=self.Version,
-            Type=self.Type,
-            Dir=self.Dir,
-            **OtherKeys
+            Name=self.Name, Version=self.Version, Type=self.Type, Dir=self.Dir, **OtherKeys
         )
 
     def check(self) -> bool:
@@ -145,9 +144,7 @@ class InstanceInfos:
         """检查此版本的内容缺失情况, 返回缺失文件的 DownloadTask 列表"""
         self.full()
         DownloadTasks = list()
-        TempTasks = Version_Client_DownloadTasks(
-            InitFile=self.VersionJson, Name=self.Name
-        )
+        TempTasks = Version_Client_DownloadTasks(InitFile=self.VersionJson, Name=self.Name)
         TempTasks.extend(AssetIndex_DownloadTasks(InitFile=self.AssetIndexJson))
         for DownloadTask in TempTasks:
             if not (DownloadTask.checkExists() and DownloadTask.checkSha1()):
@@ -161,22 +158,16 @@ class InstanceInfos:
 
         if BaseKeys in self.Configs["Global"]:
             if self.Configs["UseGlobalConfig"]:
-                return getValueFromDict(
-                    Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]
-                )
+                return getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"])
             else:
                 Return = getValueFromDict(Keys=Keys, Dict=self.Configs["Global"])
                 if Return is not None:
                     return Return
-                return getValueFromDict(
-                    Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"]
-                )
+                return getValueFromDict(Keys=Keys, Dict=self.GlobalConfig["GlobalConfig"])
         else:
             return getValueFromDict(Keys=Keys, Dict=self.Configs["UnableGlobal"])
 
-    def setConfig(
-        self, Keys: str | Iterable[str], Value: Any, Save: bool = True
-    ) -> None:
+    def setConfig(self, Keys: str | Iterable[str], Value: Any, Save: bool = True) -> None:
         """设置配置"""
         self.full()
         BaseKeys = Keys if isinstance(Keys, str) else Keys[0]

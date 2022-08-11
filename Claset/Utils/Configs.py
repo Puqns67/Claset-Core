@@ -175,13 +175,8 @@ class Configs:
             else:
                 Reverse = False
 
-            # TODO: 优化此处的逻辑(先拆再结合再拆)
-            DifferenceS = self.getDifferenceS(
-                TargetVersion=TargetVersion, Reverse=Reverse
-            )
-            self.TheConfig = self.setVersion(
-                Config=self.TheConfig, Version=TargetVersion
-            )
+            DifferenceS = self.getDifferenceS(TargetVersion=TargetVersion, Reverse=Reverse)
+            self.TheConfig = self.setVersion(Config=self.TheConfig, Version=TargetVersion)
 
         for Difference in DifferenceS:
             Type, Key = ReFindTypeAndKey.match(Difference).groups()
@@ -204,9 +199,7 @@ class Configs:
             Old, New = ReFindOldAndNew.match(DifferentsKey).groups()
             ChangeList.append([int(Old), int(New)])
 
-        ChangeList = sorted(
-            ChangeList, key=lambda ChangeList: ChangeList[0], reverse=Reverse
-        )
+        ChangeList = sorted(ChangeList, key=lambda ChangeList: ChangeList[0], reverse=Reverse)
 
         for DifferentsKey in ChangeList:
             if Reverse == False:
@@ -214,9 +207,7 @@ class Configs:
                     TargetVersion >= DifferentsKey[1]
                 ):
                     DifferenceS.extend(
-                        Differences[
-                            str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])
-                        ]
+                        Differences[str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])]
                     )
             else:
                 if (self.NowVersion >= DifferentsKey[0]) and (
@@ -224,9 +215,7 @@ class Configs:
                 ):
                     DifferenceS.extend(
                         reversed(
-                            Differences[
-                                str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])
-                            ]
+                            Differences[str(DifferentsKey[0]) + "->" + str(DifferentsKey[1])]
                         )
                     )
         Logger.debug("Config (%s)'s Differents: %s", self.ID, DifferenceS)
@@ -234,9 +223,7 @@ class Configs:
 
     def setVersion(self, Config: dict, Version: int | str) -> dict:
         """设置版本"""
-        return self.__SetToDict(
-            Keys=["VERSION"], Dict=Config, Type="REPLACE", Do=int(Version)
-        )
+        return self.__SetToDict(Keys=["VERSION"], Dict=Config, Type="REPLACE", Do=int(Version))
 
     def processConfig(self, Key: str, Type: str) -> dict:
         """对配置文件的各种操作"""

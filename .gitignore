@@ -2,20 +2,15 @@
 Logs/
 Cache/
 __pycache__/
-.git/
-.history/
 .minecraft/
 
 # Configs
 *.json
 
 # Build
+build/
 dist/
+*.jar
 
 # Other
-.vscode/
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/settings.json
-temp*
-*.jar
+temp-*

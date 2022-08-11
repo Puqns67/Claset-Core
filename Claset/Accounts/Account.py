@@ -43,9 +43,7 @@ class Account:
             ] = self.MicrosoftAuthAPI.MicrosoftAccountAccessTokenExpiresTime
 
         self.MicrosoftAuthAPI.authToMinectaft()
-        self.TheAccount[
-            "MinecraftAccessToken"
-        ] = self.MicrosoftAuthAPI.MinecraftAccessToken
+        self.TheAccount["MinecraftAccessToken"] = self.MicrosoftAuthAPI.MinecraftAccessToken
         self.TheAccount[
             "MinecraftAccessTokenExpiresTime"
         ] = self.MicrosoftAuthAPI.MinecraftAccessTokenExpiresTime
@@ -61,13 +59,10 @@ class Account:
                     "MinecraftAccessToken" in self.TheAccount
                     and "MinecraftAccessTokenExpiresTime" in self.TheAccount
                 ):
-                    if not (
-                        self.TheAccount["MinecraftAccessTokenExpiresTime"]
-                        >= int(time())
-                    ):
-                        if self.TheAccount[
-                            "MicrosoftAccountAccessTokenExpiresTime"
-                        ] >= int(time()):
+                    if not (self.TheAccount["MinecraftAccessTokenExpiresTime"] >= int(time())):
+                        if self.TheAccount["MicrosoftAccountAccessTokenExpiresTime"] >= int(
+                            time()
+                        ):
                             self.refreshToken(WithMicrosoft=False)
                         else:
                             self.refreshToken(WithMicrosoft=True)

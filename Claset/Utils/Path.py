@@ -65,10 +65,7 @@ def pathAdder(*Paths: str | Iterable | float | int) -> str:
             PathList.append(str(i))
         else:
             raise TypeError(type(Paths))
-    Path = "/".join(PathList)
-    if "$" in Path:
-        Path = path(Path)
-    return abspath(Path)
+    return path("/".join(PathList), IsPath=True)
 
 
 def setPerfix(NewPerfix: str) -> None:

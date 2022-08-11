@@ -104,9 +104,7 @@ class AccountManager:
                 self.Configs["Accounts"].remove(Account)
 
         if DefaultAccount:
-            self.Configs["DefaultAccount"] = self.Configs["Accounts"].index(
-                DefaultAccount
-            )
+            self.Configs["DefaultAccount"] = self.Configs["Accounts"].index(DefaultAccount)
 
     def save(self) -> None:
         """保存账户数据"""
@@ -137,9 +135,7 @@ class AccountManager:
 
         # 将老的默认账户的状态还原
         if self.Configs["DefaultAccount"] is not None:
-            self.Configs["Accounts"][self.Configs["DefaultAccount"]][
-                "Status"
-            ] = "NORMAL"
+            self.Configs["Accounts"][self.Configs["DefaultAccount"]]["Status"] = "NORMAL"
         self.Configs["DefaultAccount"] = ID
         self.Configs["Accounts"][ID]["Status"] = "DEFAULT"
 

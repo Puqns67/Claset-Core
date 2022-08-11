@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""游戏启动器"""
+"""游戏实例"""
 
 from logging import getLogger
 from types import NoneType
@@ -8,7 +8,7 @@ from uuid import uuid4
 from subprocess import Popen, DEVNULL
 from time import strftime, localtime
 
-from Claset import getDownloader, __fullversion__, __productname__, LaunchedGames
+from Claset import __fullversion__, __productname__, LaunchedInstance
 from Claset.Accounts import AccountManager, Account
 from Claset.Instance.Utils import (
     InstanceInfos,
@@ -27,10 +27,12 @@ from Claset.Utils import (
     saveFile,
     autoPickJava,
     getJavaInfo,
+    getDownloader,
     JavaInfo,
+    ReMatchFormatDollar,
 )
-from Claset.Utils.Others import ReMatchFormatDollar
 
+from .Instance import InstanceBase, InstanceStatus
 from .Exceptions import *
 
 if System().get() == "Windows":
@@ -55,12 +57,12 @@ if System().get() == "Windows":
 __all__ = (
     "Features",
     "ClasetJvmHeader",
-    "GameStatus",
+    "InstanceStatus",
     "GameLauncher",
 )
 Logger = getLogger(__name__)
 Features: dict[str, bool] = {"is_demo_user": False, "has_custom_resolution": True}
-ClasetJvmHeader: list[str] = [
+ClasetJvmHeader: tuple[str] = (
     "-XX:+UnlockExperimentalVMOptions",
     "-XX:+UseG1GC",
     "-XX:G1NewSizePercent=20",
@@ -70,11 +72,10 @@ ClasetJvmHeader: list[str] = [
     "-XX:-UseAdaptiveSizePolicy",
     "-XX:-OmitStackTraceInFastThrow",
     "-XX:-DontCompileHugeMethods",
-]
-GameStatus: tuple[str] = ("UNRUNNING", "STOPPED", "STARTING", "RUNNING")
+)
 
 
-class GameLauncher:
+class GameLauncher(InstanceBase):
     """游戏启动器"""
 
     def __init__(self, VersionName: str, Account: Account | None = None):
@@ -101,7 +102,7 @@ class GameLauncher:
                 self.VersionInfos.VersionJsonPath,
             )
 
-        self.Status: str = "UNRUNNING"
+        self.Status = InstanceStatus.UnRunning
 
     def launchGame(
         self,
@@ -122,12 +123,12 @@ class GameLauncher:
         if Type != "SAVESCRIPT":
             self.checkStatus(
                 (
-                    "STOPPED",
-                    "UNRUNNING",
+                    InstanceStatus.Stopped,
+                    InstanceStatus.UnRunning,
                 ),
                 Raise=True,
             )
-            self.setStatus("STARTING")
+            self.setStatus(InstanceStatus.Starting)
         if not self.VersionInfos.getConfig("NotCheckGame"):
             DownloadTasks = self.VersionInfos.checkFull()
             if len(DownloadTasks) >= 1:
@@ -168,29 +169,25 @@ class GameLauncher:
             case "SUBPROCESS":
                 Stdout = None if PrintToTerminal else DEVNULL
                 WindowsCreationFlags = (
-                    SubProcessPriorityClasses[
-                        self.VersionInfos.getConfig("WindowsPriority")
-                    ]
+                    SubProcessPriorityClasses[self.VersionInfos.getConfig("WindowsPriority")]
                     if System().get() == "Windows"
                     else 0
                 )
-                self.Game = Popen(
+                self.Instance = Popen(
                     args=[self.PickedJava["Path"]] + self.RunArgs,
                     cwd=self.RunCwd,
                     stdout=Stdout,
                     creationflags=WindowsCreationFlags,
                 )
-                LaunchedGames.append(self)
-                self.setStatus("RUNNING")
+                LaunchedInstance.append(self)
+                self.setStatus(InstanceStatus.Running)
             case "SAVESCRIPT":
                 SafetyRunCwd = safetyPath(self.RunCwd)
                 SafetyJavaPath = safetyPath(self.PickedJava["Path"])
                 SafetyRunCommand = str()
                 if SaveTo is None:
                     NowTime = strftime("%Y-%m-%d-%H-%M-%S", localtime())
-                    FormatName = System().get(
-                        Format={"Linux": "sh", "Darwin": "sh", "Windows": "bat"}
-                    )
+                    FormatName = System().get(Format={"Windows": "bat", "Other": "sh"})
                     SaveTo = pathAdder(
                         "$PREFIX", f"{self.VersionInfos.Name}-{NowTime}.{FormatName}"
                     )
@@ -199,27 +196,11 @@ class GameLauncher:
                 saveFile(
                     Path=SaveTo,
                     Type=FileTypes.Text,
-                    FileContent=(
-                        f"cd {SafetyRunCwd}\n{SafetyJavaPath}{SafetyRunCommand}"
-                    ),
+                    FileContent=(f"cd {SafetyRunCwd}\n{SafetyJavaPath}{SafetyRunCommand}"),
                 )
-
-    def waitGame(self) -> None:
-        """等待游戏结束(阻塞线程至游戏结束)"""
-        if self.checkStatus("RUNNING"):
-            self.Game.wait()
-
-    def stopGame(self) -> None:
-        """向游戏进程发送 "停止" 命令"""
-        if self.checkStatus("RUNNING"):
-            self.Game.terminate()
-            self.setStatus("STOPPED")
-
-    def killGame(self) -> None:
-        """向游戏进程发送 "杀死" 命令"""
-        if self.checkStatus("RUNNING"):
-            self.Game.kill()
-            self.setStatus("STOPPED")
+                self.setStatus(InstanceStatus.UnRunning)
+            case _:
+                TypeError(Type)
 
     def getRunArgs(self) -> list[str]:
         """获取启动命令行参数"""
@@ -227,26 +208,27 @@ class GameLauncher:
 
     def getRunArgsList(self) -> list[str]:
         """获取启动命令行参数(不包含 Java 可执行项目)"""
+        Output = list()
         if self.VersionInfos.VersionJson.get("arguments") is None:
-            Output = [
-                "${CLASETJVMHEADER}",
-                "${JVMPREFIX}",
-                "${MEMMIN}",
-                "${MEMMAX}",
-                "${LOG4J2CONFIG}",
-                "${JVMSUFFIX}",
-                "-Djava.library.path=${natives_directory}",
-                "-Dminecraft.launcher.brand=${launcher_name}",
-                "-Dminecraft.launcher.version=${launcher_version}",
-                "-cp",
-                "${classpath}",
-                "${MAINCLASS}",
-                "${GAMEARGSPREFIX}",
-            ]
+            Output.extend(
+                [
+                    "${CLASETJVMHEADER}",
+                    "${JVMPREFIX}",
+                    "${MEMMIN}",
+                    "${MEMMAX}",
+                    "${LOG4J2CONFIG}",
+                    "${JVMSUFFIX}",
+                    "-Djava.library.path=${natives_directory}",
+                    "-Dminecraft.launcher.brand=${launcher_name}",
+                    "-Dminecraft.launcher.version=${launcher_version}",
+                    "-cp",
+                    "${classpath}",
+                    "${MAINCLASS}",
+                    "${GAMEARGSPREFIX}",
+                ]
+            )
             try:
-                Output.extend(
-                    self.VersionInfos.VersionJson["minecraftArguments"].split()
-                )
+                Output.extend(self.VersionInfos.VersionJson["minecraftArguments"].split())
             except KeyError:
                 raise UnsupportVersion(self.VersionInfos.Name)
             Output.append("${GAMEARGSSUFFIX}")
@@ -271,7 +253,6 @@ class GameLauncher:
             except KeyError:
                 raise UnsupportVersion(self.VersionInfos.Name)
 
-            Output = list()
             for Argument in Arguments:
                 if isinstance(Argument, dict):
                     if ResolveRule(Items=Argument["rules"], Features=Features):
@@ -303,13 +284,7 @@ class GameLauncher:
             elif isinstance(Replaced, str):
                 MatchedGroups[1] = Replaced
                 Output.append(str().join(MatchedGroups))
-            elif isinstance(
-                Replaced,
-                (
-                    tuple,
-                    list,
-                ),
-            ):
+            elif isinstance(Replaced, Iterable):
                 if len(Replaced) != 0:
                     Output.extend(Replaced)
             elif isinstance(Replaced, int | float):
@@ -350,13 +325,11 @@ class GameLauncher:
                     )
                 )
             case "MEMMIN":
-                return "-Xms" + str(self.VersionInfos.getConfig("MemoryMin")) + "M"
+                return f"-Xms{self.VersionInfos.getConfig('MemoryMin')}M"
             case "MEMMAX":
-                return "-Xmx" + str(self.VersionInfos.getConfig("MemoryMax")) + "M"
+                return f"-Xmx{self.VersionInfos.getConfig('MemoryMax')}M"
             case "LOG4J2CONFIG":
-                return getLog4j2Infos(
-                    InitFile=self.VersionInfos.VersionJson, Type="Argument"
-                )
+                return getLog4j2Infos(InitFile=self.VersionInfos.VersionJson, Type="Argument")
             case "MAINCLASS":
                 return self.VersionInfos.MainClass
             case "launcher_name":
@@ -381,9 +354,7 @@ class GameLauncher:
                 return self.VersionInfos.Name
             case "version_type":
                 return (
-                    self._replaces("launcher_name")
-                    + "-"
-                    + self._replaces("launcher_version")
+                    f"{self._replaces('launcher_name')}-{self._replaces('launcher_version')}"
                 )
             case "classpath":
                 return getClassPath(
@@ -391,6 +362,8 @@ class GameLauncher:
                     VersionJarPath=self.VersionInfos.JarPath,
                     Features=Features,
                 )
+            case "classpath_separator":
+                return System.get(Format={"Windows": ""})
             case "natives_directory":
                 return self.VersionInfos.NativesPath
             case "game_directory":
@@ -410,7 +383,7 @@ class GameLauncher:
             case "user_properties":
                 return "{}"
             case _:
-                raise ValueError(Key)
+                raise KeyError(Key)
 
     def getJavaPathAndInfo(self, NotCheck: bool = False) -> JavaInfo:
         JavaPath = self.VersionInfos.getConfig("JavaPath")
@@ -418,7 +391,7 @@ class GameLauncher:
             "majorVersion"
         ]
         if JavaPath == "AUTOPICK":
-            return autoPickJava(recommendVersion=recommendJavaVersion)
+            return autoPickJava(recommendJavaVersion)
         else:
             if not NotCheck:
                 if not dfCheck(Path=JavaPath, Type="f"):
@@ -428,72 +401,16 @@ class GameLauncher:
                 if isinstance(recommendJavaVersion, int):
                     if recommendJavaVersion > JavaInfo["Version"][0]:
                         Logger.warning(
-                            "Java version %s too old, recommend Java Version is [%s,"
-                            " 0, 0]",
+                            "Java version %s too old, recommend Java Version is [%s," " 0, 0]",
                             JavaInfo["Version"],
                             recommendJavaVersion,
                         )
                     elif recommendJavaVersion < JavaInfo["Version"][0]:
                         Logger.warning(
-                            "Java version %s too new, recommend Java Version is [%s,"
-                            " 0, 0]",
+                            "Java version %s too new, recommend Java Version is [%s," " 0, 0]",
                             JavaInfo["Version"],
                             recommendJavaVersion,
                         )
                 return JavaInfo
             else:
                 return {"Path": JavaPath}
-
-    def setStatus(self, Status: str) -> None:
-        """设置游戏状态"""
-        if Status in GameStatus:
-            self.Status = Status
-        else:
-            raise UndefinedGameStatus(Status)
-
-    def checkStatus(
-        self,
-        Status: Iterable[str] | str,
-        Reverse: bool = False,
-        Raise: Any | None = None,
-    ) -> bool:
-        """检查游戏状态"""
-        if isinstance(Status, str):
-            Status = (Status,)
-
-        # 检查状态是否存在
-        for OneStatus in Status:
-            if OneStatus not in GameStatus:
-                raise UndefinedGameStatus(OneStatus)
-
-        if self.getStatus(Update=False) in Status:
-            if not Reverse:
-                return True
-        else:
-            if Reverse:
-                return True
-
-        if Raise not in (
-            None,
-            False,
-        ):
-            if issubclass(Raise, Exception):
-                raise Raise
-            else:
-                if isinstance(Raise, bool):
-                    Raise = None
-                raise GameStatusError(Raise)
-        else:
-            return False
-
-    def updateStatus(self) -> None:
-        """更新游戏状态"""
-        if self.checkStatus("RUNNING"):
-            if self.Game.poll() is not None:
-                self.setStatus("STOPPED")
-
-    def getStatus(self, Update: bool = True) -> str:
-        """获取当前游戏状态"""
-        if Update:
-            self.updateStatus()
-        return self.Status

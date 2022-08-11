@@ -13,7 +13,7 @@ from zstandard import ZstdCompressor, ZstdDecompressor
 
 from .Path import pathAdder, path as Pathmd
 
-from .Exceptions.File import *
+from .Exceptions.File import UnsupportType
 
 __all__ = (
     "FileTypes",
@@ -82,9 +82,7 @@ def saveFile(
     if not NotFormat:
         Path = Pathmd(Path, IsPath=True)
 
-    Logger.debug(
-        'Path: "%s", Type: "%s", FileContent Type: %s', Path, Type, type(FileContent)
-    )
+    Logger.debug('Path: "%s", Type: "%s", FileContent Type: %s', Path, Type, type(FileContent))
 
     dfCheck(Path=Path, Type="fm", NotFormat=NotFormat)
 
@@ -123,21 +121,21 @@ def moveFile(File: str, To: str, OverWrite: bool = True, Rename: bool = False) -
         # 若为文件夹, 则检查在其中是否有与源文件重名的文件
         ToFile = pathAdder(To, basename(File))
         if dfCheck(Path=ToFile, Type="f"):
-            if OverWrite == False:
-                raise FileExistsError(ToFile)
-            else:
+            if OverWrite:
                 removeFile(ToFile)
+            else:
+                raise FileExistsError(ToFile)
         else:
             To = ToFile
     elif isfile(To):
         # 若为文件, 此时 OverWrite 为 False 则触发 FileExistsError, 若为 True 则覆盖
-        if OverWrite == False:
-            raise FileExistsError(To)
-        else:
+        if OverWrite:
             removeFile(To)
+        else:
+            raise FileExistsError(To)
     else:
         # 若目标文件夹不为文件夹也不为文件则判断是否需要覆盖, 若 Rename 为 True 则优先判定其为重命名
-        if Rename == False:
+        if not Rename:
             dfCheck(Path=To, Type="dm")
 
     move(src=File, dst=To)
@@ -190,9 +188,7 @@ def decompressFile(Type: FileTypes, SourceFilePath: str, ToFilePath: str):
     saveFile(Path=ToFilePath, FileContent=FileContent, Type=FileTypes.Bytes)
 
 
-def dfCheck(
-    Path: str, Type: str, Size: int | None = None, NotFormat: bool = False
-) -> bool:
+def dfCheck(Path: str, Type: str, Size: int | None = None, NotFormat: bool = False) -> bool:
     """
     检测文件夹/文件是否存在和体积是否正常\n
     在输入 Type 不存在时触发 UnsupportType\n
@@ -220,15 +216,10 @@ def dfCheck(
         return exists(Path)
     elif "f" in Type:
         if "s" in Type:
-            if dfCheck(Path=Path, Type="f") == False:
+            if not dfCheck(Path=Path, Type="f"):
                 raise FileNotFoundError(Path)
             FileSize = getsize(Path)
-            if Size != FileSize:
-                if FileSize is None:
-                    raise UnsupportType
-                return False
-            else:
-                return True
+            return False if Size != FileSize else True
         elif "m" in Type:
             try:
                 makedirs(dirname(Path))
