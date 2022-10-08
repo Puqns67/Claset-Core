@@ -363,7 +363,7 @@ class GameLauncher(InstanceBase):
                     Features=Features,
                 )
             case "classpath_separator":
-                return System.get(Format={"Windows": ""})
+                return System.get(Format={"Windows": ""}) # TODO: ???
             case "natives_directory":
                 return self.VersionInfos.NativesPath
             case "game_directory":

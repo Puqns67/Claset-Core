@@ -8,7 +8,7 @@ __author__ = "Puqns67"
 __productname__ = "Claset-Core"
 __version__ = "0.1.0"
 __build__ = 187
-__fullversion__ = f"{__version__}_{str(__build__)}"
+__fullversion__ = f"{__version__}_{__build__}"
 __all__ = (
     "Accounts",
     "Utils",

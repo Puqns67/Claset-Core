@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from hashlib import sha1
+
 from Claset.Utils import (
     AdvancedPath,
     DownloadTask,
@@ -126,13 +128,9 @@ def removeGame(Name: str):
         raise TargetVersionNotFound(Name)
 
 
-def genNativeDirName(Type: str = "INVERSION") -> str:
+def genNativeDirName(VersionName: str) -> str:
     """生成适用于当前平台的 Native 文件夹名"""
-    match Type:
-        case "INVERSION":
-            return formatPlatform("Natives-{System}-{Arch}")
-        case "INTEMP":
-            return formatPlatform("Claset-Temp-Natives")
+    return f"Temp-Claset-Natives-{sha1(VersionName)}"
 
 
 def parseLibraryName(Input: str) -> str:

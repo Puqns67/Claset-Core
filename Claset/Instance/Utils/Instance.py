@@ -96,14 +96,10 @@ class InstanceInfos:
 
         # 设置 Natives 文件夹位置
         if self.Configs["UnableGlobal"]["NativesDir"] == "AUTOSET":
-            if self.Dir:
-                self.NativesPath = Pather.pathAdder(self.Dir, genNativeDirName())
-            else:
-                self.NativesPath = Pather.pathAdder(
-                    System().get(Format={"Windows": getenv("TEMP"), "Other": "/tmp"}),
-                    genNativeDirName(),
-                )
-            # TODO: 在 Linux 下, 如果 VersionName 中含有中文字符, 启动 Minecraft 时 Native 文件夹识别将会出现编码错误问题, 可通过软链接到缓存文件夹的方式避免此问题
+            self.NativesPath = Pather.pathAdder(
+                System().get(Format={"Windows": getenv("TEMP"), "Other": "/tmp"}),
+                genNativeDirName(self.Name),
+            )
         else:
             self.NativesPath = self.Configs["UnableGlobal"]["NativesDir"]
 

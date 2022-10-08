@@ -3,9 +3,11 @@ Logs/
 Cache/
 __pycache__/
 .minecraft/
+.venv/
 
 # Configs
 *.json
+.pdm.toml
 
 # Build
 build/

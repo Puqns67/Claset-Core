@@ -1,4 +1,5 @@
-# Claset-Core [![License](https://img.shields.io/github/license/Puqns67/Claset-Core?label=License)](https://github.com/Puqns67/Claset-Core/blob/master/LICENSE) [![Code style: black](https://img.shields.io/badge/Code%20Style-black-000000.svg)](https://github.com/psf/black)
+
+# Claset-Core [![License](https://img.shields.io/github/license/Puqns67/Claset-Core?label=License)](https://github.com/Puqns67/Claset-Core/blob/master/LICENSE) [![Code style](https://img.shields.io/badge/Code%20Style-black-000000.svg)](https://github.com/psf/black) [![Package Manager](https://img.shields.io/badge/Package%20Manager-pdm-blueviolet)](https://pdm.fming.dev)
 
 基于 Python 的 Minecraft 启动管理器核心, 未完成.
 仅支持 Python 3.10.0 及以上的版本.
@@ -10,12 +11,12 @@
 
 | 库                                                        | 版本         |
 |-----------------------------------------------------------|-------------|
-|[Python](https://github.com/python/cpython)                |3.10.5       |
+|[Python](https://github.com/python/cpython)                |3.10.7       |
 |[requests](https://github.com/psf/requests)                |2.28.1       |
-|[zstandard](https://github.com/indygreg/python-zstandard)  |0.17.0       |
+|[zstandard](https://github.com/indygreg/python-zstandard)  |0.18.0       |
 |[rich](https://github.com/Textualize/rich)*                |12.4.4       |
 |[PySocks](https://github.com/Anorov/PySocks)*              |1.7.1        |
-|[black](https://github.com/psf/black)**                    |22.6.0       |
+|[black](https://github.com/psf/black)**                    |22.8.0       |
 
 PS: * -> 可选 | ** -> 用于开发
 

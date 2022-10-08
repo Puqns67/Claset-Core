@@ -61,7 +61,9 @@ class Processor:
 
     def excute(self) -> None:
         """执行本操作器"""
-        JavaExecutablePath = self.JavaExecutablePath if self.JavaExecutablePath else autoPickJava()['Path']
+        JavaExecutablePath = (
+            self.JavaExecutablePath if self.JavaExecutablePath else autoPickJava()["Path"]
+        )
         self.Return = run(args=[JavaExecutablePath] + self.genRunArgs())
         for i in self.Outputs:
             if not (
